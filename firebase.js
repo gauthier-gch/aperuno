@@ -11,12 +11,13 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "REMPLACE_MOI",
-  authDomain: "REMPLACE_MOI.firebaseapp.com",
-  projectId: "REMPLACE_MOI",
-  storageBucket: "REMPLACE_MOI.appspot.com",
-  messagingSenderId: "REMPLACE_MOI",
-  appId: "REMPLACE_MOI",
+  apiKey: "AIzaSyCWeDSh9jLXqlKUHreX7XFs391JWIjefUc",
+  authDomain: "aperuno-spahd.firebaseapp.com",
+  projectId: "aperuno-spahd",
+  storageBucket: "aperuno-spahd.firebasestorage.app",
+  messagingSenderId: "914108671029",
+  appId: "1:914108671029:web:2755b1eaf1efcddc5d7d7c",
+  measurementId: "G-GRSLMQLZ1P"
 };
 
 const app = initializeApp(firebaseConfig);
