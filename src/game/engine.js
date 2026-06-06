@@ -44,7 +44,9 @@ export function dealNewGame(s0, starterIdx) {
 /* ------------------------------- helpers état ---------------------------- */
 
 function clone(s) { return JSON.parse(JSON.stringify(s)); }
-function note(text) { return { text, ts: Date.now() + Math.random() }; }
+/* long = true → l'annonce reste affichée longtemps (messages « X boit … »).
+   Les autres (pioche, lance un jeu, échange…) disparaissent vite. */
+function note(text, long = false) { return { text, ts: Date.now() + Math.random(), long }; }
 function idx(s, id) { return s.players.findIndex((p) => p.id === id); }
 function isTurn(s, id) { return s.players[s.current] && s.players[s.current].id === id; }
 
@@ -76,11 +78,6 @@ function endTurn(s) {
   checkWinner(s);
 }
 
-/* Cartes jouables pour amorcer un tour (sinon le joueur peut « passer »). */
-function hasPlayable(player) {
-  return player.hand.some((c) => c.type === "action" || c.type === "jeu" || c.type === "echange");
-}
-
 /* ----------------------------- cartes réaction --------------------------- */
 
 function reactionCardsOf(s, playerIdx) {
@@ -95,7 +92,7 @@ function resolveDrink(s) {
   const r = s.reaction;
   const ti = idx(s, r.targetId);
   const extra = r.bonus > 0 ? ` + ${r.bonus} gorgée${r.bonus > 1 ? "s" : ""}` : "";
-  s.announce = note(`${s.players[ti].name} boit ${r.baseLabel}${extra} 🍻`);
+  s.announce = note(`${s.players[ti].name} boit ${r.baseLabel}${extra} 🍻`, true);
   s.reaction = null;
   endTurn(s);
   return s;
@@ -159,7 +156,7 @@ export function applyMove(s0, move, myId) {
       discardFrom(s, me, cards.map((c) => c.id));
       const total = cards.reduce((n, c) => n + c.sips, 0);
       const unit = cards[0].unit;
-      s.announce = note(`${mine.name} ${actionDrink(total, unit)} 🍻`);
+      s.announce = note(`${mine.name} ${actionDrink(total, unit)} 🍻`, true);
       endTurn(s);
       return s;
     }
@@ -230,8 +227,7 @@ export function applyMove(s0, move, myId) {
     }
     case "pass": {
       requireTurnPlay(s, myId);
-      if (hasPlayable(mine)) throw new Error("Tu dois jouer une carte.");
-      s.announce = note(`${mine.name} n'a aucune carte jouable et passe son tour.`);
+      s.announce = note(`${mine.name} passe son tour 🙅`);
       endTurn(s);
       return s;
     }
@@ -325,7 +321,17 @@ export function applyMove(s0, move, myId) {
     }
     case "mgMimeReroll": {
       mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "intro") throw new Error("Le mime a déjà démarré.");
       s.minigame.word = MIME_WORDS[Math.floor(Math.random() * MIME_WORDS.length)];
+      return s;
+    }
+    case "mgMimeStart": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "intro") throw new Error("Le mime a déjà démarré.");
+      const w = (move.word || "").trim() || s.minigame.word;
+      s.minigame.word = w;
+      s.minigame.phase = "play"; // le mot devient visible par tous les joueurs
+      s.announce = note(`Mime lancé : à vous de jouer ! 🎭`);
       return s;
     }
     case "mgPearCut": {
@@ -373,14 +379,21 @@ export function applyMove(s0, move, myId) {
       mgGuard(s, isLauncher);
       const n = move.sips || sipsFor(mode);
       const ids = move.loserIds && move.loserIds.length ? move.loserIds : (move.loserId ? [move.loserId] : []);
+      const g = game(s.minigame.gameId);
       if (move.text) {
-        s.announce = note(move.text);
+        // long par défaut (messages de gorgées) sauf si l'appelant précise long:false.
+        s.announce = note(move.text, move.long !== false);
+      } else if (g.drawLoser && ids.length) {
+        // ex. duel de sec : le perdant pioche une carte (rien à boire).
+        const names = ids.map((id) => { const i = idx(s, id); if (i < 0) throw new Error("Perdant invalide."); draw(s, i, 1); return s.players[i].name; }).join(", ");
+        const many = ids.length > 1;
+        s.announce = note(`${names} ${many ? "piochent" : "pioche"} une carte 🃏`);
       } else if (ids.length) {
         const names = ids.map((id) => { const i = idx(s, id); if (i < 0) throw new Error("Perdant invalide."); return s.players[i].name; }).join(", ");
         const many = ids.length > 1;
-        s.announce = note(`${names} ${many ? "perdent et boivent" : "perd et boit"} ${n} gorgée${n > 1 ? "s" : ""} 🍻`);
+        s.announce = note(`${names} ${many ? "perdent et boivent" : "perd et boit"} ${n} gorgée${n > 1 ? "s" : ""} 🍻`, true);
       } else {
-        s.announce = note("Le perdant boit ! 🍻");
+        s.announce = note("Le perdant boit ! 🍻", true);
       }
       endTurn(s);
       return s;
