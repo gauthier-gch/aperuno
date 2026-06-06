@@ -15,9 +15,11 @@ export function PetitBacGame({ room, mg, isLauncher, launcher, act, busy, waitin
 
   const submitted = !!(mg.answers && mg.answers[MYID]);
 
-  // Auto-envoi des réponses (même non validées) à la fin du chrono → visibles par tous.
+  // Auto-envoi des réponses (même non validées) dès qu'un joueur a validé OU à
+  // la fin du chrono → les réponses de tout le monde sont visibles.
+  const timeOver = mg.endsAt && Date.now() > mg.endsAt;
   useEffect(() => {
-    if (mg.phase === "play" && mg.endsAt && Date.now() > mg.endsAt && !submitted && !autoSent.current) {
+    if (!submitted && !autoSent.current && (mg.phase === "reveal" || (mg.phase === "play" && timeOver))) {
       autoSent.current = true;
       act({ type: "mgAnswer", answers });
     }

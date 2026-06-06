@@ -271,9 +271,9 @@ export function applyMove(s0, move, myId) {
       if (Object.keys(s.minigame.votes).length >= s.players.length) {
         const tally = {};
         Object.values(s.minigame.votes).forEach((id) => { tally[id] = (tally[id] || 0) + 1; });
-        const loserId = Object.entries(tally).sort((a, b) => b[1] - a[1])[0][0];
+        const max = Math.max(...Object.values(tally));
+        s.minigame.loserIds = Object.keys(tally).filter((id) => tally[id] === max); // tous les ex æquo
         s.minigame.phase = "result";
-        s.minigame.loserId = loserId;
       }
       return s;
     }
@@ -295,6 +295,13 @@ export function applyMove(s0, move, myId) {
     case "mgAnswer": {
       if (!s.minigame || s.minigame.kind !== "inapp_letter") throw new Error("Pas de petit bac en cours.");
       s.minigame.answers[myId] = move.answers || {};
+      // La 1re validation arrête tout : on révèle (les autres réponses en cours
+      // sont auto-validées côté client) — inutile d'attendre la fin du chrono.
+      if (!s.minigame.stoppedBy && s.minigame.phase === "play") {
+        s.minigame.stoppedBy = myId;
+        s.minigame.phase = "reveal";
+        s.announce = note(`${mine.name} a validé en premier — fin du petit bac ! ⏱️`);
+      }
       return s;
     }
     case "mgReveal": {
@@ -364,13 +371,14 @@ export function applyMove(s0, move, myId) {
     }
     case "mgFinish": {
       mgGuard(s, isLauncher);
+      const n = move.sips || sipsFor(mode);
+      const ids = move.loserIds && move.loserIds.length ? move.loserIds : (move.loserId ? [move.loserId] : []);
       if (move.text) {
         s.announce = note(move.text);
-      } else if (move.loserId) {
-        const l = idx(s, move.loserId);
-        if (l < 0) throw new Error("Perdant invalide.");
-        const n = move.sips || sipsFor(mode);
-        s.announce = note(`${s.players[l].name} perd et boit ${n} gorgée${n > 1 ? "s" : ""} 🍻`);
+      } else if (ids.length) {
+        const names = ids.map((id) => { const i = idx(s, id); if (i < 0) throw new Error("Perdant invalide."); return s.players[i].name; }).join(", ");
+        const many = ids.length > 1;
+        s.announce = note(`${names} ${many ? "perdent et boivent" : "perd et boit"} ${n} gorgée${n > 1 ? "s" : ""} 🍻`);
       } else {
         s.announce = note("Le perdant boit ! 🍻");
       }

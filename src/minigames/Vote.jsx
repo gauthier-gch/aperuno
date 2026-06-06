@@ -24,12 +24,14 @@ export function VoteGame({ room, mg, isLauncher, act, busy, waiting }) {
       </div>
     );
   }
-  const loser = room.players.find((p) => p.id === mg.loserId);
+  const losers = (mg.loserIds || []).map((id) => room.players.find((p) => p.id === id)).filter(Boolean);
+  const names = losers.map((p) => p.name).join(", ");
+  const many = losers.length > 1;
   return (
     <div className="pop center">
-      <p className="b mb">🏆 Le plus voté : {loser.name} — il/elle boit !</p>
+      <p className="b mb">🏆 {many ? "Égalité ! " : ""}{names} {many ? "boivent" : "boit"} !</p>
       {isLauncher
-        ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", loserId: mg.loserId })}>Terminer le tour</button>
+        ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", loserIds: mg.loserIds })}>Terminer le tour</button>
         : waiting}
     </div>
   );
