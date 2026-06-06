@@ -72,23 +72,31 @@ puis ouvre l'URL « Network » (`http://192.168.x.x:5173`) sur chaque téléphon
 
 ## Comment on joue
 
-- **Créer une partie** → tu choisis le mode (chill/hard), ton prénom, ta photo →
-  tu obtiens un **code à 4 lettres**.
+- **Créer une partie** → tu choisis le mode (**chill** / **Harr**), ton prénom,
+  ta photo → tu obtiens un **code à 4 lettres**.
 - Les autres font **Rejoindre une partie** avec ce code.
 - L'**hôte** (👑) choisit qui commence, puis lance.
-- Chacun voit sa main, les dos de cartes des autres, la pioche et la défausse.
-- **Appuie sur une carte** pour voir ses règles et la jouer.
+- À **chaque tour** : tu **pioches** d'abord une carte (obligatoire), puis tu
+  **joues** une carte (obligatoire).
+- Comme on pioche puis on joue, le seul moyen de **réduire sa main** est de poser
+  plusieurs cartes d'un coup : **cartes identiques empilées** (2 × « 2 gorgées »
+  = 4 gorgées), **Action + Diable**, **Échange de main**, ou de se débarrasser
+  d'un **Joker / Relance** en réaction.
+- Une carte posée ne peut **jamais** être reprise.
 
 ## Ce qui est synchronisé
 
-- Tour par tour, distribution, pioche/défausse/remélange, condition de victoire.
-- Action (tu bois), Action + Diable (un autre boit, avec choix de la cible),
-  **Joker en réaction** (la cible peut refuser), passer.
-- Mini-jeux **entièrement in-app** : défi de dé (dés animés), vote secret,
-  **petit bac** (chacun saisit ses mots, chrono, révélation), chronos 10 min
-  (ni oui ni non / mot interdit), le regard (décompte, on boit sans piocher).
-- Les autres défis (le 21, l'enchère, valise, catégorie, cascade, shot russe,
-  duels) : la règle s'affiche et le lanceur **désigne le perdant** qui pioche.
+- Tour par tour, pioche obligatoire, distribution, défausse/remélange, victoire.
+- Action (tu bois, empilable), Action + Diable (un autre boit), **Joker** et
+  **Relance +2/+4** en réaction, **Échange de main**.
+- Le **perdant des mini-jeux boit** (il ne pioche plus).
+- Mini-jeux in-app : **dé pseudo-3D** (chacun lance le sien), **vote secret**
+  (on peut voter pour soi), **petit bac** (lettre modifiable, chrono synchronisé,
+  catégorie Célébrité, réponses visibles même non validées), **mime**,
+  **coupe la poire**, **place la ville** (carte de France + 50 villes),
+  **roulette Harr** (mode Harr), chronos 10 min, le regard.
+- Tout l'aléatoire (dés, lettres, roulette, distances, perdants) est calculé
+  côté serveur dans la transaction Firestore → aucun écart entre téléphones.
 
 ## Notes & limites
 
@@ -101,11 +109,31 @@ puis ouvre l'URL « Network » (`http://192.168.x.x:5173`) sur chaque téléphon
 ## Structure
 
 ```
+index.html            → entrée Vite minimale (icône, manifest PWA)
+public/
+  logo_aperuno.png    → icône d'app / écran d'accueil
+  apple-touch-icon.png
+  manifest.webmanifest
 src/
-  game.js      → moteur de jeu pur (paquet, mini-jeux, reducer applyMove)
-  firebase.js  → config Firebase + auth anonyme + identifiant appareil
-  useRoom.js   → abonnement temps réel + actions (créer/rejoindre/jouer)
-  App.jsx      → toute l'interface (accueil, lobby, table, mini-jeux)
-  styles.css   → thème festif (Marcellus + Montserrat)
-firestore.rules → règles de sécurité à coller dans la console
+  main.jsx            → montage React
+  App.jsx             → routing des écrans + toasts + garde anti-double-tap
+  firebase.js         → config Firebase + auth anonyme + identifiant appareil
+  me.js               → identifiant stable de l'appareil (MYID)
+  util.js             → compression photo de profil
+  net/useRoom.js      → abonnement temps réel + présence + actions (transactions)
+  game/
+    constants.js      → cartes, mini-jeux, métadonnées, roulette, mots de mime
+    deck.js           → construction/mélange du paquet + code de salon
+    engine.js         → reducer pur applyMove (toutes les règles + aléatoire)
+    cities.js         → 50 villes + projection + tracé France (« place la ville »)
+  components/         → Home, Rules, MiniList, Forms, Lobby, GameTable, Win, common
+  minigames/          → Dice, Vote, PetitBac, Timer, Regard, Mime, Pear, City,
+                        Roulette + dispatcher (index.jsx)
+  styles.css          → thème festif (Marcellus + Montserrat)
+firestore.rules       → règles de sécurité à coller dans la console
+.github/workflows/deploy.yml → build Vite + déploiement GitHub Pages
 ```
+
+> Déploiement **GitHub Pages** automatique : à chaque push sur `main`, le
+> workflow build le projet (`npm run build`) et publie `dist/`. Active
+> **Settings → Pages → Source = GitHub Actions** une fois.
