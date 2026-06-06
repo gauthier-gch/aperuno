@@ -1,9 +1,6 @@
 /* =========================================================================
-   Configuration Firebase.
-   👉 Remplace l'objet firebaseConfig ci-dessous par celui de TON projet
-      (Console Firebase → Paramètres du projet → Tes applications → Config).
-   Ces clés sont publiques côté front : c'est normal. La sécurité est
-   assurée par les règles Firestore (voir README).
+   Configuration Firebase (clés publiques côté front : normal, la sécurité
+   vient des règles Firestore — voir firestore.rules).
    ========================================================================= */
 
 import { initializeApp } from "firebase/app";
