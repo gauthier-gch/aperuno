@@ -44,10 +44,18 @@ export function Minigame({ room, act, busy }) {
     case "inapp_city": body = <CityGame {...shared} />; break;
     case "inapp_roulette": body = <RouletteGame {...shared} />; break;
     default:
-      // facilitator / offapp : règle affichée, le lanceur désigne le perdant qui boit.
-      body = isLauncher
-        ? <DesignateLoser players={room.players} onPick={(id) => act({ type: "mgFinish", loserId: id })} label="Le perdant boit :" />
-        : waiting;
+      // facilitator / offapp : règle affichée.
+      if (g.noLoser) {
+        // Pas de perdant à désigner (cascade, shot russe, enchère) : juste finir.
+        body = isLauncher
+          ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: `« ${g.name} » terminé 🍻` })}>Terminer le jeu</button>
+          : waiting;
+      } else {
+        // le lanceur désigne le perdant qui boit.
+        body = isLauncher
+          ? <DesignateLoser players={room.players} onPick={(id) => act({ type: "mgFinish", loserId: id })} label="Le perdant boit :" />
+          : waiting;
+      }
   }
 
   return (

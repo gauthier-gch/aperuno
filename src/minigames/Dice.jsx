@@ -1,37 +1,26 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { MYID } from "../me.js";
 
-const SHOW = {
-  1: "rotateX(0deg) rotateY(0deg)",
-  2: "rotateY(180deg)",
-  3: "rotateY(-90deg)",
-  4: "rotateY(90deg)",
-  5: "rotateX(-90deg)",
-  6: "rotateX(90deg)",
-};
 const PIPS = {
   1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8],
 };
-const FACE_CLASS = ["", "f1", "f2", "f3", "f4", "f5", "f6"];
 
-function Face({ n }) {
+function Die({ value, rolling }) {
+  // Pendant le lancer, on fait défiler des faces aléatoires pour l'effet.
+  const [shown, setShown] = useState(value || 1);
+  useEffect(() => {
+    if (rolling) {
+      const i = setInterval(() => setShown(1 + Math.floor(Math.random() * 6)), 90);
+      return () => clearInterval(i);
+    }
+    if (value) setShown(value);
+  }, [rolling, value]);
+  const face = PIPS[shown] || PIPS[1];
   return (
-    <div className={"face " + FACE_CLASS[n]}>
+    <div className={"die" + (rolling ? " rolling" : "")}>
       {Array.from({ length: 9 }).map((_, i) => (
-        <span key={i}>{PIPS[n].includes(i) ? <span className="pip" /> : null}</span>
+        <span className="cell" key={i}>{face.includes(i) ? <span className="pip" /> : null}</span>
       ))}
-    </div>
-  );
-}
-
-function Cube({ value }) {
-  const rolling = !value;
-  const style = value ? { transform: SHOW[value] } : undefined;
-  return (
-    <div className="scene">
-      <div className={"cube" + (rolling ? " rolling" : "")} style={style}>
-        {[1, 2, 3, 4, 5, 6].map((n) => <Face key={n} n={n} />)}
-      </div>
     </div>
   );
 }
@@ -60,8 +49,8 @@ export function DiceGame({ room, mg, isLauncher, launcher, others, act, busy, wa
   return (
     <div className="center">
       <div className="dice-row">
-        <div className="dice-col"><Cube value={mg.d1} /><p className="muted">{launcher.name}</p></div>
-        <div className="dice-col"><Cube value={mg.d2} /><p className="muted">{oppName}</p></div>
+        <div className="dice-col"><Die value={mg.d1} rolling={mg.phase === "roll" && !mg.d1} /><p className="muted">{launcher.name}</p></div>
+        <div className="dice-col"><Die value={mg.d2} rolling={mg.phase === "roll" && !mg.d2} /><p className="muted">{oppName}</p></div>
       </div>
       {mg.phase === "roll" && (
         <>

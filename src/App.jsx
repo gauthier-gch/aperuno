@@ -15,17 +15,24 @@ export default function App() {
   const [screen, setScreen] = useState("home");
   const [code, setCode] = useState(() => localStorage.getItem("aperuno_code") || null);
   const [toast, setToast] = useState(null);
+  const [announce, setAnnounce] = useState(null);
   const [busy, setBusy] = useState(false);
   const [, tick] = useState(0);
   const { room, error } = useRoom(code);
   const online = usePresence(code, MYID, !!(room && room.players));
   const toastTimer = useRef();
+  const annTimer = useRef();
   const busyRef = useRef(false);
 
   const flash = (m, ms = 3200) => {
     clearTimeout(toastTimer.current);
     setToast(m);
     toastTimer.current = setTimeout(() => setToast(null), ms);
+  };
+  const showAnnounce = (m, ms = 7000) => {
+    clearTimeout(annTimer.current);
+    setAnnounce(m);
+    annTimer.current = setTimeout(() => setAnnounce(null), ms);
   };
 
   useEffect(() => { ensureAuth().then(() => setAuthed(true)).catch((e) => setAuthErr(e.message)); }, []);
@@ -34,11 +41,11 @@ export default function App() {
     else localStorage.removeItem("aperuno_code");
   }, [code]);
 
-  // Toast sur chaque nouvelle annonce de jeu.
+  // Bannière centrale sur chaque nouvelle annonce de jeu (reste ~7 s).
   const lastTs = useRef(0);
   useEffect(() => {
     const a = room && room.announce;
-    if (a && a.ts !== lastTs.current) { lastTs.current = a.ts; flash(a.text, 6000); }
+    if (a && a.ts !== lastTs.current) { lastTs.current = a.ts; showAnnounce(a.text); }
   }, [room && room.announce && room.announce.ts]);
 
   // Rafraîchit l'affichage des chronos chaque seconde.
@@ -75,6 +82,7 @@ export default function App() {
         {room.status === "lobby" && <Lobby room={room} onStart={(i) => startGame(code, i)} leave={leave} online={online} />}
         {room.status === "playing" && <GameTable room={room} act={act} flash={flash} leave={leave} busy={busy} online={online} />}
         {room.status === "finished" && <Win room={room} onReplay={(i) => startGame(code, i)} leave={leave} />}
+        {announce && <div className="announce-banner pop" onClick={() => setAnnounce(null)}>{announce}</div>}
         {toast && <div className="toast pop">{toast}</div>}
       </Shell>
     );

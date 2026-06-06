@@ -87,13 +87,34 @@ export function distanceKm(a, b) {
   return Math.round(2 * R * Math.asin(Math.sqrt(h)));
 }
 
-/* Tracé décoratif simplifié de la France métropolitaine, en viewBox 0..100
-   (coordonnées = normalisé × 100). Volontairement approximatif (carte vierge). */
-export const FRANCE_PATH =
-  "M30,8 L40,6 L48,10 L52,7 L58,12 L57,20 L64,22 L70,20 L74,26 L72,33 " +
-  "L80,38 L86,46 L82,52 L86,60 L80,64 L76,72 L66,74 L64,82 L56,86 L50,84 " +
-  "L46,90 L40,86 L36,80 L26,80 L20,74 L24,66 L16,60 L10,54 L14,46 L8,40 " +
-  "L16,34 L14,26 L22,22 L20,14 L30,8 Z";
+/* Contour (simplifié) de la France métropolitaine + Corse, en coordonnées
+   géographiques réelles (lng, lat). On le projette avec la MÊME projection que
+   les villes → l'outline et les marqueurs sont parfaitement alignés. */
+const FRANCE_BORDER = [
+  [2.40, 51.05], [1.85, 50.95], [1.58, 50.72], [1.50, 50.20], [1.08, 49.93],
+  [0.10, 49.50], [-0.37, 49.30], [-1.60, 49.65], [-1.60, 48.83], [-1.50, 48.62],
+  [-2.76, 48.60], [-4.50, 48.39], [-4.79, 48.04], [-4.10, 47.90], [-3.37, 47.65],
+  [-2.76, 47.55], [-2.20, 47.27], [-2.25, 46.95], [-1.78, 46.50], [-1.15, 46.16],
+  [-1.03, 45.60], [-1.06, 45.10], [-1.16, 44.66], [-1.56, 43.48], [-1.79, 43.35],
+  [-0.70, 42.95], [0.65, 42.70], [1.45, 42.55], [2.65, 42.35], [3.17, 42.45],
+  [3.03, 42.78], [3.30, 43.20], [3.70, 43.40], [3.87, 43.50], [4.80, 43.35],
+  [5.37, 43.27], [5.93, 43.10], [6.64, 43.16], [7.02, 43.50], [7.52, 43.78],
+  [7.50, 44.15], [6.85, 44.55], [6.95, 44.90], [6.86, 45.50], [6.86, 45.83],
+  [6.15, 46.20], [6.06, 46.42], [5.96, 46.80], [7.00, 47.35], [7.59, 47.59],
+  [7.79, 48.58], [7.93, 49.04], [6.85, 49.20], [6.13, 49.46], [5.40, 49.55],
+  [4.85, 49.79], [4.20, 50.00], [4.00, 50.35], [3.55, 50.38], [3.06, 50.63],
+];
+const CORSICA_BORDER = [
+  [9.36, 43.00], [9.45, 42.81], [9.55, 42.30], [9.50, 41.92], [9.18, 41.39],
+  [8.80, 41.56], [8.74, 41.92], [8.66, 42.27], [8.76, 42.57], [9.10, 42.70],
+];
 
-/* Corse, petit îlot décoratif en bas à droite. */
-export const CORSICA_PATH = "M88,80 L92,82 L91,90 L87,92 L86,86 Z";
+function toPath(border) {
+  return border.map((c, i) => {
+    const p = project({ lng: c[0], lat: c[1] });
+    return `${i === 0 ? "M" : "L"}${(p.x * 100).toFixed(2)},${(p.y * 100).toFixed(2)}`;
+  }).join(" ") + " Z";
+}
+
+export const FRANCE_PATH = toPath(FRANCE_BORDER);
+export const CORSICA_PATH = toPath(CORSICA_BORDER);
