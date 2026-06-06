@@ -45,7 +45,7 @@ export default function App() {
   const lastTs = useRef(0);
   useEffect(() => {
     const a = room && room.announce;
-    if (a && a.ts !== lastTs.current) { lastTs.current = a.ts; showAnnounce(a.text); }
+    if (a && a.ts !== lastTs.current) { lastTs.current = a.ts; showAnnounce(a.text, a.long ? 7000 : 2200); }
   }, [room && room.announce && room.announce.ts]);
 
   // Rafraîchit l'affichage des chronos chaque seconde.

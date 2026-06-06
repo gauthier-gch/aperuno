@@ -85,7 +85,6 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
   const [reactPlus, setReactPlus] = useState(null);
   const hasDiable = me.hand.some((c) => c.type === "diable");
   const turnName = room.players[room.current] ? room.players[room.current].name : "";
-  const hasPlayable = me.hand.some((c) => c.type === "action" || c.type === "jeu" || c.type === "echange");
 
   function playActionStack(ids) { setSheet(null); act({ type: "action", cardIds: ids }); }
   function openDiable(ids) { setSheet(null); setTarget({ cardIds: ids, diableId: me.hand.find((x) => x.type === "diable").id }); }
@@ -144,9 +143,9 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
         {me.hand.map((c) => <CardFace key={c.id} c={c} onClick={() => setSheet(c)} />)}
       </div>
 
-      {canPlay && !hasPlayable && (
+      {canPlay && (
         <button className="btn btn-ghost mt" disabled={busy} onClick={() => act({ type: "pass" })}>
-          Aucune carte jouable — passer mon tour
+          Passer mon tour 🙅
         </button>
       )}
 

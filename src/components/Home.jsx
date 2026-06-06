@@ -38,7 +38,7 @@ export function Rules({ back }) {
         <p className="muted">
           <b className="w">Chaque tour :</b><br />
           1️⃣ Tu <b>pioches</b> obligatoirement une carte.<br />
-          2️⃣ Puis tu <b>joues</b> obligatoirement une carte.<br /><br />
+          2️⃣ Puis tu <b>joues</b> une carte — ou tu <b>passes</b>.<br /><br />
           Comme tu pioches puis joues, le seul moyen de réduire ta main est de poser
           <b> plusieurs cartes d'un coup</b> :<br />
           • <b style={{ color: "#ff6f86" }}>Cartes identiques</b> → empile-les (2 × « 2 gorgées » = 4 gorgées).<br />
