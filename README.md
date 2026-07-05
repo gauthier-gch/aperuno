@@ -92,9 +92,13 @@ puis ouvre l'URL « Network » (`http://192.168.x.x:5173`) sur chaque téléphon
 - Le **perdant des mini-jeux boit** (il ne pioche plus).
 - Mini-jeux in-app : **dé pseudo-3D** (chacun lance le sien), **vote secret**
   (on peut voter pour soi), **petit bac** (lettre modifiable, chrono synchronisé,
-  catégorie Célébrité, réponses visibles même non validées), **mime**,
-  **coupe la poire**, **place la ville** (carte de France + 50 villes),
-  **roulette Harr** (mode Harr), chronos 10 min, le regard.
+  catégorie Célébrité, réponses en tableau), **mime** (mot visible par tous),
+  **coupe la poire** (direction cible à reproduire au doigt), **place la ville**
+  (carte de France + 50 villes, zoom + classement), **l'imposteur** (avec Mister
+  White qui peut deviner le mot), **c'est un 10 mais**, **roulette Harr**,
+  chronos 10 min, le regard, duels (choix de l'adversaire puis du perdant).
+- On peut **rejoindre une partie en cours** (7 cartes, en fin d'ordre) et l'hôte
+  peut **passer le tour** d'un joueur absent.
 - Tout l'aléatoire (dés, lettres, roulette, distances, perdants) est calculé
   côté serveur dans la transaction Firestore → aucun écart entre téléphones.
 

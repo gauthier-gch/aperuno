@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 
 export function Shell({ children, timers }) {
+  const active = (timers || []).filter((t) => t.endsAt > Date.now());
   return (
     <div className="apr-root">
       <div className="apr-app">
-        {timers && timers.length > 0 && (
-          <div className="chrono">
-            {timers.filter((t) => t.endsAt > Date.now()).map((t) => {
+        {active.length > 0 && (
+          <div className="chrono-bar">
+            {active.map((t) => {
               const left = Math.max(0, t.endsAt - Date.now());
               const m = Math.floor(left / 60000);
               const s = Math.floor((left % 60000) / 1000);

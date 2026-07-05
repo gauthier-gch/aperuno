@@ -21,6 +21,36 @@ export function Home({ go }) {
         <button className="btn btn-blue" onClick={() => go("join")}><span className="ico">🔗</span> Rejoindre une partie</button>
         <button className="btn btn-ghost" onClick={() => go("rules")}><span className="ico">📜</span> Règles</button>
         <button className="btn btn-ghost" onClick={() => go("minijeux")}><span className="ico">🎲</span> Mini-jeux</button>
+        <button className="btn btn-ghost" onClick={() => go("install")}><span className="ico">📱</span> Installe l'app sur ton tél</button>
+      </div>
+    </div>
+  );
+}
+
+export function Install({ back }) {
+  const Step = ({ n, children }) => (
+    <div className="step"><span className="step-n">{n}</span><span>{children}</span></div>
+  );
+  return (
+    <div className="fade">
+      <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
+      <h2 className="h-title">Installe apéruno 📱</h2>
+      <p className="muted mb">Ajoute apéruno à ton écran d'accueil pour l'ouvrir comme une vraie app (plein écran, une icône).</p>
+
+      <div className="panel mb">
+        <p className="b w mb-sm"> Sur iPhone (Safari)</p>
+        <Step n="1">Ouvre le lien du jeu dans <b>Safari</b> (copie-colle l'adresse si besoin).</Step>
+        <Step n="2">Appuie sur le bouton <b>Partager</b> <span className="dim">(le carré avec une flèche ↑, en bas de l'écran)</span>.</Step>
+        <Step n="3">Fais défiler et choisis <b>« Sur l'écran d'accueil »</b>.</Step>
+        <Step n="4">Appuie sur <b>Ajouter</b> — l'icône apéruno apparaît sur ton écran d'accueil ! 🍸</Step>
+      </div>
+
+      <div className="panel">
+        <p className="b w mb-sm">🤖 Sur Android (Chrome)</p>
+        <Step n="1">Ouvre le lien du jeu dans <b>Chrome</b>.</Step>
+        <Step n="2">Appuie sur les <b>⋮ trois petits points</b> (en haut à droite).</Step>
+        <Step n="3">Choisis <b>« Ajouter à l'écran d'accueil »</b> (ou « Installer l'application »).</Step>
+        <Step n="4">Confirme avec <b>Ajouter</b>. 🍸</Step>
       </div>
     </div>
   );

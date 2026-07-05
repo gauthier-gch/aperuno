@@ -8,7 +8,7 @@
 
 import {
   GAMES, game, PETITBAC_LETTERS, PETITBAC_DURATION, TEN_MIN, MIME_WORDS,
-  ROULETTE, sipsFor, actionDrink,
+  ROULETTE, sipsFor, actionDrink, IMPOSTER_PAIRS, imposterSetup, CARD_SUITS,
 } from "./constants.js";
 import { buildDeck, shuffle, makeUid } from "./deck.js";
 import { CITIES, project, unproject, distanceKm } from "./cities.js";
@@ -38,6 +38,21 @@ export function dealNewGame(s0, starterIdx) {
   s.turn = { drawn: false };
   s.announce = note(`C'est parti ! ${s.players[s.current].name} commence — pioche puis joue 🥃`);
   s.reaction = null; s.minigame = null; s.timers = [];
+  return s;
+}
+
+/* Ajoute un joueur à une partie déjà lancée : 7 cartes, en fin d'ordre de
+   table (n'affecte pas l'index du joueur courant). */
+export function joinInProgress(s0, player) {
+  const s = clone(s0);
+  const hand = [];
+  for (let k = 0; k < 7; k++) {
+    if (s.deck.length === 0) { s.deck = shuffle(s.discard); s.discard = []; }
+    if (s.deck.length === 0) break;
+    hand.push(s.deck.shift());
+  }
+  s.players.push({ id: player.id, name: player.name, photo: player.photo || null, hand });
+  s.announce = note(`${player.name} rejoint la partie en cours 👋`);
   return s;
 }
 
@@ -119,13 +134,35 @@ function initMinigame(s, gameId) {
     case "inapp_letter":
       return { ...base, phase: "intro", letter: randLetter(), answers: {} };
     case "inapp_mime": return { ...base, word: MIME_WORDS[Math.floor(Math.random() * MIME_WORDS.length)] };
-    case "inapp_pear": return { ...base, phase: "cut", cuts: {} };
+    case "inapp_pear": return { ...base, phase: "cut", targetAngle: Math.floor(Math.random() * 180), cuts: {} };
     case "inapp_city": return { ...base, phase: "mark", cityIdx: Math.floor(Math.random() * CITIES.length), marks: {} };
     case "inapp_roulette": return { ...base, segment: null };
+    case "inapp_dix": {
+      const suit = CARD_SUITS[Math.floor(Math.random() * CARD_SUITS.length)];
+      return { ...base, phase: "guess", value: 1 + Math.floor(Math.random() * 10), suit: suit.s, red: suit.red, guesses: {} };
+    }
+    case "inapp_imposteur": return initImposteur(s, base);
     default: return { ...base };
   }
 }
 function randLetter() { return PETITBAC_LETTERS[Math.floor(Math.random() * PETITBAC_LETTERS.length)]; }
+
+function initImposteur(s, base) {
+  const n = s.players.length;
+  if (n < 3) return { ...base, phase: "over", cantPlay: true };
+  const { imposteurs, white } = imposterSetup(n);
+  const pair = IMPOSTER_PAIRS[Math.floor(Math.random() * IMPOSTER_PAIRS.length)];
+  const order = shuffle(s.players.map((p) => p.id));
+  const roles = {};
+  let k = 0;
+  for (let i = 0; i < imposteurs; i++) roles[order[k++]] = "imposteur";
+  for (let i = 0; i < white; i++) roles[order[k++]] = "white";
+  while (k < order.length) roles[order[k++]] = "civil";
+  return {
+    ...base, phase: "reveal", civilWord: pair[0], imposterWord: pair[1],
+    roles, eliminated: [], speakerIdx: 0, round: 1, lastElim: null, result: null,
+  };
+}
 
 /* ================================ REDUCER ================================ */
 
@@ -336,13 +373,20 @@ export function applyMove(s0, move, myId) {
     }
     case "mgPearCut": {
       if (!s.minigame || s.minigame.kind !== "inapp_pear") throw new Error("Pas de poire en cours.");
-      if (typeof move.x !== "number") throw new Error("Coupe invalide.");
-      s.minigame.cuts[myId] = move.x;
+      const cut = move.cut;
+      if (!cut || typeof cut.angle !== "number") throw new Error("Coupe invalide.");
+      s.minigame.cuts[myId] = cut;
       if (Object.keys(s.minigame.cuts).length >= s.players.length) {
+        const target = s.minigame.targetAngle;
         let loserId = null, worst = -1;
         s.players.forEach((p) => {
-          const dev = Math.abs((s.minigame.cuts[p.id] ?? 0.5) - 0.5);
-          if (dev > worst) { worst = dev; loserId = p.id; }
+          const c = s.minigame.cuts[p.id];
+          let da = Math.abs((c ? c.angle : 90) - target) % 180;
+          if (da > 90) da = 180 - da;                       // écart d'orientation 0..90
+          const off = c ? Math.abs(c.offset || 0) : 0.5;    // décalage vs le centre
+          const score = da + off * 120;
+          s.minigame.cuts[p.id] = { ...(c || {}), score: Math.round(score) };
+          if (score > worst) { worst = score; loserId = p.id; }
         });
         s.minigame.loserId = loserId;
         s.minigame.phase = "result";
@@ -375,6 +419,101 @@ export function applyMove(s0, move, myId) {
       s.minigame.phase = "result";
       return s;
     }
+    /* ---------- passer le tour d'un joueur absent (hôte) ---------- */
+    case "skipCurrent": {
+      if (myId !== s.hostId) throw new Error("Seul l'hôte peut passer le tour d'un joueur.");
+      if (s.minigame || s.reaction) throw new Error("Impossible pendant un mini-jeu ou une réaction.");
+      const skipped = s.players[s.current];
+      s.announce = note(`${skipped.name} est passé (absent) ⏭️`);
+      endTurn(s);
+      return s;
+    }
+
+    /* ---------- duels (regard / sec) : choisir l'adversaire ---------- */
+    case "mgDuelPick": {
+      mgGuard(s, isLauncher);
+      const o = idx(s, move.oppId);
+      if (o < 0 || o === launcher) throw new Error("Adversaire invalide.");
+      s.minigame.oppIdx = o;
+      s.minigame.phase = "duel";
+      return s;
+    }
+
+    /* ---------- C'est un 10 mais ---------- */
+    case "mgDixGuess": {
+      if (!s.minigame || s.minigame.kind !== "inapp_dix") throw new Error("Pas de partie en cours.");
+      if (me === launcher) throw new Error("Le lanceur ne note pas.");
+      if (s.minigame.phase !== "guess") throw new Error("Trop tard pour noter.");
+      const v = move.value;
+      if (typeof v !== "number" || v < 1 || v > 10) throw new Error("Note invalide (1 à 10).");
+      s.minigame.guesses[myId] = v;
+      return s;
+    }
+    case "mgDixReveal": {
+      mgGuard(s, isLauncher);
+      s.minigame.phase = "reveal";
+      return s;
+    }
+
+    /* ---------- L'imposteur ---------- */
+    case "mgImpStart": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "reveal") throw new Error("Déjà démarré.");
+      s.minigame.phase = "play"; s.minigame.speakerIdx = 0;
+      return s;
+    }
+    case "mgImpNext": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "play") throw new Error("Pas en phase de parole.");
+      const active = s.players.filter((p) => !s.minigame.eliminated.includes(p.id));
+      s.minigame.speakerIdx = Math.min(s.minigame.speakerIdx + 1, active.length);
+      return s;
+    }
+    case "mgImpToVote": {
+      mgGuard(s, isLauncher);
+      s.minigame.phase = "elim"; s.minigame.lastElim = null;
+      return s;
+    }
+    case "mgImpEliminate": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "elim") throw new Error("Pas en phase d'élimination.");
+      const t = idx(s, move.targetId);
+      if (t < 0) throw new Error("Joueur invalide.");
+      if (s.minigame.eliminated.includes(move.targetId)) throw new Error("Déjà éliminé.");
+      const role = s.minigame.roles[move.targetId];
+      s.minigame.eliminated.push(move.targetId);
+      s.minigame.lastElim = { id: move.targetId, role };
+      s.announce = note(`${s.players[t].name} est éliminé — ${roleLabel(role)} — et boit 1 gorgée 🍻`, true);
+      if (role === "white") s.minigame.phase = "whiteguess"; // Mister White tente de deviner
+      else imposteurCheckOver(s);
+      return s;
+    }
+    case "mgImpWhiteGuess": {
+      if (!s.minigame || s.minigame.kind !== "inapp_imposteur" || s.minigame.phase !== "whiteguess") throw new Error("Pas de tentative en cours.");
+      if (!s.minigame.lastElim || s.minigame.lastElim.id !== myId) throw new Error("Ce n'est pas à toi de deviner.");
+      const guess = (move.guess || "").trim().toLowerCase();
+      const target = s.minigame.civilWord.trim().toLowerCase();
+      if (guess && guess === target) {
+        s.minigame.result = "white"; s.minigame.phase = "over";
+        s.announce = note(`🎭 Mister White a deviné « ${s.minigame.civilWord} » et gagne la manche !`, true);
+      } else {
+        s.minigame.whiteGuessFailed = true;
+        imposteurCheckOver(s);
+        if (s.minigame.phase === "whiteguess") s.minigame.phase = "elim";
+      }
+      return s;
+    }
+    case "mgImpNextRound": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "elim" || !s.minigame.lastElim) throw new Error("Rien à enchaîner.");
+      s.minigame.round += 1;
+      s.minigame.speakerIdx = 0;
+      s.minigame.lastElim = null;
+      s.minigame.whiteGuessFailed = false;
+      s.minigame.phase = "play";
+      return s;
+    }
+
     case "mgFinish": {
       mgGuard(s, isLauncher);
       const n = move.sips || sipsFor(mode);
@@ -418,6 +557,24 @@ function requireTurnPlay(s, id) {
 function mgGuard(s, isLauncher) {
   if (!s.minigame) throw new Error("Aucun mini-jeu en cours.");
   if (!isLauncher) throw new Error("Seul le lanceur peut faire ça.");
+}
+
+export function roleLabel(role) {
+  return role === "imposteur" ? "Imposteur" : role === "white" ? "Mister White" : "Civil";
+}
+function activeRoles(s) {
+  const mg = s.minigame;
+  return s.players.filter((p) => !mg.eliminated.includes(p.id)).map((p) => mg.roles[p.id]);
+}
+/* Fin de manche de l'imposteur : civils gagnent si imposteur(s)+white éliminés ;
+   imposteurs gagnent s'ils atteignent la parité avec les civils. */
+function imposteurCheckOver(s) {
+  const roles = activeRoles(s);
+  const imp = roles.filter((r) => r === "imposteur").length;
+  const white = roles.filter((r) => r === "white").length;
+  const civ = roles.filter((r) => r === "civil").length;
+  if (imp === 0 && white === 0) { s.minigame.result = "civils"; s.minigame.phase = "over"; }
+  else if (imp > 0 && civ <= imp) { s.minigame.result = "imposteurs"; s.minigame.phase = "over"; }
 }
 function handCard(player, cardId, type) {
   const c = player.hand.find((x) => x.id === cardId);

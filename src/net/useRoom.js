@@ -10,7 +10,7 @@ import {
   collection, setDoc as setDocRaw,
 } from "firebase/firestore";
 import { db } from "../firebase.js";
-import { newLobby, dealNewGame, applyMove } from "../game/engine.js";
+import { newLobby, dealNewGame, applyMove, joinInProgress } from "../game/engine.js";
 import { genCode } from "../game/deck.js";
 
 function roomRef(code) { return doc(db, "rooms", code); }
@@ -85,14 +85,22 @@ export async function joinRoom(code, player) {
     const snap = await tx.get(ref);
     if (!snap.exists()) throw new Error("Salon introuvable.");
     const s = snap.data();
-    if (s.status !== "lobby") throw new Error("La partie a déjà commencé.");
+    if (s.status === "finished") throw new Error("La partie est terminée.");
     const existing = s.players.find((p) => p.id === player.id);
-    if (existing) { existing.name = player.name; existing.photo = player.photo || existing.photo; }
-    else {
-      if (s.players.length >= 10) throw new Error("Salon plein (10 joueurs max).");
-      s.players.push({ id: player.id, name: player.name, photo: player.photo || null, hand: [] });
+    if (existing) {
+      // déjà dans le salon (reconnexion) : on met juste à jour le profil.
+      existing.name = player.name; existing.photo = player.photo || existing.photo;
+      tx.set(ref, s);
+      return;
     }
-    tx.set(ref, s);
+    if (s.players.length >= 10) throw new Error("Salon plein (10 joueurs max).");
+    if (s.status === "lobby") {
+      s.players.push({ id: player.id, name: player.name, photo: player.photo || null, hand: [] });
+      tx.set(ref, s);
+    } else {
+      // partie en cours : on distribue 7 cartes au nouveau venu.
+      tx.set(ref, joinInProgress(s, player));
+    }
   });
 }
 
