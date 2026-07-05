@@ -18,24 +18,45 @@
 </head>
 <body>
 <div id="root">
-  <!-- Écran de secours : reste visible si le JS ne se charge pas (cache/404).
+  <!-- Écran de secours + diagnostic : reste visible si le JS ne se charge pas.
        React le remplace dès qu'il monte. -->
-  <div id="boot" style="font-family:sans-serif;color:#f3ecff;background:#0a0718;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;">
+  <div id="boot" style="font-family:sans-serif;color:#f3ecff;background:#0a0718;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;">
     <div style="font-size:40px">🍸</div>
     <div style="font-weight:700">Chargement d'apéruno…</div>
-    <div id="boot-hint" style="font-size:13px;opacity:.7;display:none">Si rien n'apparaît, recharge la page.</div>
+    <div id="boot-hint" style="font-size:13px;opacity:.75;display:none">Souci de chargement. Détails (à m'envoyer en capture) :</div>
+    <div id="boot-diag" style="display:none;font-size:11px;line-height:1.4;opacity:.9;max-width:92%;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.35);padding:10px 12px;border-radius:10px;text-align:left;"></div>
     <button id="boot-reload" style="display:none;border:none;border-radius:14px;padding:12px 18px;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff3b5c,#b15bff)">Recharger</button>
   </div>
 </div>
 <script>
-  // Si React n'a pas pris la main après 4 s, on propose de recharger.
+(function () {
+  var errs = [];
+  function render() {
+    var d = document.getElementById("boot-diag"), h = document.getElementById("boot-hint"), b = document.getElementById("boot-reload");
+    if (!d) return; // React a monté : plus de #boot
+    if (errs.length) { d.style.display = "block"; d.textContent = errs.join("\n"); if (h) h.style.display = "block"; }
+    if (b) { b.style.display = "inline-block"; b.onclick = function () { location.reload(); }; }
+  }
+  function push(m) { errs.push(m); render(); }
+  window.addEventListener("error", function (e) {
+    if (e && e.target && (e.target.tagName === "SCRIPT" || e.target.tagName === "LINK"))
+      push("⚠️ Ressource non chargée : " + (e.target.src || e.target.href));
+    else
+      push("⚠️ Erreur JS : " + ((e && e.message) || "inconnue") + (e && e.filename ? (" @ " + e.filename + ":" + e.lineno) : ""));
+  }, true);
+  window.addEventListener("unhandledrejection", function (e) {
+    push("⚠️ Promesse rejetée : " + ((e.reason && (e.reason.message || e.reason)) || ""));
+  });
   setTimeout(function () {
-    if (document.getElementById("boot")) {
-      var h = document.getElementById("boot-hint"), b = document.getElementById("boot-reload");
-      if (h) h.style.display = "block";
-      if (b) { b.style.display = "inline-block"; b.onclick = function () { location.reload(); }; }
-    }
-  }, 4000);
+    if (!document.getElementById("boot")) return; // monté : tout va bien
+    render();
+    try {
+      fetch("/aperuno/assets/index.js", { cache: "no-store" })
+        .then(function (r) { push("bundle : HTTP " + r.status + " · type " + (r.headers.get("content-type") || "?")); })
+        .catch(function (err) { push("bundle inaccessible : " + err.message); });
+    } catch (e) {}
+  }, 4500);
+})();
 </script>
 <script type="module" src="/src/main.jsx"></script>
 </body>
