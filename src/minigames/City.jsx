@@ -42,6 +42,8 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
       setPan({ x: panning.current.px + (t.clientX - panning.current.x), y: panning.current.py + (t.clientY - panning.current.y) });
     };
     const panEnd = () => { panning.current = null; };
+    // quand on zoome, on réduit l'écriture des noms pour éviter qu'ils prennent tout l'écran
+    const labelStyle = { transform: `translateX(-50%) scale(${1 / zoom})`, transformOrigin: "top center" };
 
     return (
       <div className="center-col">
@@ -52,11 +54,11 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
           <div className="map-zoom" style={{ transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})` }}>
             <div className="map-stage">
               <FranceMap />
-              <div className="marker" style={{ left: `${real.x * 100}%`, top: `${real.y * 100}%` }}>📍<small>{city.name}</small></div>
+              <div className="marker" style={{ left: `${real.x * 100}%`, top: `${real.y * 100}%` }}>📍<small style={labelStyle}>{city.name}</small></div>
               {ranked.map((p) => {
                 const m = mg.marks[p.id];
                 return <div key={p.id} className="marker" style={{ left: `${m.x * 100}%`, top: `${m.y * 100}%`, opacity: p.id === mg.loserId ? 1 : 0.8 }}>
-                  {p.id === mg.loserId ? "❌" : "•"}<small>{p.name}</small></div>;
+                  {p.id === mg.loserId ? "❌" : "•"}<small style={labelStyle}>{p.name}</small></div>;
               })}
             </div>
           </div>

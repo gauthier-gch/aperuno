@@ -85,6 +85,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
   const [swap, setSwap] = useState(null);          // { cardId } -> échange de main
   const [swapCard, setSwapCard] = useState(null);  // { cardId } -> échange de carte
   const [reactPlus, setReactPlus] = useState(null);
+  const [skipConfirm, setSkipConfirm] = useState(null); // joueur dont on veut passer le tour
   const hasDiable = me.hand.some((c) => c.type === "diable");
   const turnName = room.players[room.current] ? room.players[room.current].name : "";
 
@@ -101,7 +102,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
     <div className="fade">
       <div className="space" style={{ marginBottom: 6 }}>
         <span className="apr-logo" style={{ textAlign: "left" }}><span className="a" style={{ fontSize: 24 }}>apéruno</span></span>
-        <button className="btn btn-ghost btn-sm auto" onClick={leave}>Quitter</button>
+        <button className="btn btn-ghost auto quit-btn" onClick={leave}>Quitter la partie</button>
       </div>
 
       <div className={"turnbar " + (isMyTurn ? "mine" : "")}>
@@ -109,14 +110,15 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
           : canPlay ? "🎯 À toi — joue une carte !"
           : `Au tour de ${turnName}`}
       </div>
-      {room.hostId === MYID && !isMyTurn && !room.minigame && !room.reaction && (
-        <button className="btn btn-ghost btn-sm" style={{ marginBottom: 12 }} disabled={busy}
-          onClick={() => act({ type: "skipCurrent" })}>⏭️ Passer le tour de {turnName} (absent)</button>
+      {!isMyTurn && !room.minigame && !room.reaction && (
+        <p className="muted dim center" style={{ marginBottom: 10 }}>Un joueur absent ? Touche son avatar pour passer son tour.</p>
       )}
 
       <div className="opps">
         {room.players.map((p, i) => p.id !== MYID && (
-          <div className={"opp" + (i === room.current ? " turn" : "")} key={p.id}>
+          <div className={"opp" + (i === room.current ? " turn" : "")} key={p.id}
+            onClick={() => i === room.current && !room.minigame && !room.reaction && setSkipConfirm(p)}
+            style={i === room.current && !room.minigame && !room.reaction ? { cursor: "pointer" } : undefined}>
             <div className="av-wrap"><Ava p={p} size={40} online={online[p.id] !== false} /></div>
             <div className="stack">
               {Array.from({ length: Math.min(p.hand.length, 4) }).map((_, k) => (
@@ -176,6 +178,19 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
             ))}
           </div>
           <button className="btn btn-ghost btn-sm mt" onClick={() => setSwapCard(null)}>Annuler</button>
+        </Overlay>
+      )}
+
+      {skipConfirm && (
+        <Overlay>
+          <div className="center-col">
+            <Ava p={skipConfirm} size={64} />
+            <h3 className="h-title">Passer le tour de {skipConfirm.name} ?</h3>
+            <p className="muted mb">S'il/elle est absent(e), tu peux sauter son tour.</p>
+            <button className="btn btn-primary" disabled={busy}
+              onClick={() => { setSkipConfirm(null); act({ type: "skipCurrent" }); }}>⏭️ Passer le tour</button>
+            <button className="btn btn-ghost btn-sm mt" onClick={() => setSkipConfirm(null)}>Annuler</button>
+          </div>
         </Overlay>
       )}
 

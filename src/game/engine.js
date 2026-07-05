@@ -430,9 +430,8 @@ export function applyMove(s0, move, myId) {
       s.minigame.phase = "result";
       return s;
     }
-    /* ---------- passer le tour d'un joueur absent (hôte) ---------- */
+    /* ---------- passer le tour d'un joueur absent (n'importe qui) ---------- */
     case "skipCurrent": {
-      if (myId !== s.hostId) throw new Error("Seul l'hôte peut passer le tour d'un joueur.");
       if (s.minigame || s.reaction) throw new Error("Impossible pendant un mini-jeu ou une réaction.");
       const skipped = s.players[s.current];
       s.announce = note(`${skipped.name} est passé (absent) ⏭️`);

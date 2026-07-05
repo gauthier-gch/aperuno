@@ -70,7 +70,7 @@ export function Minigame({ room, act, busy, leave }) {
     <Overlay>
       <div className="space mb">
         <span className="chip">🎲 Carte jeu</span>
-        <button className="btn btn-ghost btn-sm auto" onClick={leave}>Quitter</button>
+        <button className="btn btn-ghost auto quit-btn" onClick={leave}>Quitter la partie</button>
       </div>
       <h3 className="h-title">{g.name}</h3>
       <p className="muted mb">{g.rule}</p>

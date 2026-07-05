@@ -81,10 +81,13 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
         {allSpoke && <p className="muted mb">Tout le monde a parlé.</p>}
         {isLauncher ? (
           <div className="col-gap" style={{ width: "100%" }}>
-            {!allSpoke && <button className="btn btn-ghost" disabled={busy} onClick={() => act({ type: "mgImpNext" })}>Joueur suivant ▶</button>}
-            <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgImpToVote" })}>Heure de l'élimination 🗳️</button>
+            {!allSpoke
+              ? <button className="btn btn-blue" disabled={busy} onClick={() => act({ type: "mgImpNext" })}>
+                  {speaker && speaker.id === MYID ? "J'ai parlé — au suivant ▶" : `${speaker ? speaker.name : ""} a parlé — au suivant ▶`}
+                </button>
+              : <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgImpToVote" })}>Heure de l'élimination 🗳️</button>}
           </div>
-        ) : <p className="muted dim">Manche {mg.round} · l'hôte gère les tours.</p>}
+        ) : <p className="muted dim">Manche {mg.round} · l'hôte gère les tours de parole.</p>}
       </div>
     );
   }
