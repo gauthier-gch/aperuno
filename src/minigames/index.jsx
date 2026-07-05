@@ -11,6 +11,9 @@ import { MimeGame } from "./Mime.jsx";
 import { PearGame } from "./Pear.jsx";
 import { CityGame } from "./City.jsx";
 import { RouletteGame } from "./Roulette.jsx";
+import { DuelGame } from "./Duel.jsx";
+import { DixGame } from "./Dix.jsx";
+import { ImposteurGame } from "./Imposteur.jsx";
 
 /* Phases où l'on attend la contribution de chaque joueur (risque de blocage
    si quelqu'un se déconnecte) → le lanceur peut débloquer manuellement. */
@@ -19,11 +22,12 @@ function collecting(mg) {
     (mg.kind === "inapp_vote" && mg.phase !== "result") ||
     (mg.kind === "inapp_pear" && mg.phase === "cut") ||
     (mg.kind === "inapp_city" && mg.phase === "mark") ||
+    (mg.kind === "inapp_dix" && mg.phase === "guess") ||
     (mg.kind === "inapp_letter" && mg.phase === "play")
   );
 }
 
-export function Minigame({ room, act, busy }) {
+export function Minigame({ room, act, busy, leave }) {
   const mg = room.minigame;
   const g = game(mg.gameId);
   const launcher = room.players[mg.launcherIdx];
@@ -43,10 +47,14 @@ export function Minigame({ room, act, busy }) {
     case "inapp_pear": body = <PearGame {...shared} />; break;
     case "inapp_city": body = <CityGame {...shared} />; break;
     case "inapp_roulette": body = <RouletteGame {...shared} />; break;
+    case "inapp_dix": body = <DixGame {...shared} />; break;
+    case "inapp_imposteur": body = <ImposteurGame {...shared} />; break;
     default:
-      // facilitator / offapp : règle affichée.
-      if (g.noLoser) {
-        // Pas de perdant à désigner (cascade, shot russe, enchère) : juste finir.
+      if (g.duel) {
+        // duels : choisir l'adversaire PUIS désigner le perdant.
+        body = <DuelGame {...shared} />;
+      } else if (g.noLoser) {
+        // pas de perdant à désigner (cascade, shot russe, enchère) : juste finir.
         body = isLauncher
           ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: `« ${g.name} » terminé 🍻`, long: false })}>Terminer le jeu</button>
           : waiting;
@@ -60,7 +68,10 @@ export function Minigame({ room, act, busy }) {
 
   return (
     <Overlay>
-      <span className="chip mb">🎲 Carte jeu</span>
+      <div className="space mb">
+        <span className="chip">🎲 Carte jeu</span>
+        <button className="btn btn-ghost btn-sm auto" onClick={leave}>Quitter</button>
+      </div>
       <h3 className="h-title">{g.name}</h3>
       <p className="muted mb">{g.rule}</p>
       {body}

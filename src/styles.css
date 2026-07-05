@@ -155,3 +155,34 @@ html, body, #root { margin: 0; height: 100%; }
 .pop { animation:pop .35s cubic-bezier(.2,1.4,.5,1); }
 @keyframes pop { from{opacity:0; transform:scale(.85);} to{opacity:1; transform:scale(1);} }
 .big-num { font-family:'Marcellus'; font-size:80px; line-height:1; color:var(--gold); }
+
+/* ---- chronos en bandeau (dans le flux, ne cachent rien) ---- */
+.chrono-bar { display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:center; margin:0 0 12px; padding:8px 12px; border-radius:14px; background:rgba(255,59,92,.12); border:1px solid rgba(255,59,92,.4); }
+.chrono-bar .one { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; }
+.chrono-bar .t { font-family:'Marcellus'; color:var(--gold); }
+
+/* ---- tuto installation ---- */
+.step { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; font-size:14px; color:#d7cdf5; line-height:1.5; }
+.step-n { flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#ff3b5c,#b15bff); color:#fff; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; }
+
+/* ---- carte à jouer (c'est un 10 mais) ---- */
+.playcard { position:relative; width:120px; height:168px; border-radius:14px; background:#fff; box-shadow:0 12px 28px rgba(0,0,0,.5); margin:6px auto; }
+.playcard .pc-corner { position:absolute; font-weight:800; font-size:17px; line-height:1; text-align:center; }
+.playcard .pc-corner.tl { top:8px; left:9px; }
+.playcard .pc-corner.br { bottom:8px; right:9px; transform:rotate(180deg); }
+.playcard .pc-mid { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:60px; }
+
+/* ---- tableau petit bac ---- */
+.pb-scroll { overflow-x:auto; margin-bottom:8px; }
+.pb-grid { border-collapse:collapse; width:100%; font-size:12px; }
+.pb-grid th, .pb-grid td { border:1px solid rgba(255,255,255,.14); padding:6px 8px; text-align:left; white-space:nowrap; }
+.pb-grid thead th { background:rgba(255,255,255,.08); color:#fff; font-size:11px; }
+.pb-grid tbody th { background:rgba(0,0,0,.22); color:#fff; }
+.pb-grid td { color:#cdbff2; }
+
+/* ---- zoom carte de France (résultats) ---- */
+.map-viewport { position:relative; width:100%; max-width:340px; height:300px; overflow:hidden; border-radius:16px; background:rgba(0,0,0,.2); touch-action:none; margin:8px auto 12px; }
+.map-zoom { position:absolute; inset:0; transform-origin:center center; }
+.map-viewport .map-stage { width:100%; max-width:none; margin:0; }
+.map-zoom-ctrl { position:absolute; right:8px; bottom:8px; display:flex; flex-direction:column; gap:5px; z-index:2; }
+.map-zoom-ctrl button { width:34px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:rgba(20,14,44,.85); color:#fff; font-size:18px; font-weight:800; }

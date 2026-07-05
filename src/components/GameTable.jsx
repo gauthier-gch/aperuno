@@ -105,6 +105,10 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
           : canPlay ? "🎯 À toi — joue une carte !"
           : `Au tour de ${turnName}`}
       </div>
+      {room.hostId === MYID && !isMyTurn && !room.minigame && !room.reaction && (
+        <button className="btn btn-ghost btn-sm" style={{ marginBottom: 12 }} disabled={busy}
+          onClick={() => act({ type: "skipCurrent" })}>⏭️ Passer le tour de {turnName} (absent)</button>
+      )}
 
       <div className="opps">
         {room.players.map((p, i) => p.id !== MYID && (
@@ -228,7 +232,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
         </Overlay>
       )}
 
-      {room.minigame && <Minigame room={room} act={act} flash={flash} busy={busy} />}
+      {room.minigame && <Minigame room={room} act={act} flash={flash} busy={busy} leave={leave} />}
     </div>
   );
 }

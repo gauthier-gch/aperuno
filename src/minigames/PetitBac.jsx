@@ -57,16 +57,27 @@ export function PetitBacGame({ room, mg, isLauncher, launcher, act, busy, waitin
     return (
       <div className="pop">
         <p className="muted mb">Lettre : <b className="w">{mg.letter}</b>. Réponses :</p>
-        <div className="pb-table">
-          {room.players.map((p) => (
-            <div className="pb-row" key={p.id}>
-              <b>{p.name}{!mg.answers[p.id] ? " (n'a pas validé)" : ""}</b>
-              <span className="muted">
-                {PETITBAC_CATS.map((c) => (mg.answers[p.id] && mg.answers[p.id][c]) ? mg.answers[p.id][c] : "—").join(" · ")}
-              </span>
-            </div>
-          ))}
+        <div className="pb-scroll">
+          <table className="pb-grid">
+            <thead>
+              <tr>
+                <th>Joueur</th>
+                {PETITBAC_CATS.map((c) => <th key={c}>{c}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {room.players.map((p) => (
+                <tr key={p.id}>
+                  <th>{p.name}{!mg.answers[p.id] ? " *" : ""}</th>
+                  {PETITBAC_CATS.map((c) => (
+                    <td key={c}>{(mg.answers[p.id] && mg.answers[p.id][c]) ? mg.answers[p.id][c] : "—"}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+        <p className="dim mb">* n'a pas validé (réponses en cours)</p>
         {isLauncher
           ? <DesignateLoser players={room.players} onPick={(id) => act({ type: "mgFinish", loserId: id })} label="Qui a perdu ? (il/elle boit)" />
           : <p className="muted center mt">En attente de {launcher.name}…</p>}

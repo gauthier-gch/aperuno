@@ -53,16 +53,20 @@ export const GAMES = [
   { id: "doigt", name: "Jeu du doigt", chill: 2, harr: 2, kind: "facilitator",
     rule: "Chaque joueur pose un doigt sur le verre. Le lanceur compte 1, 2, 3 puis annonce combien de doigts resteront. Les autres retirent ou non leur doigt. Si le lanceur devine juste, il retire définitivement son doigt. Le dernier à pouvoir retirer définitivement son doigt perd et boit. Attention : si tu célèbres ta réussite en retirant ton doigt, tu dois le remettre en jeu !" },
   { id: "poire", name: "Coupe la poire", chill: 2, harr: 2, kind: "inapp_pear",
-    rule: "Une poire apparaît. Chaque joueur effectue une coupe verticale. Le plus éloigné de la coupe parfaitement centrale perd et boit." },
+    rule: "Une poire apparaît avec une direction de coupe cible (la même pour tous). Reproduis-la du mieux possible : le plus éloigné de la cible perd et boit." },
   { id: "ville", name: "Place la ville", chill: 2, harr: 2, kind: "inapp_city",
     rule: "Une ville française est tirée. Chacun place un marqueur sur la carte. Le plus éloigné de la vraie position perd et boit." },
+  { id: "imposteur", name: "L'imposteur", chill: 2, harr: 2, kind: "inapp_imposteur",
+    rule: "Chacun reçoit un mot secret ; l'imposteur en a un autre, proche, et Mister White n'a aucun mot. À tour de rôle, décrivez votre mot sans le dire. À chaque manche, votez pour éliminer un joueur (l'hôte désigne l'éliminé). Les civils gagnent si l'imposteur et Mister White sont éliminés. Les éliminés boivent." },
+  { id: "dix", name: "C'est un 10 mais", chill: 2, harr: 2, kind: "inapp_dix",
+    rule: "Le lanceur voit une carte (1 à 10) et lance un « c'est un 10 mais… » à l'oral. Chacun note de 1 à 10. Au dévoilement de la carte, chacun boit l'écart entre sa note et la carte." },
   { id: "cascade", name: "Cascade", chill: 0, harr: 2, kind: "facilitator", noLoser: true,
     rule: "Tout le monde boit en même temps. Un joueur ne peut s'arrêter que lorsque le précédent a reposé son verre." },
   { id: "russe", name: "Shot russe", chill: 0, harr: 3, kind: "facilitator", noLoser: true,
     rule: "Le joueur prépare plusieurs shots, un seul contient de l'alcool. Chacun en prend un à tour de rôle." },
-  { id: "duelsec", name: "Duel de sec", chill: 0, harr: 1, kind: "facilitator", drawLoser: true,
+  { id: "duelsec", name: "Duel de sec", chill: 0, harr: 1, kind: "facilitator", drawLoser: true, duel: true,
     rule: "Le joueur défie un adversaire à un cul-sec. Les deux verres doivent avoir un volume similaire. Le perdant pioche une carte." },
-  { id: "duelregard", name: "Duel de regard", chill: 1, harr: 1, kind: "facilitator",
+  { id: "duelregard", name: "Duel de regard", chill: 1, harr: 1, kind: "facilitator", duel: true,
     rule: "Le joueur défie un adversaire : ils se fixent dans les yeux. Le premier qui rit ou détourne perd et boit." },
   { id: "enchere", name: "L'enchère des secs", chill: 0, harr: 2, kind: "offapp", noLoser: true,
     rule: "Le joueur déclare finir son verre en moins de X secondes. Le suivant surenchérit ou crie « menteur ». Si « menteur » a tort et que le bluffeur a fini son verre dans les temps, celui qui a crié « menteur » finit aussi son verre. Sinon, c'est le bluffeur qui finit son verre." },
@@ -119,3 +123,27 @@ export const ROULETTE = [
   { label: "Alcool dans le verre de ton choix", color: "#7d3bff", needsTarget: true, give: "se prend un peu d'alcool en plus dans son verre" },
   { label: "Distribue un sec", color: "#f4c95d", needsTarget: true, give: "se prend un sec 🥃" },
 ];
+
+/* « L'imposteur » : paires (mot des civils / mot de l'imposteur), proches. */
+export const IMPOSTER_PAIRS = [
+  ["Fraise", "Framboise"], ["Chien", "Loup"], ["Café", "Thé"], ["Pizza", "Quiche"],
+  ["Mer", "Océan"], ["Vélo", "Moto"], ["Citron", "Orange"], ["Guitare", "Violon"],
+  ["Bière", "Vin"], ["Chat", "Tigre"], ["Neige", "Pluie"], ["Boulanger", "Pâtissier"],
+  ["Football", "Rugby"], ["Avion", "Hélicoptère"], ["Montagne", "Colline"],
+  ["Docteur", "Infirmier"], ["Pomme", "Poire"], ["Soleil", "Lune"],
+  ["Chaise", "Tabouret"], ["Téléphone", "Tablette"], ["Plage", "Piscine"],
+  ["Roi", "Prince"], ["Fromage", "Yaourt"], ["Train", "Métro"], ["Piano", "Orgue"],
+];
+
+/* Nombre de rôles selon le nombre de joueurs. */
+export function imposterSetup(n) {
+  const imposteurs = n >= 6 ? 2 : 1;
+  const white = n <= 3 ? 0 : 1;
+  return { imposteurs, white };
+}
+
+/* « C'est un 10 mais » : couleurs de cartes. */
+export const CARD_SUITS = [
+  { s: "♥", red: true }, { s: "♦", red: true }, { s: "♣", red: false }, { s: "♠", red: false },
+];
+
