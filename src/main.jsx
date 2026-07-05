@@ -8,7 +8,7 @@ import "./styles.css";
    purge le code de salon mémorisé : les anciennes parties en cours ne sont plus
    compatibles, ça évite de recharger un état périmé. L'identité du joueur
    (aperuno_client_id) est conservée. Les assets sont versionnés par Vite. */
-const APP_VERSION = "6";
+const APP_VERSION = "7";
 try {
   if (localStorage.getItem("aperuno_version") !== APP_VERSION) {
     localStorage.removeItem("aperuno_code");

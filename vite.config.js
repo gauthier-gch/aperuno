@@ -1,15 +1,16 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// base: "./" -> chemins d'assets relatifs (marche sur Vercel comme sur GitHub
-// Pages en sous-dossier /nom-du-repo/).
+// GitHub Pages sert le site sous https://<user>.github.io/aperuno/.
+// base ABSOLUE "/aperuno/" -> les assets sont référencés en /aperuno/assets/...
+// ce qui fonctionne quelle que soit l'URL (avec ou sans "/" final, raccourci
+// écran d'accueil, favori…). Une base relative "./" cassait le chargement selon
+// le contexte (404 sur le JS -> écran de secours figé).
 //
-// Noms de fichiers STABLES (sans hash) : après un redéploiement, un ancien
-// index.html encore en cache continue de pointer vers des fichiers qui EXISTENT
-// (assets/index.js), au lieu d'un fichier hashé supprimé -> plus de page blanche.
-// Le cache navigateur se rafraîchit ensuite normalement (ETag + max-age court).
+// Noms de fichiers STABLES (sans hash) : un index.html encore en cache pointe
+// toujours vers un fichier existant -> pas de page blanche après un déploiement.
 export default defineConfig({
-  base: "./",
+  base: "/aperuno/",
   plugins: [react()],
   build: {
     rollupOptions: {
