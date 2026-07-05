@@ -16,7 +16,7 @@ function CardFace({ c, onClick, selected }) {
   );
 }
 
-function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDiableStack, onJeu, onEchange }) {
+function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDiableStack, onJeu, onEchange, onEchangeCarte }) {
   const m = TYPE_META[card.type];
   const g = card.type === "jeu" ? GAMES.find((x) => x.id === card.gameId) : null;
   const rule = g ? g.rule : CARD_INFO[card.type];
@@ -62,6 +62,7 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
       )}
       {canPlay && card.type === "jeu" && <button className="btn btn-blue" onClick={onJeu}>Lancer ce jeu 🎲</button>}
       {canPlay && card.type === "echange" && <button className="btn" style={{ background: "linear-gradient(135deg,#00c6c6,#0094c6)" }} onClick={onEchange}>Échanger ma main 🔄</button>}
+      {canPlay && card.type === "echangecarte" && <button className="btn" style={{ background: "linear-gradient(135deg,#12b3a6,#0a8f85)" }} onClick={onEchangeCarte}>Échanger une carte 🔃</button>}
       {canPlay && card.type === "diable" && <p className="muted" style={{ color: "#c78bff" }}>Ouvre plutôt une carte <b>action</b> puis « Jouer avec un Diable ».</p>}
       {canPlay && card.type === "joker" && <p className="muted" style={{ color: "#27d17c" }}>Garde-la : elle se déclenchera quand un diable te visera.</p>}
       {canPlay && card.type === "plus" && <p className="muted" style={{ color: "#ff9b2f" }}>Se joue en réaction quand un diable te vise : tu renvoies la peine +{card.value} à un autre joueur.</p>}
@@ -81,7 +82,8 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
   const top = room.discard[0];
   const [sheet, setSheet] = useState(null);
   const [target, setTarget] = useState(null);     // { cardIds, diableId } -> diable
-  const [swap, setSwap] = useState(null);          // { cardId } -> échange
+  const [swap, setSwap] = useState(null);          // { cardId } -> échange de main
+  const [swapCard, setSwapCard] = useState(null);  // { cardId } -> échange de carte
   const [reactPlus, setReactPlus] = useState(null);
   const hasDiable = me.hand.some((c) => c.type === "diable");
   const turnName = room.players[room.current] ? room.players[room.current].name : "";
@@ -92,6 +94,8 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
   function playJeu(c) { setSheet(null); act({ type: "playJeu", cardId: c.id }); }
   function openEchange(c) { setSheet(null); setSwap({ cardId: c.id }); }
   function sendEchange(targetId) { const sw = swap; setSwap(null); act({ type: "echange", cardId: sw.cardId, targetId }); }
+  function openEchangeCarte(c) { setSheet(null); setSwapCard({ cardId: c.id }); }
+  function sendEchangeCarte(discardId) { const sw = swapCard; setSwapCard(null); act({ type: "echangeCarte", cardId: sw.cardId, discardId }); }
 
   return (
     <div className="fade">
@@ -157,7 +161,22 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
         <CardSheet card={sheet} hand={me.hand} canPlay={canPlay} hasDiable={hasDiable}
           close={() => setSheet(null)}
           onActionStack={playActionStack} onDiableStack={openDiable}
-          onJeu={() => playJeu(sheet)} onEchange={() => openEchange(sheet)} />
+          onJeu={() => playJeu(sheet)} onEchange={() => openEchange(sheet)} onEchangeCarte={() => openEchangeCarte(sheet)} />
+      )}
+
+      {swapCard && (
+        <Overlay>
+          <h3 className="h-title">Quelle carte défausser ? 🔃</h3>
+          <p className="muted mb">Elle sera remplacée par une carte de la pioche.</p>
+          <div className="wrap">
+            {me.hand.filter((c) => c.id !== swapCard.cardId).map((c) => (
+              <button key={c.id} className="btn btn-ghost btn-sm auto" onClick={() => sendEchangeCarte(c.id)}>
+                <span style={{ color: TYPE_META[c.type].color }}>{TYPE_META[c.type].ic}</span> {c.label}
+              </button>
+            ))}
+          </div>
+          <button className="btn btn-ghost btn-sm mt" onClick={() => setSwapCard(null)}>Annuler</button>
+        </Overlay>
       )}
 
       {target && (

@@ -83,6 +83,7 @@ export const TYPE_META = {
   joker: { color: "#27d17c", glow: "rgba(39,209,124,.55)", tag: "JOKER", ic: "🃏" },
   plus: { color: "#ff9b2f", glow: "rgba(255,155,47,.55)", tag: "RELANCE", ic: "⏫" },
   echange: { color: "#00c6c6", glow: "rgba(0,198,198,.55)", tag: "ÉCHANGE", ic: "🔄" },
+  echangecarte: { color: "#12b3a6", glow: "rgba(18,179,166,.55)", tag: "ÉCHANGE 1", ic: "🔃" },
 };
 
 export const DICE = [null, "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
@@ -97,6 +98,7 @@ export const CARD_INFO = {
   joker: "Carte joker. Se joue en réaction pour refuser un diable dirigé contre toi. Quand tu la joues, elle quitte ta main.",
   plus: "Carte relance (+2 / +4). En réaction à un diable : tu renvoies la peine à un autre joueur en ajoutant +2 ou +4 gorgées. Elle quitte ta main.",
   echange: "Carte échange de main. À ton tour : choisis un adversaire, vous échangez intégralement vos mains. Parfait pour te débarrasser d'une grosse main !",
+  echangecarte: "Carte échange de carte. À ton tour : choisis une carte de ta main à défausser, elle est remplacée par une carte piochée. Idéal pour te débarrasser d'une carte qui t'arrange pas.",
 };
 
 /* Mots / situations proposés pour le mime. */
