@@ -249,6 +249,17 @@ export function applyMove(s0, move, myId) {
       endTurn(s);
       return s;
     }
+    case "echangeCarte": {
+      requireTurnPlay(s, myId);
+      const card = handCard(mine, move.cardId, "echangecarte");
+      const swapOut = mine.hand.find((c) => c.id === move.discardId);
+      if (!swapOut || swapOut.id === card.id) throw new Error("Choisis une autre carte à défausser.");
+      discardFrom(s, me, [card.id, swapOut.id]);
+      draw(s, me, 1); // remplacée par une carte de la pioche
+      s.announce = note(`${mine.name} échange une carte 🔃`);
+      endTurn(s);
+      return s;
+    }
     case "playJeu": {
       requireTurnPlay(s, myId);
       const card = handCard(mine, move.cardId, "jeu");

@@ -74,6 +74,7 @@ export function Rules({ back }) {
           • <b style={{ color: "#ff6f86" }}>Cartes identiques</b> → empile-les (2 × « 2 gorgées » = 4 gorgées).<br />
           • <b style={{ color: "#c78bff" }}>Action + Diable</b> → un autre boit (tu poses 2 cartes).<br />
           • <b style={{ color: "#00c6c6" }}>Échange de main</b> → tu échanges toute ta main avec un adversaire.<br />
+          • <b style={{ color: "#12b3a6" }}>Échange de carte</b> → tu défausses une carte et en pioches une nouvelle.<br />
           • <b style={{ color: "#27d17c" }}>Joker</b> / <b style={{ color: "#ff9b2f" }}>Relance</b> → se jouent en réaction (et quittent ta main).
         </p>
       </div>
