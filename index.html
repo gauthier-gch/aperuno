@@ -17,7 +17,26 @@
 <meta name="description" content="apéruno — jeu de soirée multijoueur façon UNO × Mario Party." />
 </head>
 <body>
-<div id="root"></div>
+<div id="root">
+  <!-- Écran de secours : reste visible si le JS ne se charge pas (cache/404).
+       React le remplace dès qu'il monte. -->
+  <div id="boot" style="font-family:sans-serif;color:#f3ecff;background:#0a0718;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;">
+    <div style="font-size:40px">🍸</div>
+    <div style="font-weight:700">Chargement d'apéruno…</div>
+    <div id="boot-hint" style="font-size:13px;opacity:.7;display:none">Si rien n'apparaît, recharge la page.</div>
+    <button id="boot-reload" style="display:none;border:none;border-radius:14px;padding:12px 18px;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff3b5c,#b15bff)">Recharger</button>
+  </div>
+</div>
+<script>
+  // Si React n'a pas pris la main après 4 s, on propose de recharger.
+  setTimeout(function () {
+    if (document.getElementById("boot")) {
+      var h = document.getElementById("boot-hint"), b = document.getElementById("boot-reload");
+      if (h) h.style.display = "block";
+      if (b) { b.style.display = "inline-block"; b.onclick = function () { location.reload(); }; }
+    }
+  }, 4000);
+</script>
 <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
