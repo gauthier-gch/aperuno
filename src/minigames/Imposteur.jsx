@@ -13,9 +13,9 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
   if (mg.cantPlay) {
     return (
       <div className="center-col">
-        <p className="muted mb">Il faut au moins 3 joueurs pour L'imposteur.</p>
+        <p className="muted mb">Il faut au moins 3 joueurs pour Undercover.</p>
         {isLauncher
-          ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: "L'imposteur annulé (pas assez de joueurs)", long: false })}>Terminer</button>
+          ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: "Undercover annulé (pas assez de joueurs)", long: false })}>Terminer</button>
           : waiting}
       </div>
     );
@@ -33,11 +33,11 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
   /* fin de manche */
   if (mg.phase === "over") {
     const res = mg.result;
-    const title = res === "civils" ? "🎉 Les civils gagnent !" : res === "imposteurs" ? "😈 L'imposteur gagne !" : res === "white" ? "🎭 Mister White gagne !" : "Fin";
+    const title = res === "civils" ? "🎉 Les civils gagnent !" : res === "imposteurs" ? "😈 L'undercover gagne !" : res === "white" ? "🎭 Mister White gagne !" : "Fin";
     return (
       <div className="center-col">
         <p className="b mb">{title}</p>
-        <p className="muted mb">Mot des civils : <b className="w">{mg.civilWord}</b> · mot imposteur : <b className="w">{mg.imposterWord}</b></p>
+        <p className="muted mb">Mot des civils : <b className="w">{mg.civilWord}</b> · mot undercover : <b className="w">{mg.imposterWord}</b></p>
         <div className="pb-table" style={{ width: "100%" }}>
           {room.players.map((p) => (
             <div className="pb-row space" key={p.id}>

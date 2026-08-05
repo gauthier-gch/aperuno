@@ -9,6 +9,7 @@
 import {
   GAMES, game, PETITBAC_LETTERS, PETITBAC_DURATION, TEN_MIN, MIME_WORDS,
   ROULETTE, sipsFor, actionDrink, IMPOSTER_PAIRS, imposterSetup, CARD_SUITS,
+  CONNEXION_CATS,
 } from "./constants.js";
 import { buildDeck, shuffle, makeUid } from "./deck.js";
 import { CITIES, project, unproject, distanceKm } from "./cities.js";
@@ -142,10 +143,18 @@ function initMinigame(s, gameId) {
       return { ...base, phase: "guess", value: 1 + Math.floor(Math.random() * 10), suit: suit.s, red: suit.red, guesses: {} };
     }
     case "inapp_imposteur": return initImposteur(s, base);
+    case "inapp_connexion":
+      return { ...base, phase: "intro", category: randCategory(), words: {} };
     default: return { ...base };
   }
 }
 function randLetter() { return PETITBAC_LETTERS[Math.floor(Math.random() * PETITBAC_LETTERS.length)]; }
+function randCategory() { return CONNEXION_CATS[Math.floor(Math.random() * CONNEXION_CATS.length)]; }
+/* Normalise un mot pour comparer les « connexions » (casse/accents/espaces). */
+function normWord(str) {
+  return (str || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().trim().replace(/\s+/g, " ");
+}
 
 function initImposteur(s, base) {
   const n = s.players.length;
@@ -461,7 +470,43 @@ export function applyMove(s0, move, myId) {
     }
     case "mgDixReveal": {
       mgGuard(s, isLauncher);
+      // Le lanceur boit la moyenne (arrondie) des écarts des autres joueurs.
+      const ecarts = Object.values(s.minigame.guesses || {})
+        .filter((v) => typeof v === "number")
+        .map((v) => Math.abs(v - s.minigame.value));
+      s.minigame.launcherSips = ecarts.length
+        ? Math.round(ecarts.reduce((a, b) => a + b, 0) / ecarts.length) : 0;
       s.minigame.phase = "reveal";
+      return s;
+    }
+
+    /* ---------- Connexion ---------- */
+    case "mgConnexionReroll": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "intro") throw new Error("Trop tard pour changer la catégorie.");
+      s.minigame.category = randCategory();
+      return s;
+    }
+    case "mgConnexionStart": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "intro") throw new Error("Déjà démarré.");
+      s.minigame.phase = "play";
+      s.minigame.startsAt = Date.now() + 1500; // petit "3,2,1" synchronisé
+      s.announce = note(`Connexion : catégorie « ${s.minigame.category} » — top dans 1,5 s ! ⚡`);
+      return s;
+    }
+    case "mgConnexionWord": {
+      if (!s.minigame || s.minigame.kind !== "inapp_connexion") throw new Error("Pas de Connexion en cours.");
+      if (s.minigame.phase !== "play") throw new Error("Ce n'est pas le moment de répondre.");
+      const raw = (move.word || "").trim();
+      if (!raw) throw new Error("Écris un mot.");
+      s.minigame.words[myId] = { raw, norm: normWord(raw) };
+      if (Object.keys(s.minigame.words).length >= s.players.length) resolveConnexion(s);
+      return s;
+    }
+    case "mgConnexionReveal": {
+      mgGuard(s, isLauncher);
+      resolveConnexion(s);
       return s;
     }
 
@@ -570,7 +615,7 @@ function mgGuard(s, isLauncher) {
 }
 
 export function roleLabel(role) {
-  return role === "imposteur" ? "Imposteur" : role === "white" ? "Mister White" : "Civil";
+  return role === "imposteur" ? "Undercover" : role === "white" ? "Mister White" : "Civil";
 }
 function activeRoles(s) {
   const mg = s.minigame;
@@ -585,6 +630,20 @@ function imposteurCheckOver(s) {
   const civ = roles.filter((r) => r === "civil").length;
   if (imp === 0 && white === 0) { s.minigame.result = "civils"; s.minigame.phase = "over"; }
   else if (imp > 0 && civ <= imp) { s.minigame.result = "imposteurs"; s.minigame.phase = "over"; }
+}
+/* « Connexion » : regroupe les mots identiques ; ceux qui matchent ≥1 autre
+   joueur sont « connectés » et boiront. */
+function resolveConnexion(s) {
+  const mg = s.minigame;
+  const groups = {}; // norm -> [ids]
+  Object.entries(mg.words || {}).forEach(([id, w]) => {
+    if (!w || !w.norm) return;
+    (groups[w.norm] = groups[w.norm] || []).push(id);
+  });
+  const connectedIds = [];
+  Object.values(groups).forEach((ids) => { if (ids.length >= 2) connectedIds.push(...ids); });
+  mg.connectedIds = connectedIds;
+  mg.phase = "reveal";
 }
 function handCard(player, cardId, type) {
   const c = player.hand.find((x) => x.id === cardId);

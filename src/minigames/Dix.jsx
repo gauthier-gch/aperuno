@@ -17,6 +17,7 @@ export function DixGame({ room, mg, isLauncher, launcher, act, busy, waiting }) 
   const guessers = room.players.filter((p) => p.id !== launcher.id);
 
   if (mg.phase === "reveal") {
+    const launcherSips = mg.launcherSips || 0;
     return (
       <div className="center-col">
         <PlayCard value={mg.value} suit={mg.suit} red={mg.red} />
@@ -32,9 +33,13 @@ export function DixGame({ room, mg, isLauncher, launcher, act, busy, waiting }) 
               </div>
             );
           })}
+          <div className="pb-row space" style={{ borderTop: "1px solid rgba(255,255,255,.15)" }}>
+            <b>{launcher.name} <span className="dim">(lanceur)</span></b>
+            <span className="muted">boit la moyenne des écarts → {launcherSips} 🍻</span>
+          </div>
         </div>
         {isLauncher
-          ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: `« C'est un 10 mais » terminé 🍻`, long: false })}>Terminer le tour</button>
+          ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: `« C'est un 10 mais » : ${launcher.name} boit ${launcherSips} gorgée${launcherSips > 1 ? "s" : ""} (moyenne des écarts) 🍻` })}>Terminer le tour</button>
           : waiting}
       </div>
     );

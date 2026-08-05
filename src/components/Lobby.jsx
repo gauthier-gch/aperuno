@@ -13,7 +13,7 @@ export function Lobby({ room, onStart, leave, online = {} }) {
         <div className="code-big">{room.code}</div>
         <span className="chip">{room.mode === "chill" ? "😎 Chill" : "🔥 Harr"}</span>
       </div>
-      <p className="muted mb">Joueurs connectés ({room.players.length}/10)</p>
+      <p className="muted mb">Joueurs connectés ({room.players.length}/15)</p>
       <div className="players-grid">
         {room.players.map((p) => (
           <div className="pcard" key={p.id}>
