@@ -81,7 +81,7 @@ export default function App() {
       <Shell timers={room.timers}>
         {room.status === "lobby" && <Lobby room={room} onStart={(i) => startGame(code, i)} leave={leave} online={online} />}
         {room.status === "playing" && <GameTable room={room} act={act} flash={flash} leave={leave} busy={busy} online={online} />}
-        {room.status === "finished" && <Win room={room} onReplay={(i) => startGame(code, i)} leave={leave} />}
+        {room.status === "finished" && <Win room={room} onReplay={(i) => startGame(code, i)} leave={leave} act={act} busy={busy} />}
         {announce && <div className="announce-banner pop" onClick={() => setAnnounce(null)}>{announce}</div>}
         {toast && <div className="toast pop">{toast}</div>}
       </Shell>
