@@ -7,7 +7,7 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
   const [guess, setGuess] = useState("");
   const myRole = mg.roles ? mg.roles[MYID] : null;
   const myWord = myRole === "imposteur" ? mg.imposterWord : myRole === "white" ? null : mg.civilWord;
-  const active = room.players.filter((p) => !mg.eliminated.includes(p.id));
+  const active = room.players.filter((p) => !(mg.eliminated || []).includes(p.id));
 
   /* pas assez de joueurs */
   if (mg.cantPlay) {

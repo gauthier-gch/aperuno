@@ -1,100 +1,56 @@
-import React, { useEffect, useState } from "react";
-import { MYID } from "../me.js";
+import React, { useState } from "react";
+import { Ava } from "../components/common.jsx";
+import { sipsFor } from "../game/constants.js";
 
-/* « Connexion » : une catégorie est tirée, au décompte chacun écrit un mot.
-   Tous ceux qui ont écrit le même mot sont « connectés » et boivent. */
+/* « Connexion » : une catégorie simple est affichée. Le décompte et les mots
+   se font à l'oral (rien à saisir). Tous ceux qui ont dit le même mot sont
+   « connectés » et boivent — le lanceur les désigne puis termine. */
 export function ConnexionGame({ room, mg, isLauncher, launcher, act, busy, waiting }) {
-  const [word, setWord] = useState("");
-  const [, force] = useState(0);
-  useEffect(() => {
-    const i = setInterval(() => force((x) => x + 1), 250);
-    return () => clearInterval(i);
-  }, []);
+  const [picked, setPicked] = useState([]); // ids des joueurs connectés
 
-  const submitted = !!(mg.words && mg.words[MYID]);
-  const count = mg.words ? Object.keys(mg.words).length : 0;
-
-  /* ---- intro : le lanceur peut changer la catégorie puis lance ---- */
-  if (mg.phase === "intro") {
-    return (
-      <div className="center-col">
-        <p className="muted">Catégorie</p>
-        <div className="apr-logo"><span className="a" style={{ fontSize: 30 }}>{mg.category}</span></div>
-        {isLauncher ? (
-          <>
-            <button className="btn btn-ghost btn-sm mt" disabled={busy} onClick={() => act({ type: "mgConnexionReroll" })}>🔁 Changer la catégorie</button>
-            <button className="btn btn-blue mt" disabled={busy} onClick={() => act({ type: "mgConnexionStart" })}>Lancer le décompte ⚡</button>
-          </>
-        ) : <p className="muted">En attente que {launcher.name} lance…</p>}
-      </div>
-    );
-  }
-
-  /* ---- révélation : qui est connecté ? ---- */
-  if (mg.phase === "reveal") {
-    const connected = mg.connectedIds || [];
-    const someConnected = connected.length > 0;
-    return (
-      <div className="pop">
-        <p className="muted mb">Catégorie : <b className="w">{mg.category}</b>. Les mots :</p>
-        <div className="pb-table" style={{ width: "100%" }}>
-          {room.players.map((p) => {
-            const w = mg.words && mg.words[p.id];
-            const isConnected = connected.includes(p.id);
-            return (
-              <div className="pb-row space" key={p.id}
-                style={isConnected ? { borderLeft: "3px solid var(--gold)" } : undefined}>
-                <b>{p.name}</b>
-                <span className="muted">{w ? w.raw : "—"}{isConnected ? " 🔗 boit" : ""}</span>
-              </div>
-            );
-          })}
-        </div>
-        <p className={someConnected ? "b center mb" : "muted center mb"}>
-          {someConnected ? "🔗 Les joueurs connectés boivent ! 🍻" : "Personne n'est connecté — personne ne boit 🙅"}
-        </p>
-        {isLauncher
-          ? <button className="btn btn-primary" disabled={busy} onClick={() => act({
-              type: "mgFinish",
-              loserIds: connected,
-              text: someConnected ? undefined : "Connexion : personne n'est connecté 🙅",
-              long: someConnected ? undefined : false,
-            })}>Terminer le tour</button>
-          : waiting}
-      </div>
-    );
-  }
-
-  /* ---- jeu : compte à rebours puis saisie du mot ---- */
-  const notStarted = mg.startsAt && Date.now() < mg.startsAt;
-  if (notStarted) {
-    const go = Math.ceil((mg.startsAt - Date.now()) / 1000);
-    return (
-      <div className="center-col">
-        <p className="muted">Catégorie : <b className="w">{mg.category}</b></p>
-        <p className="muted">Prêt ?</p>
-        <div className="big-num">{go}</div>
-      </div>
-    );
-  }
+  const toggle = (id) =>
+    setPicked((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
 
   return (
     <div className="center-col">
-      <p className="muted mb">Un mot pour : <b className="w">{mg.category}</b></p>
-      {submitted ? (
-        <p className="muted center">✅ Mot envoyé : <b className="w">{mg.words[MYID].raw}</b>. En attente des autres… ({count}/{room.players.length})</p>
+      <p className="muted">Catégorie</p>
+      <div className="apr-logo"><span className="a" style={{ fontSize: 30 }}>{mg.category}</span></div>
+      <p className="muted mt mb">
+        Au décompte (à l'oral : 3… 2… 1 !), chacun annonce un mot de cette catégorie.
+        Ceux qui ont dit le <b className="w">même mot</b> sont connectés et boivent 🔗
+      </p>
+
+      {isLauncher ? (
+        <>
+          <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act({ type: "mgConnexionReroll" })}>🔁 Changer de mot</button>
+
+          <div className="mt" style={{ width: "100%" }}>
+            <p className="muted mb">Qui était connecté ? (touche pour sélectionner)</p>
+            <div className="wrap">
+              {room.players.map((p) => {
+                const on = picked.includes(p.id);
+                return (
+                  <button key={p.id} className={"btn btn-sm auto " + (on ? "btn-gold" : "btn-ghost")}
+                    onClick={() => toggle(p.id)}>
+                    <Ava p={p} size={20} /> {p.name}{on ? " 🔗" : ""}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <button className="btn btn-primary mt" disabled={busy} onClick={() => {
+            const sips = sipsFor(room.mode);
+            const names = picked.map((id) => (room.players.find((p) => p.id === id) || {}).name).filter(Boolean).join(", ");
+            act(picked.length
+              ? { type: "mgFinish", text: `Connexion 🔗 : ${names} ${picked.length > 1 ? "étaient connectés et boivent" : "était connecté et boit"} ${sips} gorgée${sips > 1 ? "s" : ""} 🍻` }
+              : { type: "mgFinish", text: "Connexion : personne n'est connecté 🙅", long: false });
+          }}>
+            {picked.length ? `${picked.length} connecté${picked.length > 1 ? "s" : ""} boivent 🍻` : "Personne n'est connecté — terminer"}
+          </button>
+        </>
       ) : (
-        <div style={{ width: "100%" }}>
-          <input className="input mb" placeholder="Ton mot…" value={word} maxLength={24}
-            autoFocus onChange={(e) => setWord(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && word.trim() && !busy) act({ type: "mgConnexionWord", word }); }} />
-          <button className="btn btn-blue" disabled={busy || !word.trim()} onClick={() => act({ type: "mgConnexionWord", word })}>Valider mon mot 🔗</button>
-        </div>
-      )}
-      {isLauncher && (
-        <button className="btn btn-ghost btn-sm mt" disabled={busy} onClick={() => act({ type: "mgConnexionReveal" })}>
-          Révéler maintenant ({count}/{room.players.length})
-        </button>
+        <p className="muted mt">En attente que {launcher.name} conclue…</p>
       )}
     </div>
   );
