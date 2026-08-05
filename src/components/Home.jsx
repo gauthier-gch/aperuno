@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { GAMES, SUGGEST_EMAIL } from "../game/constants.js";
 
 const LOGO = `${import.meta.env.BASE_URL}logo_aperuno.png`;
@@ -32,6 +32,19 @@ export function Home({ go }) {
   );
 }
 
+function CopyLink() {
+  const [done, setDone] = useState(false);
+  const copy = () => {
+    try { navigator.clipboard && navigator.clipboard.writeText(window.location.href); } catch (e) {}
+    setDone(true); setTimeout(() => setDone(false), 1800);
+  };
+  return (
+    <a onClick={copy} style={{ color: "var(--gold)", textDecoration: "underline", cursor: "pointer" }}>
+      {done ? "lien copié ✅" : "en cliquant ici"}
+    </a>
+  );
+}
+
 export function Install({ back }) {
   const Step = ({ n, children }) => (
     <div className="step"><span className="step-n">{n}</span><span>{children}</span></div>
@@ -40,11 +53,11 @@ export function Install({ back }) {
     <div className="fade">
       <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
       <h2 className="h-title">Installe apéruno 📱</h2>
-      <p className="muted mb">Ajoute apéruno à ton écran d'accueil pour l'ouvrir comme une vraie app (plein écran, une icône).</p>
+      <p className="muted mb">💡 Ajoute Apéruno à ton écran d'accueil pour l'ouvrir comme une vraie app !</p>
 
       <div className="panel mb">
         <p className="b w mb-sm"> Sur iPhone (Safari)</p>
-        <Step n="1">Ouvre le lien du jeu dans <b>Safari</b> (copie-colle l'adresse si besoin).</Step>
+        <Step n="1">Ouvre le lien du jeu dans <b>Safari</b> (copie-colle l'adresse <CopyLink /> si besoin).</Step>
         <Step n="2">Appuie sur le bouton <b>Partager</b> <span className="dim">(le carré avec une flèche ↑, en bas de l'écran)</span>.</Step>
         <Step n="3">Fais défiler et choisis <b>« Sur l'écran d'accueil »</b>.</Step>
         <Step n="4">Appuie sur <b>Ajouter</b> — l'icône apéruno apparaît sur ton écran d'accueil ! 🍸</Step>
@@ -52,7 +65,7 @@ export function Install({ back }) {
 
       <div className="panel">
         <p className="b w mb-sm">🤖 Sur Android (Chrome)</p>
-        <Step n="1">Ouvre le lien du jeu dans <b>Chrome</b>.</Step>
+        <Step n="1">Ouvre le lien du jeu dans <b>Chrome</b> (copie-colle l'adresse <CopyLink /> si besoin).</Step>
         <Step n="2">Appuie sur les <b>⋮ trois petits points</b> (en haut à droite).</Step>
         <Step n="3">Choisis <b>« Ajouter à l'écran d'accueil »</b> (ou « Installer l'application »).</Step>
         <Step n="4">Confirme avec <b>Ajouter</b>. 🍸</Step>
@@ -67,7 +80,7 @@ export function Rules({ back }) {
       <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
       <h2 className="h-title">Règles</h2>
       <div className="panel mb">
-        <p className="muted"><b className="w">But.</b> Se débarrasser de toutes ses cartes. Premier à 0 carte = gagnant.</p>
+        <p className="muted"><b className="w">🎯 Objectif :</b> Se débarrasser de toutes ses cartes. Le premier à vider son jeu gagne et distribue un cul sec 🥃.</p>
       </div>
       <div className="panel mb">
         <p className="muted">
@@ -85,31 +98,39 @@ export function Rules({ back }) {
       </div>
       <div className="panel">
         <p className="muted">
-          <b style={{ color: "#37a6ff" }}>Cartes Jeu</b> → lancent un mini-jeu. Le <b>perdant boit</b> (plus de pioche !).
-          Une carte posée ne peut pas être reprise.
+          <b style={{ color: "#37a6ff" }}>Les cartes Jeu</b> lancent un mini-jeu. En général, le <b>perdant du mini-jeu boit</b>.
         </p>
       </div>
     </div>
   );
 }
 
+/* Un jeu est « hors-app » quand l'appli ne fait que le lancer/annoncer (le jeu
+   se joue à l'oral ou physiquement) ; sinon il est piloté « in-app ». */
+const HORS_APP_KINDS = ["offapp", "facilitator", "regard", "inapp_connexion"];
+
 export function MiniList({ back }) {
+  const games = [...GAMES].sort((a, b) => a.name.localeCompare(b.name, "fr"));
   return (
     <div className="fade">
       <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
       <h2 className="h-title">Mini-jeux</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {GAMES.map((g) => (
-          <div className="panel" key={g.id} style={{ padding: 14 }}>
-            <div className="space">
-              <b className="apr-serif" style={{ fontSize: 18 }}>{g.name}</b>
-              <span className="chip">
-                {g.harrOnly ? "🔥 Harr" : g.kind === "offapp" ? "hors app" : (g.kind === "facilitator" || g.kind === "regard") ? "physique" : "in-app"}
-              </span>
+        {games.map((g) => {
+          const horsApp = HORS_APP_KINDS.includes(g.kind);
+          return (
+            <div className={"panel" + (g.harrOnly ? " harr-mini" : "")} key={g.id} style={{ padding: 14 }}>
+              <div className="space">
+                <b className="apr-serif" style={{ fontSize: 18 }}>{g.name}</b>
+                <div className="row" style={{ gap: 6, flex: "0 0 auto" }}>
+                  <span className="chip">{horsApp ? "hors-app" : "in-app"}</span>
+                  {g.harrOnly && <span className="chip harr-chip">🔥 Harr</span>}
+                </div>
+              </div>
+              <p className="muted mt">{g.rule}</p>
             </div>
-            <p className="muted mt">{g.rule}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -38,7 +38,7 @@ export function dealNewGame(s0, starterIdx) {
   s.winnerId = null;
   s.turn = { drawn: false };
   s.announce = note(`C'est parti ! ${s.players[s.current].name} commence — pioche puis joue 🥃`);
-  s.reaction = null; s.minigame = null; s.timers = [];
+  s.reaction = null; s.minigame = null; s.timers = []; s.secTarget = null;
   return s;
 }
 
@@ -281,6 +281,18 @@ export function applyMove(s0, move, myId) {
       requireTurnPlay(s, myId);
       s.announce = note(`${mine.name} passe son tour 🙅`);
       endTurn(s);
+      return s;
+    }
+
+    /* ---------- le gagnant distribue un cul sec ---------- */
+    case "winnerSec": {
+      if (s.status !== "finished") throw new Error("La partie n'est pas terminée.");
+      if (myId !== s.winnerId) throw new Error("Seul le gagnant offre le cul sec.");
+      if (s.secTarget) throw new Error("Cul sec déjà distribué.");
+      const t = idx(s, move.targetId);
+      if (t < 0 || move.targetId === myId) throw new Error("Choisis un autre joueur.");
+      s.secTarget = move.targetId;
+      s.announce = note(`${mine.name} offre un cul sec à ${s.players[t].name} 🥃`, true);
       return s;
     }
 

@@ -175,6 +175,10 @@ html, body, #root { margin: 0; height: 100%; }
 .chrono-bar .one { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; }
 .chrono-bar .t { font-family:'Marcellus'; color:var(--gold); }
 
+/* ---- mini-jeux réservés au mode Harr (liste) ---- */
+.harr-mini { background:rgba(255,59,92,.1); border-color:rgba(255,59,92,.38); }
+.harr-chip { background:rgba(255,59,92,.18); border-color:rgba(255,59,92,.5); }
+
 /* ---- tuto installation ---- */
 .step { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; font-size:14px; color:#d7cdf5; line-height:1.5; }
 .step-n { flex:0 0 auto; width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#ff3b5c,#b15bff); color:#fff; font-weight:800; font-size:12px; display:flex; align-items:center; justify-content:center; }
