@@ -18,7 +18,7 @@ function PhotoName({ name, setName, photo, setPhoto }) {
         <input className="input" placeholder="Ton prénom" value={name} maxLength={14}
           onChange={(e) => setName(e.target.value)} />
       </div>
-      <p className="muted dim" style={{ marginTop: 6 }}>📷 Photo facultative — ton prénom suffit.</p>
+      <p className="muted dim" style={{ marginTop: 6 }}>📷 Photo facultative — ton prénom suffit. En l'ajoutant, tu acceptes qu'elle soit visible par les joueurs de ton salon et stockée temporairement (supprimée sous ~12 h).</p>
     </>
   );
 }
@@ -50,6 +50,7 @@ export function CreateForm({ back, onDone, flash }) {
       <button className="btn btn-primary" style={{ marginTop: 22 }} disabled={busy} onClick={go}>
         {busy ? "Création…" : "Créer le salon 🎴"}
       </button>
+      <p className="muted dim center" style={{ marginTop: 10 }}>🔞 En continuant, tu confirmes avoir 18 ans et acceptes les CGU et la politique de confidentialité (accessibles sur l'accueil).</p>
     </div>
   );
 }
@@ -81,6 +82,7 @@ export function JoinForm({ back, onDone, flash }) {
       <button className="btn btn-blue" style={{ marginTop: 22 }} disabled={busy} onClick={go}>
         {busy ? "Connexion…" : "Rejoindre 🔗"}
       </button>
+      <p className="muted dim center" style={{ marginTop: 10 }}>🔞 En continuant, tu confirmes avoir 18 ans et acceptes les CGU et la politique de confidentialité (accessibles sur l'accueil).</p>
     </div>
   );
 }
