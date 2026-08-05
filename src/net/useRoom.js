@@ -26,6 +26,7 @@ function stamp(s) {
   const uid = myUid();
   if (uid) s.members = { ...(s.members || {}), [uid]: true };
   s.expireAt = ttl();
+  s.rev = (s.rev || 0) + 1; // compteur de version : sert à resynchroniser l'affichage optimiste
   return s;
 }
 
