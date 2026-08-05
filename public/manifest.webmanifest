@@ -3,14 +3,14 @@
   "short_name": "apéruno",
   "description": "Jeu de soirée multijoueur façon UNO × Mario Party.",
   "lang": "fr",
-  "start_url": "/aperuno/",
-  "scope": "/aperuno/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0718",
   "theme_color": "#0a0718",
   "icons": [
-    { "src": "/aperuno/logo_aperuno.png", "sizes": "315x315", "type": "image/png", "purpose": "any" },
-    { "src": "/aperuno/apple-touch-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/logo_aperuno.png", "sizes": "315x315", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }

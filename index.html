@@ -9,7 +9,7 @@
 <!-- Icône d'application + écran d'accueil (iPhone & Android) -->
 <link rel="icon" type="image/png" href="./logo_aperuno.png" />
 <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-<link rel="manifest" href="/aperuno/manifest.webmanifest" />
+<link rel="manifest" href="/manifest.webmanifest" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="apéruno" />
@@ -51,7 +51,7 @@
     if (!document.getElementById("boot")) return; // monté : tout va bien
     render();
     try {
-      fetch("/aperuno/assets/index.js", { cache: "no-store" })
+      fetch("/assets/index.js", { cache: "no-store" })
         .then(function (r) { push("bundle : HTTP " + r.status + " · type " + (r.headers.get("content-type") || "?")); })
         .catch(function (err) { push("bundle inaccessible : " + err.message); });
     } catch (e) {}
