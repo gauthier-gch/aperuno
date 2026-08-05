@@ -175,6 +175,10 @@ html, body, #root { margin: 0; height: 100%; }
 .chrono-bar .one { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; }
 .chrono-bar .t { font-family:'Marcellus'; color:var(--gold); }
 
+/* ---- pied de page accueil (mentions légales) ---- */
+.home-foot { margin-top:22px; text-align:center; display:flex; flex-direction:column; gap:6px; }
+.foot-link { color:var(--gold); text-decoration:underline; cursor:pointer; }
+
 /* ---- mini-jeux réservés au mode Harr (liste) ---- */
 .harr-mini { background:rgba(255,59,92,.1); border-color:rgba(255,59,92,.38); }
 .harr-chip { background:rgba(255,59,92,.18); border-color:rgba(255,59,92,.5); }

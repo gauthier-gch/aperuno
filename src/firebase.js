@@ -31,6 +31,11 @@ export function ensureAuth() {
   return authReady;
 }
 
+/* uid d'authentification (anonyme) Firebase — sert à sécuriser les règles
+   Firestore : c'est la seule identité que les règles peuvent vérifier
+   (distincte de MYID, l'identifiant d'appareil côté jeu). */
+export function myUid() { return auth.currentUser ? auth.currentUser.uid : null; }
+
 /* Identifiant stable de l'appareil/joueur (persiste entre rechargements). */
 export function clientId() {
   let id = localStorage.getItem("aperuno_client_id");

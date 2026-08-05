@@ -20,9 +20,12 @@ export function newLobby(code, mode, host) {
   return {
     code, mode, status: "lobby", hostId: host.id,
     players: [{ id: host.id, name: host.name, photo: host.photo || null, hand: [] }],
+    // members : { <uid Firebase> : true } — utilisé par les règles Firestore
+    // pour n'autoriser l'écriture qu'aux membres du salon (voir firestore.rules).
+    members: host.uid ? { [host.uid]: true } : {},
     deck: [], discard: [], current: 0, winnerId: null,
     turn: { drawn: false },
-    announce: null, reaction: null, minigame: null, timers: [],
+    announce: null, reaction: null, minigame: null, timers: [], secTarget: null,
     createdAt: Date.now(),
   };
 }

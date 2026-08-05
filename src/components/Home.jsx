@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { GAMES, SUGGEST_EMAIL } from "../game/constants.js";
+import { GAMES, SUGGEST_EMAIL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED } from "../game/constants.js";
 
 const LOGO = `${import.meta.env.BASE_URL}logo_aperuno.png`;
 
@@ -27,6 +27,95 @@ export function Home({ go }) {
         <button className="btn btn-ghost" onClick={() => go("minijeux")}><span className="ico">🎲</span> Mini-jeux</button>
         <button className="btn btn-ghost" onClick={() => go("install")}><span className="ico">📱</span> Installe l'app sur ton tél</button>
         <a className="btn btn-ghost" href={SUGGEST_HREF} style={{ textDecoration: "none" }}><span className="ico">💡</span> Suggérer une amélioration</a>
+      </div>
+
+      <div className="home-foot">
+        <p className="muted dim">🔞 Réservé aux 18 ans et plus — l'abus d'alcool est dangereux pour la santé, à consommer avec modération.</p>
+        <p className="muted dim">
+          <a onClick={() => go("terms")} className="foot-link">CGU</a>
+          <span> · </span>
+          <a onClick={() => go("privacy")} className="foot-link">Confidentialité</a>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function Terms({ back }) {
+  return (
+    <div className="fade">
+      <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
+      <h2 className="h-title">Conditions d'utilisation</h2>
+      <p className="muted dim mb">Dernière mise à jour : {LEGAL_UPDATED}</p>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">🔞 Réservé aux majeurs</p>
+        <p className="muted">{APP_NAME} est un jeu de soirée qui met en scène la consommation d'alcool. Il est <b>strictement réservé aux personnes de 18 ans et plus</b>. En utilisant l'application, tu déclares être majeur(e).</p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">🍹 Consommation responsable</p>
+        <p className="muted">L'abus d'alcool est dangereux pour la santé. Bois avec modération, jamais sous la contrainte, et arrête quand tu veux. Ne joue pas si tu es enceinte, si tu dois conduire, si tu prends des médicaments incompatibles ou si tu as un problème avec l'alcool. Chaque joueur reste seul responsable de ce qu'il boit. Les « gorgées », « secs » et « cul secs » proposés par le jeu peuvent toujours être remplacés par une boisson sans alcool.</p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">📋 Usage de l'application</p>
+        <p className="muted">{APP_NAME} est fourni gratuitement, « en l'état », sans garantie. Tu t'engages à ne pas en détourner l'usage et à ne pas y publier de contenu illicite, haineux ou portant atteinte à autrui (notamment dans les prénoms et photos). L'éditeur peut faire évoluer ou interrompre le service à tout moment.</p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">⚖️ Responsabilité</p>
+        <p className="muted">L'éditeur décline toute responsabilité quant aux conséquences directes ou indirectes liées à l'utilisation du jeu et à la consommation d'alcool. L'utilisation se fait sous ta seule responsabilité.</p>
+      </div>
+
+      <div className="panel">
+        <p className="b w mb-sm">✉️ Éditeur & contact</p>
+        <p className="muted">Éditeur : {APP_NAME}. Contact : <a href={`mailto:${CONTACT_EMAIL}`} className="foot-link">{CONTACT_EMAIL}</a>. Les présentes conditions sont soumises au droit français.</p>
+      </div>
+    </div>
+  );
+}
+
+export function Privacy({ back }) {
+  return (
+    <div className="fade">
+      <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
+      <h2 className="h-title">Politique de confidentialité</h2>
+      <p className="muted dim mb">Dernière mise à jour : {LEGAL_UPDATED}</p>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">👤 Responsable</p>
+        <p className="muted">Le responsable du traitement est {APP_NAME}. Pour toute question ou pour exercer tes droits : <a href={`mailto:${CONTACT_EMAIL}`} className="foot-link">{CONTACT_EMAIL}</a>.</p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">🗂️ Données collectées</p>
+        <p className="muted">
+          • le <b>prénom</b> que tu saisis ;<br />
+          • une <b>photo de profil</b>, <b>facultative</b> (elle n'est demandée que si tu l'ajoutes) ;<br />
+          • un <b>identifiant d'appareil</b> (stocké dans ton navigateur) et un <b>identifiant anonyme</b> Firebase, pour te reconnecter à ta partie ;<br />
+          • des <b>données techniques</b> gérées par notre hébergeur (adresse IP, journaux) nécessaires au fonctionnement.
+        </p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">🎯 Finalités & base légale</p>
+        <p className="muted">Ces données servent uniquement à faire fonctionner le jeu multijoueur en temps réel (exécution du service). L'ajout d'une <b>photo</b> repose sur ton <b>consentement</b> : tu peux jouer sans photo, et ne pas en ajouter n'empêche rien.</p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">☁️ Hébergement & partage</p>
+        <p className="muted">Les données de partie sont hébergées via <b>Google Firebase</b> (Firestore / Authentification). Le prénom et la photo que tu choisis sont visibles par les autres joueurs du <b>même salon</b>. Nous ne vendons ni ne louons tes données, et ne les utilisons pas à des fins publicitaires.</p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">⏳ Conservation</p>
+        <p className="muted">Les salons (prénoms, photos, état de partie) sont <b>supprimés automatiquement</b> après environ <b>12 h d'inactivité</b>. Les identifiants stockés dans ton navigateur restent tant que tu ne les effaces pas (vider les données du site les supprime).</p>
+      </div>
+
+      <div className="panel">
+        <p className="b w mb-sm">🔐 Tes droits</p>
+        <p className="muted">Tu disposes d'un droit d'accès, de rectification, d'effacement et d'opposition. Comme les salons s'effacent seuls sous 12 h, la plupart des données disparaissent d'elles-mêmes ; pour toute demande, écris à <a href={`mailto:${CONTACT_EMAIL}`} className="foot-link">{CONTACT_EMAIL}</a>. Nous n'utilisons pas de cookies publicitaires, seulement du stockage local technique.</p>
       </div>
     </div>
   );

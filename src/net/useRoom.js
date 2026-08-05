@@ -7,13 +7,27 @@
 import { useEffect, useRef, useState } from "react";
 import {
   doc, onSnapshot, runTransaction, setDoc, getDoc,
-  collection, setDoc as setDocRaw,
+  collection, setDoc as setDocRaw, Timestamp,
 } from "firebase/firestore";
-import { db } from "../firebase.js";
+import { db, myUid } from "../firebase.js";
 import { newLobby, dealNewGame, applyMove, joinInProgress } from "../game/engine.js";
 import { genCode } from "../game/deck.js";
 
 function roomRef(code) { return doc(db, "rooms", code); }
+
+/* Durée de vie d'un salon après la dernière activité. Le champ `expireAt`
+   (Timestamp) est rafraîchi à chaque écriture ; une règle TTL Firestore sur
+   ce champ supprime automatiquement les salons inactifs (données + coûts). */
+const ROOM_TTL_MS = 12 * 60 * 60 * 1000; // 12 h
+function ttl() { return Timestamp.fromMillis(Date.now() + ROOM_TTL_MS); }
+/* Estampille l'état avant écriture : rafraîchit l'expiration et garantit que
+   l'écrivain figure dans `members` (exigé par les règles). */
+function stamp(s) {
+  const uid = myUid();
+  if (uid) s.members = { ...(s.members || {}), [uid]: true };
+  s.expireAt = ttl();
+  return s;
+}
 
 /* Abonnement live à un salon. Renvoie { room, error }.
    On rafraîchit aussi au retour en avant-plan (reconnexion / réveil). */
@@ -51,7 +65,7 @@ export function usePresence(code, myId, active) {
   useEffect(() => {
     if (!code || !active) return;
     const presRef = doc(db, "rooms", code, "presence", myId);
-    const beat = () => setDocRaw(presRef, { at: Date.now() }, { merge: true }).catch(() => {});
+    const beat = () => setDocRaw(presRef, { at: Date.now(), expireAt: ttl() }, { merge: true }).catch(() => {});
     beat();
     const iv = setInterval(beat, 20000);
     const col = collection(db, "rooms", code, "presence");
@@ -72,7 +86,7 @@ export async function createRoom(mode, host) {
     const ref = roomRef(code);
     const exists = (await getDoc(ref)).exists();
     if (!exists) {
-      await setDoc(ref, newLobby(code, mode, host));
+      await setDoc(ref, stamp(newLobby(code, mode, { ...host, uid: myUid() })));
       return code;
     }
   }
@@ -90,16 +104,16 @@ export async function joinRoom(code, player) {
     if (existing) {
       // déjà dans le salon (reconnexion) : on met juste à jour le profil.
       existing.name = player.name; existing.photo = player.photo || existing.photo;
-      tx.set(ref, s);
+      tx.set(ref, stamp(s));
       return;
     }
     if (s.players.length >= 15) throw new Error("Salon plein (15 joueurs max).");
     if (s.status === "lobby") {
       s.players.push({ id: player.id, name: player.name, photo: player.photo || null, hand: [] });
-      tx.set(ref, s);
+      tx.set(ref, stamp(s));
     } else {
       // partie en cours : on distribue 7 cartes au nouveau venu.
-      tx.set(ref, joinInProgress(s, player));
+      tx.set(ref, stamp(joinInProgress(s, player)));
     }
   });
 }
@@ -116,6 +130,6 @@ async function mutate(code, fn) {
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists()) throw new Error("Salon introuvable.");
-    tx.set(ref, fn(snap.data()));
+    tx.set(ref, stamp(fn(snap.data())));
   });
 }
