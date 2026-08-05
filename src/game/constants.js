@@ -41,7 +41,7 @@ export const GAMES = [
   { id: "chanteur", name: "Le chanteur", chill: 2, harr: 2, kind: "offapp",
     rule: "Le lanceur propose un chanteur ou un groupe connu. À tour de rôle, chacun cite une chanson de cet artiste (sans répéter). Le premier qui sèche perd et boit." },
   { id: "connexion", name: "Connexion", chill: 2, harr: 2, kind: "inapp_connexion",
-    rule: "Une catégorie simple est tirée (couleur, fruit, fast-food…). Au décompte, chacun écrit un mot de cette catégorie. Tous ceux qui ont écrit le même mot sont « connectés » et boivent !" },
+    rule: "Une catégorie simple est tirée (couleur, fruit, fast-food…). Au décompte oral (3, 2, 1 !), chacun annonce à voix haute un mot de cette catégorie. Tous ceux qui ont dit le même mot sont « connectés » et boivent !" },
   { id: "petitbac", name: "Petit bac", chill: 4, harr: 2, kind: "inapp_letter",
     rule: "Une lettre est tirée. Chacun écrit un mot par catégorie commençant par cette lettre, avant la fin du chrono." },
   { id: "nioui", name: "Ni oui ni non", chill: 1, harr: 1, kind: "inapp_timer",
