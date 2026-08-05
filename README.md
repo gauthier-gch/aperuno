@@ -31,10 +31,23 @@ npm install
 5. Colle ces valeurs dans **`src/firebase.js`** (remplace les `REMPLACE_MOI`).
 6. **Règles Firestore** : onglet **Firestore Database → Règles**, colle le
    contenu de **`firestore.rules`** (fourni à la racine), puis **Publier**.
+7. **Nettoyage automatique (TTL)** : onglet **Firestore Database → TTL** →
+   **Créer une règle** → champ **`expireAt`**. Firestore supprime alors
+   automatiquement les salons (et leurs documents de présence) inactifs depuis
+   plus de ~12 h. Le champ `expireAt` est rafraîchi à chaque action de jeu.
 
 > Les clés `firebaseConfig` sont publiques côté navigateur, c'est normal et sans
-> danger : la sécurité vient des règles Firestore (lecture/écriture réservées
-> aux utilisateurs authentifiés, même anonymes).
+> danger : la sécurité vient des **règles Firestore**. Depuis la v0.9, l'écriture
+> d'un salon est réservée à ses **membres** (chaque appareil authentifié est
+> enregistré dans un champ `members` par son uid Firebase), la structure est
+> validée (mode/statut/≤ 15 joueurs) et les salons expirent tout seuls (TTL).
+>
+> ⚠️ Pour une mise en production/commercialisation, ces règles réduisent
+> fortement la surface d'attaque mais ne suffisent pas à empêcher la triche :
+> l'état de jeu est calculé côté client puis écrit tel quel, donc un membre
+> malveillant peut encore écrire un état arbitraire. Le correctif complet est de
+> déplacer la logique « autoritaire » côté serveur (Cloud Functions) et
+> d'activer **App Check** + la restriction de la clé API par domaine.
 
 ## 4. Lancer en local
 

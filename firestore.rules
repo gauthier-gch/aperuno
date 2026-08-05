@@ -2,10 +2,64 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Salons apéruno (+ sous-collection de présence) : lecture/écriture
-    // réservées aux utilisateurs (anonymes) authentifiés.
-    match /rooms/{code}/{document=**} {
-      allow read, write: if request.auth != null;
+    function isSignedIn() { return request.auth != null; }
+
+    // Le salon doit rester bien formé (structure + plafond de joueurs).
+    // NB : les règles Firestore ne peuvent pas mesurer la taille en octets d'un
+    // document ; le plafond concret est le nombre de joueurs (≤ 15) et la
+    // limite Firestore d'1 Mio/document. Les photos sont compressées et
+    // facultatives pour rester bien en dessous.
+    function validRoom(d) {
+      return d.code is string
+        && d.mode in ['chill', 'harr']
+        && d.status in ['lobby', 'playing', 'finished']
+        && d.hostId is string
+        && d.players is list
+        && d.players.size() >= 1
+        && d.players.size() <= 15
+        && d.members is map;
+    }
+
+    match /rooms/{code} {
+
+      // Lecture : il faut être authentifié ET connaître le code (accès par id
+      // exact, pas de requête de liste possible sur /rooms).
+      allow read: if isSignedIn();
+
+      // Création : l'auteur doit figurer dans members, le code doit
+      // correspondre au chemin, et la structure être valide.
+      allow create: if isSignedIn()
+        && request.resource.data.code == code
+        && request.auth.uid in request.resource.data.members
+        && validRoom(request.resource.data);
+
+      // Mise à jour : l'auteur doit être un membre après écriture, on ne peut
+      // RETIRER aucun membre existant (empêche d'éjecter les autres / d'effacer
+      // la map), et code + date de création sont immuables.
+      // NB : un utilisateur qui connaît le code peut toujours « rejoindre »
+      // (s'ajouter à members) puis écrire un état arbitraire — l'état de jeu
+      // étant calculé côté client, seule une logique serveur (Cloud Functions)
+      // empêche réellement la triche. Ces règles bloquent l'écriture anonyme,
+      // les documents mal formés, le dépassement de 15 joueurs et l'éjection.
+      allow update: if isSignedIn()
+        && request.auth.uid in request.resource.data.members
+        && (!('members' in resource.data)
+            || request.resource.data.members.keys().hasAll(resource.data.members.keys()))
+        && request.resource.data.code == code
+        && request.resource.data.createdAt == resource.data.createdAt
+        && validRoom(request.resource.data);
+
+      // Suppression : jamais côté client. Le nettoyage se fait via la règle TTL
+      // Firestore sur le champ `expireAt` (le service TTL contourne ces règles).
+      allow delete: if false;
+
+      // Présence : petit battement de cœur, un document par joueur.
+      match /presence/{pid} {
+        allow read: if isSignedIn();
+        allow create, update: if isSignedIn()
+          && request.resource.data.keys().hasOnly(['at', 'expireAt']);
+        allow delete: if false;
+      }
     }
   }
 }
