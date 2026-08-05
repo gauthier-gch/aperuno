@@ -27,7 +27,7 @@ export function sipsFor(mode) {
 
 /* kind : inapp_dice | inapp_vote | inapp_timer | inapp_letter | regard |
           inapp_mime | inapp_pear | inapp_city | inapp_roulette |
-          facilitator | offapp
+          inapp_connexion | inapp_patate | facilitator | offapp
    harrOnly : carte présente uniquement dans le deck du mode Harr. */
 export const GAMES = [
   { id: "21", name: "Le 21", chill: 3, harr: 1, kind: "offapp",
@@ -38,6 +38,10 @@ export const GAMES = [
     rule: "Choisis un adversaire. Vous lancez chacun votre dé. Le plus bas boit l'écart en gorgées." },
   { id: "categorie", name: "Catégorie", chill: 2, harr: 2, kind: "offapp",
     rule: "Choisis une catégorie. Chacun donne un item à tour de rôle. Le premier qui sèche perd et boit." },
+  { id: "chanteur", name: "Le chanteur", chill: 2, harr: 2, kind: "offapp",
+    rule: "Le lanceur propose un chanteur ou un groupe connu. À tour de rôle, chacun cite une chanson de cet artiste (sans répéter). Le premier qui sèche perd et boit." },
+  { id: "connexion", name: "Connexion", chill: 2, harr: 2, kind: "inapp_connexion",
+    rule: "Une catégorie simple est tirée (couleur, fruit, fast-food…). Au décompte, chacun écrit un mot de cette catégorie. Tous ceux qui ont écrit le même mot sont « connectés » et boivent !" },
   { id: "petitbac", name: "Petit bac", chill: 4, harr: 2, kind: "inapp_letter",
     rule: "Une lettre est tirée. Chacun écrit un mot par catégorie commençant par cette lettre, avant la fin du chrono." },
   { id: "nioui", name: "Ni oui ni non", chill: 1, harr: 1, kind: "inapp_timer",
@@ -56,8 +60,8 @@ export const GAMES = [
     rule: "Une poire apparaît avec une direction de coupe cible (la même pour tous). Reproduis-la du mieux possible : le plus éloigné de la cible perd et boit." },
   { id: "ville", name: "Place la ville", chill: 2, harr: 2, kind: "inapp_city",
     rule: "Une ville française est tirée. Chacun place un marqueur sur la carte. Le plus éloigné de la vraie position perd et boit." },
-  { id: "imposteur", name: "L'imposteur", chill: 2, harr: 2, kind: "inapp_imposteur",
-    rule: "Chacun reçoit un mot secret ; l'imposteur en a un autre, proche, et Mister White n'a aucun mot. À tour de rôle, décrivez votre mot sans le dire. À chaque manche, votez pour éliminer un joueur (l'hôte désigne l'éliminé). Les civils gagnent si l'imposteur et Mister White sont éliminés. Les éliminés boivent." },
+  { id: "imposteur", name: "Undercover", chill: 2, harr: 2, kind: "inapp_imposteur",
+    rule: "Chacun reçoit un mot secret ; l'undercover en a un autre, proche, et Mister White n'a aucun mot. À tour de rôle, décrivez votre mot sans le dire. À chaque manche, votez pour éliminer un joueur (l'hôte désigne l'éliminé). Les civils gagnent si l'undercover et Mister White sont éliminés. Les éliminés boivent." },
   { id: "dix", name: "C'est un 10 mais", chill: 2, harr: 2, kind: "inapp_dix",
     rule: "Le lanceur voit une carte (1 à 10) et lance un « c'est un 10 mais… » à l'oral. Chacun note de 1 à 10. Au dévoilement de la carte, chacun boit l'écart entre sa note et la carte." },
   { id: "cascade", name: "Cascade", chill: 0, harr: 2, kind: "facilitator", noLoser: true,
@@ -72,6 +76,8 @@ export const GAMES = [
     rule: "Le joueur déclare finir son verre en moins de X secondes. Le suivant surenchérit ou crie « menteur ». Si « menteur » a tort et que le bluffeur a fini son verre dans les temps, celui qui a crié « menteur » finit aussi son verre. Sinon, c'est le bluffeur qui finit son verre." },
   { id: "roulette", name: "Roulette Harr", chill: 0, harr: 2, kind: "inapp_roulette", harrOnly: true,
     rule: "Réservée au mode Harr. Lance la roue et applique le sort qui tombe !" },
+  { id: "patate", name: "Patate chaude", chill: 0, harr: 2, kind: "inapp_patate", harrOnly: true, noLoser: true,
+    rule: "Réservée au mode Harr. La musique monte… Lance le dé : dès que tu fais 6, passe le téléphone (le 6 affiché !) au voisin, qui relance. Celui qui tient le téléphone au moment du drop finit son verre cul sec 🥃 !" },
 ];
 
 export function game(id) { return GAMES.find((g) => g.id === id); }
@@ -148,4 +154,16 @@ export function imposterSetup(n) {
 export const CARD_SUITS = [
   { s: "♥", red: true }, { s: "♦", red: true }, { s: "♣", red: false }, { s: "♠", red: false },
 ];
+
+/* « Connexion » : catégories simples proposées au hasard. */
+export const CONNEXION_CATS = [
+  "Une couleur", "Un fruit", "Un fast-food", "Un animal", "Un pays",
+  "Une marque de voiture", "Un sport", "Un métier", "Une boisson", "Un légume",
+  "Un film culte", "Un jour de la semaine", "Une partie du corps", "Un instrument de musique",
+  "Un super-héros", "Une saison", "Un dessert", "Un moyen de transport",
+  "Une pièce de la maison", "Un réseau social",
+];
+
+/* Adresse qui reçoit les suggestions d'amélioration (bouton de la home). */
+export const SUGGEST_EMAIL = "gauthier.gache@gmail.com";
 

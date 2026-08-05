@@ -93,7 +93,7 @@ export async function joinRoom(code, player) {
       tx.set(ref, s);
       return;
     }
-    if (s.players.length >= 10) throw new Error("Salon plein (10 joueurs max).");
+    if (s.players.length >= 15) throw new Error("Salon plein (15 joueurs max).");
     if (s.status === "lobby") {
       s.players.push({ id: player.id, name: player.name, photo: player.photo || null, hand: [] });
       tx.set(ref, s);

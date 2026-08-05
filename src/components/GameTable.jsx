@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { MYID } from "../me.js";
 import { TYPE_META, CARD_INFO, GAMES, actionDrink } from "../game/constants.js";
 import { Overlay, Ava } from "./common.jsx";
@@ -86,8 +86,35 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
   const [swapCard, setSwapCard] = useState(null);  // { cardId } -> échange de carte
   const [reactPlus, setReactPlus] = useState(null);
   const [skipConfirm, setSkipConfirm] = useState(null); // joueur dont on veut passer le tour
+  const [confirmLeave, setConfirmLeave] = useState(false); // confirmation avant de quitter
+  const [drawReveal, setDrawReveal] = useState(null);      // carte piochée à révéler
+  const pendingDraw = useRef(false);
+  const prevHandIds = useRef(me.hand.map((c) => c.id));
   const hasDiable = me.hand.some((c) => c.type === "diable");
   const turnName = room.players[room.current] ? room.players[room.current].name : "";
+
+  const requestLeave = () => setConfirmLeave(true);
+
+  // Détecte ma carte piochée pour l'animer avant qu'elle rejoigne la main.
+  const handKey = me.hand.map((c) => c.id).join(",");
+  useEffect(() => {
+    const ids = me.hand.map((c) => c.id);
+    if (pendingDraw.current) {
+      const added = me.hand.filter((c) => !prevHandIds.current.includes(c.id));
+      if (added.length) { setDrawReveal(added[added.length - 1]); pendingDraw.current = false; }
+    }
+    prevHandIds.current = ids;
+  }, [handKey]);
+  useEffect(() => {
+    if (!drawReveal) return;
+    const t = setTimeout(() => setDrawReveal(null), 1700);
+    return () => clearTimeout(t);
+  }, [drawReveal]);
+
+  const copyCode = () => {
+    try { navigator.clipboard && navigator.clipboard.writeText(room.code); } catch (e) {}
+    flash(`Code ${room.code} copié — partage-le pour rejoindre en cours de route 📋`);
+  };
 
   function playActionStack(ids) { setSheet(null); act({ type: "action", cardIds: ids }); }
   function openDiable(ids) { setSheet(null); setTarget({ cardIds: ids, diableId: me.hand.find((x) => x.type === "diable").id }); }
@@ -102,7 +129,10 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
     <div className="fade">
       <div className="space" style={{ marginBottom: 6 }}>
         <span className="apr-logo" style={{ textAlign: "left" }}><span className="a" style={{ fontSize: 24 }}>apéruno</span></span>
-        <button className="btn btn-ghost auto quit-btn" onClick={leave}>Quitter la partie</button>
+        <div className="row" style={{ alignItems: "center", gap: 8 }}>
+          <button className="chip code-chip auto" onClick={copyCode} title="Copier le code">🔑 {room.code}</button>
+          <button className="btn btn-ghost auto quit-btn" onClick={requestLeave}>Quitter la partie</button>
+        </div>
       </div>
 
       <div className={"turnbar " + (isMyTurn ? "mine" : "")}>
@@ -134,7 +164,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
       <div className="center-zone">
         <div className="pile">
           <div className={"pile-card pile-back" + (mustDraw && !busy ? " draw-now" : "")}
-            onClick={() => mustDraw && !busy && act({ type: "drawTurn" })}>{room.deck.length}</div>
+            onClick={() => { if (mustDraw && !busy) { pendingDraw.current = true; act({ type: "drawTurn" }); } }}>{room.deck.length}</div>
           <div className="pile-lbl">{mustDraw ? "Pioche 👆" : "Pioche"}</div>
         </div>
         <div className="pile">
@@ -266,7 +296,31 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
         </Overlay>
       )}
 
-      {room.minigame && <Minigame room={room} act={act} flash={flash} busy={busy} leave={leave} />}
+      {room.minigame && <Minigame room={room} act={act} flash={flash} busy={busy} leave={requestLeave} />}
+
+      {drawReveal && (
+        <div className="overlay draw-overlay" onClick={() => setDrawReveal(null)}>
+          <div className="center-col">
+            <p className="muted mb">Tu as pioché…</p>
+            <div className="reveal-card">
+              <CardFace c={drawReveal} onClick={() => {}} />
+            </div>
+            <p className="dim mt">elle rejoint ta main 🂠</p>
+          </div>
+        </div>
+      )}
+
+      {confirmLeave && (
+        <Overlay>
+          <div className="center-col">
+            <div style={{ fontSize: 44 }}>⚠️</div>
+            <h3 className="h-title">Quitter le salon ?</h3>
+            <p className="muted mb">Attention, tu vas quitter le salon. Tu es sûr(e) ?</p>
+            <button className="btn btn-primary" onClick={() => { setConfirmLeave(false); leave(); }}>Oui, quitter</button>
+            <button className="btn btn-ghost btn-sm mt" onClick={() => setConfirmLeave(false)}>Annuler — je reste</button>
+          </div>
+        </Overlay>
+      )}
     </div>
   );
 }

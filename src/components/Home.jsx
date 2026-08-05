@@ -1,7 +1,11 @@
 import React from "react";
-import { GAMES } from "../game/constants.js";
+import { GAMES, SUGGEST_EMAIL } from "../game/constants.js";
 
 const LOGO = `${import.meta.env.BASE_URL}logo_aperuno.png`;
+
+const SUGGEST_HREF = `mailto:${SUGGEST_EMAIL}` +
+  `?subject=${encodeURIComponent("apéruno — suggestion d'amélioration")}` +
+  `&body=${encodeURIComponent("Salut !\n\nVoici mon idée pour améliorer apéruno :\n\n")}`;
 
 export function Home({ go }) {
   return (
@@ -22,6 +26,7 @@ export function Home({ go }) {
         <button className="btn btn-ghost" onClick={() => go("rules")}><span className="ico">📜</span> Règles</button>
         <button className="btn btn-ghost" onClick={() => go("minijeux")}><span className="ico">🎲</span> Mini-jeux</button>
         <button className="btn btn-ghost" onClick={() => go("install")}><span className="ico">📱</span> Installe l'app sur ton tél</button>
+        <a className="btn btn-ghost" href={SUGGEST_HREF} style={{ textDecoration: "none" }}><span className="ico">💡</span> Suggérer une amélioration</a>
       </div>
     </div>
   );

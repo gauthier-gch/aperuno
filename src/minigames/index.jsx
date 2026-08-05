@@ -14,6 +14,8 @@ import { RouletteGame } from "./Roulette.jsx";
 import { DuelGame } from "./Duel.jsx";
 import { DixGame } from "./Dix.jsx";
 import { ImposteurGame } from "./Imposteur.jsx";
+import { ConnexionGame } from "./Connexion.jsx";
+import { PatateGame } from "./Patate.jsx";
 
 /* Phases où l'on attend la contribution de chaque joueur (risque de blocage
    si quelqu'un se déconnecte) → le lanceur peut débloquer manuellement. */
@@ -49,6 +51,8 @@ export function Minigame({ room, act, busy, leave }) {
     case "inapp_roulette": body = <RouletteGame {...shared} />; break;
     case "inapp_dix": body = <DixGame {...shared} />; break;
     case "inapp_imposteur": body = <ImposteurGame {...shared} />; break;
+    case "inapp_connexion": body = <ConnexionGame {...shared} />; break;
+    case "inapp_patate": body = <PatateGame {...shared} />; break;
     default:
       if (g.duel) {
         // duels : choisir l'adversaire PUIS désigner le perdant.
