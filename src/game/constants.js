@@ -134,13 +134,22 @@ export const ROULETTE = [
 
 /* « L'imposteur » : paires (mot des civils / mot de l'imposteur), proches. */
 export const IMPOSTER_PAIRS = [
-  ["Fraise", "Framboise"], ["Chien", "Loup"], ["Café", "Thé"], ["Pizza", "Quiche"],
-  ["Mer", "Océan"], ["Vélo", "Moto"], ["Citron", "Orange"], ["Guitare", "Violon"],
-  ["Bière", "Vin"], ["Chat", "Tigre"], ["Neige", "Pluie"], ["Boulanger", "Pâtissier"],
-  ["Football", "Rugby"], ["Avion", "Hélicoptère"], ["Montagne", "Colline"],
-  ["Docteur", "Infirmier"], ["Pomme", "Poire"], ["Soleil", "Lune"],
-  ["Chaise", "Tabouret"], ["Téléphone", "Tablette"], ["Plage", "Piscine"],
-  ["Roi", "Prince"], ["Fromage", "Yaourt"], ["Train", "Métro"], ["Piano", "Orgue"],
+  /* ALCOOL */
+  ["Shot", "Cul Sec"], ["Vodka", "Tequila"], ["Gueule de bois", "Blackout"],
+  ["Kebab", "McDo"], ["Barman", "Videur"], ["Cendrier", "Briquet"],
+  ["Bière", "Cidre"], ["Boîte de nuit", "Bar de strip-tease"],
+  /* SEXE */
+  ["Fion", "Anus"], ["Sexe anal", "Sexe oral"], ["Fellation", "Cunnilingus"],
+  ["Partouze", "Plan à 3"], ["Masturbation", "Préliminaires"],
+  ["Missionnaire", "Levrette"], ["Sextape", "Nudes"], ["Cougar", "MILF"],
+  ["Sugar Daddy", "Gigolo"], ["Ex partenaire", "Amant / Maîtresse"],
+  ["Tinder", "Pornhub"],
+  /* OBJETS */
+  ["Préservatif", "Pilule"], ["Menottes", "Fouet"], ["String", "Culotte"],
+  ["Papier toilette", "Brosse à chiottes"],
+  /* BEURK */
+  ["Pet", "Rot"], ["Diarrhée", "Constipation"], ["Poil de cul", "Poil de nez"],
+  ["Sperme", "Cyprine"],
 ];
 
 /* Nombre de rôles selon le nombre de joueurs. */
