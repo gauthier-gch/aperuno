@@ -4,7 +4,7 @@ import { ensureAuth } from "./firebase.js";
 import { useRoom, usePresence, startGame, doMove } from "./net/useRoom.js";
 import { applyMove } from "./game/engine.js";
 import { Shell } from "./components/common.jsx";
-import { Home, Rules, MiniList, Install, Terms, Privacy } from "./components/Home.jsx";
+import { Home, Rules, MiniList, Install, Terms, Privacy, AgeGate } from "./components/Home.jsx";
 import { CreateForm, JoinForm } from "./components/Forms.jsx";
 import { Lobby } from "./components/Lobby.jsx";
 import { GameTable } from "./components/GameTable.jsx";
@@ -27,6 +27,14 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [announce, setAnnounce] = useState(null);
   const [busy, setBusy] = useState(false);
+  // Confirmation de majorité (déclaration sur l'honneur), mémorisée une fois donnée.
+  const [adult, setAdult] = useState(() => {
+    try { return localStorage.getItem("aperuno_adult") === "1"; } catch (e) { return false; }
+  });
+  const confirmAdult = () => {
+    try { localStorage.setItem("aperuno_adult", "1"); } catch (e) {}
+    setAdult(true);
+  };
   const [, tick] = useState(0);
   const { room: serverRoom, error } = useRoom(code);
   // Affichage optimiste : on montre le coup localement tout de suite, puis on
@@ -116,9 +124,9 @@ export default function App() {
         <h2 className="h-title">Salon introuvable</h2>
         <p className="muted">Le code « {code} » n'existe pas (ou la partie est terminée).</p>
         <button className="btn btn-primary" onClick={leave}>Accueil</button>
-      </div></Shell>
+      </div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>
     );
-    if (!room) return <Shell><div className="center-col"><p className="muted">Chargement du salon…</p></div></Shell>;
+    if (!room) return <Shell><div className="center-col"><p className="muted">Chargement du salon…</p></div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>;
     return (
       <Shell timers={room.timers}>
         {room.status === "lobby" && <Lobby room={room} onStart={(i) => startGame(code, i)} leave={leave} online={online} />}
@@ -126,6 +134,7 @@ export default function App() {
         {room.status === "finished" && <Win room={room} onReplay={(i) => startGame(code, i)} leave={leave} act={act} busy={busy} />}
         {announce && <div className="announce-banner pop" onClick={() => setAnnounce(null)}>{announce}</div>}
         {toast && <div className="toast pop">{toast}</div>}
+        {!adult && <AgeGate onConfirm={confirmAdult} />}
       </Shell>
     );
   }
@@ -141,6 +150,7 @@ export default function App() {
       {screen === "create" && <CreateForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} />}
       {screen === "join" && <JoinForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} />}
       {toast && <div className="toast pop">{toast}</div>}
+      {!adult && <AgeGate onConfirm={confirmAdult} />}
     </Shell>
   );
 }

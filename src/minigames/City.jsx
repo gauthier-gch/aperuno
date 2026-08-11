@@ -17,15 +17,37 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const panning = useRef(null);
+  const placing = useRef(false);
+  const downPt = useRef(null);
   const city = CITIES[mg.cityIdx];
   const submitted = mg.marks && mg.marks[MYID] != null;
 
-  function pick(e) {
-    if (submitted || mg.phase === "result") return;
+  /* Placement en Pointer Events (unifie souris/tactile). On évite ainsi le
+     `click` fantôme émis après un appui long, qui repositionnait le marqueur
+     à l'endroit du relâchement (le pin « se décalait tout seul »). */
+  function place(e) {
     const r = stageRef.current.getBoundingClientRect();
-    const t = e.touches ? e.touches[0] : e;
-    setMark({ x: Math.max(0, Math.min(1, (t.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (t.clientY - r.top) / r.height)) });
+    setMark({
+      x: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)),
+      y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)),
+    });
   }
+  function pickDown(e) {
+    if (submitted || mg.phase === "result") return;
+    placing.current = true;
+    downPt.current = { x: e.clientX, y: e.clientY };
+    stageRef.current.setPointerCapture?.(e.pointerId);
+    place(e);
+  }
+  function pickMove(e) {
+    if (!placing.current) return;
+    // Seuil anti-tremblement : un appui long immobile ne déplace plus le pin,
+    // seul un vrai glissement volontaire le repositionne.
+    const d = Math.hypot(e.clientX - downPt.current.x, e.clientY - downPt.current.y);
+    if (d < 6) return;
+    place(e);
+  }
+  function pickUp() { placing.current = false; }
 
   /* --------- résultats : zoom + liste triée --------- */
   if (mg.phase === "result") {
@@ -87,7 +109,8 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
   return (
     <div className="center-col">
       <p className="muted mb">Place <b className="w">{city.name}</b> sur la carte :</p>
-      <div className="map-stage" ref={stageRef} onClick={pick} onTouchStart={pick} onTouchMove={pick}>
+      <div className="map-stage" ref={stageRef}
+        onPointerDown={pickDown} onPointerMove={pickMove} onPointerUp={pickUp} onPointerCancel={pickUp}>
         <FranceMap />
         {(submitted ? mg.marks[MYID] : mark) && (
           <div className="marker" style={{ left: `${(submitted ? mg.marks[MYID].x : mark.x) * 100}%`, top: `${(submitted ? mg.marks[MYID].y : mark.y) * 100}%` }}>📍</div>

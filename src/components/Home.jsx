@@ -41,6 +41,55 @@ export function Home({ go }) {
   );
 }
 
+/* Porte d'âge affichée à l'arrivée : le joueur déclare sur l'honneur être
+   majeur avant d'accéder au jeu (qui met en scène la consommation d'alcool). */
+export function AgeGate({ onConfirm }) {
+  const [refused, setRefused] = useState(false);
+
+  if (refused) {
+    return (
+      <div className="overlay">
+        <div className="sheet pop" style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 46 }}>🔞</div>
+          <h2 className="h-title" style={{ marginTop: 8 }}>Accès réservé aux majeurs</h2>
+          <p className="muted mb">
+            {APP_NAME} est un jeu de soirée qui met en scène la consommation d'alcool,
+            <b className="w"> strictement réservé aux personnes de 18 ans et plus</b>.
+            Reviens quand tu seras majeur(e) 🍸
+          </p>
+          <button className="btn btn-ghost" onClick={() => setRefused(false)}>← Retour</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overlay">
+      <div className="sheet pop" style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 48 }}>🔞</div>
+        <h2 className="h-title" style={{ marginTop: 8 }}>Tu es bien majeur(e) ?</h2>
+        <p className="muted mb">
+          {APP_NAME} est un jeu de soirée qui met en scène la consommation d'alcool.
+          Il est <b className="w">strictement réservé aux personnes de 18 ans et plus</b>.
+          L'abus d'alcool est dangereux pour la santé, à consommer avec modération.
+        </p>
+        <p className="muted dim mb">
+          En continuant, je déclare sur l'honneur être âgé(e) d'au moins 18 ans et
+          accepter les <b>CGU</b> d'{APP_NAME}.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button className="btn btn-primary" onClick={onConfirm}>
+            ✅ Je confirme être majeur(e) sur l'honneur
+          </button>
+          <button className="btn btn-ghost" onClick={() => setRefused(true)}>
+            Je n'ai pas 18 ans
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Terms({ back }) {
   return (
     <div className="fade">

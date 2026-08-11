@@ -108,21 +108,30 @@ function makeAudio() {
 }
 
 export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
-  const [phase, setPhase] = useState("ready"); // ready | playing | dropped
+  const [phase, setPhase] = useState("playing"); // playing | dropped
   const [value, setValue] = useState(null);
   const [rolling, setRolling] = useState(false);
   const audioRef = useRef(null);
-  const dropTimer = useRef(null);
   const tickTimer = useRef(null);
   const rollTimer = useRef(null);
-  const startedAt = useRef(0);
   const durationRef = useRef(0);
+  const audioStart = useRef(null);   // ctx.currentTime au démarrage réel du son
+  const wallStart = useRef(0);       // repli horloge murale si pas de WebAudio
+  const startedRef = useRef(false);
+  const gestureCleanup = useRef(null);
 
-  // Nettoyage à la fermeture du composant.
-  useEffect(() => () => {
-    clearTimeout(dropTimer.current); clearTimeout(rollTimer.current); clearTimeout(tickTimer.current);
-    if (audioRef.current) audioRef.current.stop();
-  }, []);
+  // Démarrage automatique dès l'ouverture du mini-jeu (côté lanceur) :
+  // la musique se déclenche immédiatement et monte jusqu'au drop.
+  useEffect(() => {
+    if (isLauncher && !startedRef.current) startGame();
+    return () => {
+      startedRef.current = false;
+      clearTimeout(rollTimer.current); clearTimeout(tickTimer.current);
+      if (gestureCleanup.current) gestureCleanup.current();
+      if (audioRef.current) audioRef.current.stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLauncher]);
 
   if (!isLauncher) {
     return (
@@ -142,27 +151,55 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
     setPhase("dropped");
   }
 
-  // Boucle de « tics » qui s'accélèrent à l'approche du drop.
+  // Temps écoulé depuis le vrai démarrage du son (ms). Caler la montée et le
+  // drop sur l'horloge audio garde tout synchronisé même si, sur mobile, le son
+  // ne démarre qu'au premier contact (contexte audio suspendu jusque-là).
+  function elapsedMs() {
+    const audio = audioRef.current;
+    if (audio && audio.ctx) {
+      if (audio.ctx.state !== "running") return 0; // en attente d'un geste → figé à 0
+      if (audioStart.current == null) {
+        audioStart.current = audio.ctx.currentTime;
+        audio.start(durationRef.current); // planifie la montée maintenant que le son tourne
+      }
+      return (audio.ctx.currentTime - audioStart.current) * 1000;
+    }
+    return Date.now() - wallStart.current; // pas de WebAudio → horloge murale
+  }
+
+  // Boucle de « tics » qui s'accélèrent à l'approche du drop, pilotée par le temps réel.
   function scheduleTick() {
-    const elapsed = Date.now() - startedAt.current;
+    const audio = audioRef.current;
+    const running = !audio || (audio.ctx && audio.ctx.state === "running");
+    const elapsed = elapsedMs();
     const progress = Math.min(1, elapsed / durationRef.current); // 0 → 1
-    const gap = 620 - progress * 500; // 620ms → 120ms
-    if (audioRef.current) audioRef.current.blip(300 + progress * 500);
-    tickTimer.current = setTimeout(scheduleTick, Math.max(110, gap));
+    if (running && audio) audio.blip(300 + progress * 500);
+    if (elapsed >= durationRef.current) { triggerDrop(); return; }
+    const gap = running ? Math.max(110, 620 - progress * 500) : 250; // 620ms → 120ms
+    tickTimer.current = setTimeout(scheduleTick, gap);
   }
 
   function startGame() {
+    startedRef.current = true;
     const audio = makeAudio();
     audioRef.current = audio;
-    const duration = 30000 + Math.floor(Math.random() * 30000); // 30–60 s
+    const duration = 90000 + Math.floor(Math.random() * 90000); // 1min30 – 3min
     durationRef.current = duration;
-    startedAt.current = Date.now();
+    audioStart.current = null;
+    wallStart.current = Date.now();
     if (audio) {
-      if (audio.ctx.state === "suspended") audio.ctx.resume().catch(() => {});
-      audio.start(duration);
+      const resume = () => { if (audio.ctx.state === "suspended") audio.ctx.resume().catch(() => {}); };
+      resume();
+      // Repli mobile : si l'autoplay est bloqué, le premier contact relance le son.
+      const onGesture = () => resume();
+      window.addEventListener("pointerdown", onGesture, { capture: true });
+      window.addEventListener("touchstart", onGesture, { capture: true });
+      gestureCleanup.current = () => {
+        window.removeEventListener("pointerdown", onGesture, { capture: true });
+        window.removeEventListener("touchstart", onGesture, { capture: true });
+      };
     }
     scheduleTick();
-    dropTimer.current = setTimeout(triggerDrop, duration);
     setPhase("playing");
   }
 
@@ -176,16 +213,6 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
       setRolling(false);
       setValue(1 + Math.floor(Math.random() * 6));
     }, 650);
-  }
-
-  if (phase === "ready") {
-    return (
-      <div className="center-col">
-        <div style={{ fontSize: 56 }}>🥔🔥</div>
-        <p className="muted mb">Un seul téléphone : on se le passe ! Monte le son 🔊, la tension va monter…</p>
-        <button className="btn btn-primary" onClick={startGame}>Lancer la patate 🔥🎵</button>
-      </div>
-    );
   }
 
   if (phase === "dropped") {
@@ -203,7 +230,7 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
   const isSix = value === 6;
   return (
     <div className="center-col">
-      <p className="muted">🎵 La tension monte… lance le dé !</p>
+      <p className="muted">🔊 Monte le son ! La tension monte… lance le dé !</p>
       <div className="dice-row"><div className="dice-col"><Die value={value} rolling={rolling} /></div></div>
       {isSix && !rolling
         ? <p className="b" style={{ color: "var(--gold)", fontSize: 18 }}>6 ! 👉 Passe le téléphone (garde le 6 affiché) !</p>
