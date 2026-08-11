@@ -167,8 +167,21 @@ function initImposteur(s, base) {
   while (k < order.length) roles[order[k++]] = "civil";
   return {
     ...base, phase: "reveal", civilWord: pair[0], imposterWord: pair[1],
-    roles, eliminated: [], speakerIdx: 0, round: 1, lastElim: null, result: null,
+    roles, eliminated: [], speakerIdx: 0, speakOrder: [], round: 1, lastElim: null, result: null,
   };
+}
+
+/* Ordre de parole des joueurs encore en jeu.
+   Règle : Mister White ne commence jamais (il n'a aucun mot). Si le premier
+   de la file est Mister White, on le décale à la fin. */
+function imposteurSpeakOrder(mg, players) {
+  const ids = players.filter((p) => !mg.eliminated.includes(p.id)).map((p) => p.id);
+  let guard = 0;
+  while (ids.length > 1 && mg.roles[ids[0]] === "white" && guard < ids.length) {
+    ids.push(ids.shift());
+    guard++;
+  }
+  return ids;
 }
 
 /* ================================ REDUCER ================================ */
@@ -503,13 +516,16 @@ export function applyMove(s0, move, myId) {
       mgGuard(s, isLauncher);
       if (s.minigame.phase !== "reveal") throw new Error("Déjà démarré.");
       s.minigame.phase = "play"; s.minigame.speakerIdx = 0;
+      s.minigame.speakOrder = imposteurSpeakOrder(s.minigame, s.players);
       return s;
     }
     case "mgImpNext": {
       mgGuard(s, isLauncher);
       if (s.minigame.phase !== "play") throw new Error("Pas en phase de parole.");
-      const active = s.players.filter((p) => !s.minigame.eliminated.includes(p.id));
-      s.minigame.speakerIdx = Math.min(s.minigame.speakerIdx + 1, active.length);
+      const order = s.minigame.speakOrder && s.minigame.speakOrder.length
+        ? s.minigame.speakOrder
+        : s.players.filter((p) => !s.minigame.eliminated.includes(p.id)).map((p) => p.id);
+      s.minigame.speakerIdx = Math.min(s.minigame.speakerIdx + 1, order.length);
       return s;
     }
     case "mgImpToVote": {
@@ -551,6 +567,7 @@ export function applyMove(s0, move, myId) {
       if (s.minigame.phase !== "elim" || !s.minigame.lastElim) throw new Error("Rien à enchaîner.");
       s.minigame.round += 1;
       s.minigame.speakerIdx = 0;
+      s.minigame.speakOrder = imposteurSpeakOrder(s.minigame, s.players);
       s.minigame.lastElim = null;
       s.minigame.whiteGuessFailed = false;
       s.minigame.phase = "play";

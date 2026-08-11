@@ -68,8 +68,12 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
 
   /* tours de parole */
   if (mg.phase === "play") {
-    const speaker = active[mg.speakerIdx];
-    const allSpoke = mg.speakerIdx >= active.length;
+    /* Ordre de parole calculé par le moteur (Mister White ne commence jamais). */
+    const order = mg.speakOrder && mg.speakOrder.length
+      ? mg.speakOrder.map((id) => room.players.find((p) => p.id === id)).filter(Boolean)
+      : active;
+    const speaker = order[mg.speakerIdx];
+    const allSpoke = mg.speakerIdx >= order.length;
     return (
       <div className="center-col">
         <MyWordCard />
