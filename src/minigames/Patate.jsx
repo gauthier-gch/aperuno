@@ -30,14 +30,17 @@ function makeAudio() {
   if (!AC) return null;
   const ctx = new AC();
   const master = ctx.createGain();
-  master.gain.value = 0.0001;
+  // Palier AUDIBLE dès la première seconde : la tension vient de la nappe qui
+  // monte en fréquence, du filtre qui s'ouvre et des tics qui s'accélèrent —
+  // pas d'un fondu depuis le silence (qui rendait le début inaudible).
+  master.gain.value = 0.35;
   master.connect(ctx.destination);
 
   // Riser : nappe qui monte en fréquence pendant tout le build-up.
   const riser = ctx.createOscillator();
   riser.type = "sawtooth";
   const riserGain = ctx.createGain();
-  riserGain.gain.value = 0.06;
+  riserGain.gain.value = 0.09;
   const lp = ctx.createBiquadFilter();
   lp.type = "lowpass";
   lp.frequency.value = 500;
@@ -59,12 +62,17 @@ function makeAudio() {
 
   const start = (durationMs) => {
     const t = ctx.currentTime;
-    master.gain.setValueAtTime(0.0001, t);
-    master.gain.exponentialRampToValueAtTime(0.5, t + durationMs / 1000);
+    const d = durationMs / 1000;
+    // Volume : audible tout de suite, monte légèrement (ramp LINÉAIRE depuis un
+    // palier audible, et non exponentielle depuis ~0 qui restait muette longtemps).
+    master.gain.cancelScheduledValues(t);
+    master.gain.setValueAtTime(0.35, t);
+    master.gain.linearRampToValueAtTime(0.6, t + d);
+    // Tension : la nappe monte en fréquence et le filtre s'ouvre progressivement.
     riser.frequency.setValueAtTime(120, t);
-    riser.frequency.exponentialRampToValueAtTime(900, t + durationMs / 1000);
+    riser.frequency.exponentialRampToValueAtTime(900, t + d);
     lp.frequency.setValueAtTime(400, t);
-    lp.frequency.exponentialRampToValueAtTime(3500, t + durationMs / 1000);
+    lp.frequency.exponentialRampToValueAtTime(3500, t + d);
   };
 
   const drop = () => {
@@ -205,6 +213,10 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
 
   function rollDie() {
     if (rolling || phase !== "playing") return;
+    // Le lancer du dé est un vrai geste utilisateur : on (re)débloque le son ici
+    // pour garantir qu'il s'entend, même si l'autoplay au montage a été bloqué.
+    const audio = audioRef.current;
+    if (audio && audio.ctx && audio.ctx.state === "suspended") audio.ctx.resume().catch(() => {});
     setValue(null);
     setRolling(true);
     if (navigator.vibrate) navigator.vibrate(30);
