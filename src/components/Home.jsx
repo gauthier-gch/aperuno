@@ -287,10 +287,23 @@ export function Rules({ back }) {
           • <b style={{ color: "#27d17c" }}>Joker</b> / <b style={{ color: "#ff9b2f" }}>Relance</b> → se jouent en réaction (et quittent ta main).
         </p>
       </div>
-      <div className="panel">
+      <div className="panel mb">
         <p className="muted">
           <b style={{ color: "#37a6ff" }}>Les cartes Jeu</b> lancent un mini-jeu. En général, le <b>perdant du mini-jeu boit</b>.
         </p>
+      </div>
+      <div className="panel">
+        <p className="muted mb-sm">
+          <b className="w">🎲 Les {GAMES.length} mini-jeux disponibles</b>
+          <span className="dim"> — 🔥 = réservé au mode Harr. Règles détaillées dans l'onglet <b>Mini-jeux</b>.</span>
+        </p>
+        <div className="wrap">
+          {[...GAMES].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((g) => (
+            <span key={g.id} className={"chip" + (g.harrOnly ? " harr-chip" : "")}>
+              {g.harrOnly ? "🔥 " : ""}{g.name}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
