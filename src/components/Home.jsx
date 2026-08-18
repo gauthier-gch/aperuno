@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { GAMES, SUGGEST_EMAIL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED } from "../game/constants.js";
+import {
+  GAMES, SUGGEST_EMAIL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED,
+  SITE_NAME, LEGAL_EDITOR, LEGAL_PUBLISHER, LEGAL_HOST,
+} from "../game/constants.js";
 
 const LOGO = `${import.meta.env.BASE_URL}logo_aperuno.png`;
 
@@ -35,6 +38,8 @@ export function Home({ go }) {
           <a onClick={() => go("terms")} className="foot-link">CGU</a>
           <span> · </span>
           <a onClick={() => go("privacy")} className="foot-link">Confidentialité</a>
+          <span> · </span>
+          <a onClick={() => go("legal")} className="foot-link">Mentions légales</a>
         </p>
       </div>
     </div>
@@ -120,6 +125,53 @@ export function Terms({ back }) {
       <div className="panel">
         <p className="b w mb-sm">✉️ Éditeur & contact</p>
         <p className="muted">Éditeur : {APP_NAME}. Contact : <a href={`mailto:${CONTACT_EMAIL}`} className="foot-link">{CONTACT_EMAIL}</a>. Les présentes conditions sont soumises au droit français.</p>
+      </div>
+    </div>
+  );
+}
+
+export function Legal({ back }) {
+  return (
+    <div className="fade">
+      <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
+      <h2 className="h-title">Mentions légales</h2>
+      <p className="muted dim mb">Dernière mise à jour : {LEGAL_UPDATED}</p>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">✍️ Éditeur du site</p>
+        <p className="muted">
+          Le site <b>{SITE_NAME}</b> ({APP_NAME}) est édité par {LEGAL_EDITOR},
+          personne physique. Contact :{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="foot-link">{CONTACT_EMAIL}</a>.
+        </p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">📰 Directeur de la publication</p>
+        <p className="muted">{LEGAL_PUBLISHER}.</p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">☁️ Hébergeur</p>
+        <p className="muted">{LEGAL_HOST}.</p>
+      </div>
+
+      <div className="panel mb">
+        <p className="b w mb-sm">© Propriété intellectuelle</p>
+        <p className="muted">
+          Sauf mention contraire, l'ensemble des contenus de {APP_NAME} (nom, logo,
+          textes, visuels, code) est protégé par le droit de la propriété
+          intellectuelle et reste la propriété de son éditeur. Toute reproduction ou
+          réutilisation sans autorisation est interdite.
+        </p>
+      </div>
+
+      <div className="panel">
+        <p className="b w mb-sm">⚖️ Droit applicable</p>
+        <p className="muted">
+          Le présent site est soumis au droit français. Pour toute question, écris à{" "}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="foot-link">{CONTACT_EMAIL}</a>.
+        </p>
       </div>
     </div>
   );

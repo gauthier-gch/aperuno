@@ -4,7 +4,7 @@ import { ensureAuth } from "./firebase.js";
 import { useRoom, usePresence, startGame, doMove } from "./net/useRoom.js";
 import { applyMove } from "./game/engine.js";
 import { Shell } from "./components/common.jsx";
-import { Home, Rules, MiniList, Install, Terms, Privacy, AgeGate } from "./components/Home.jsx";
+import { Home, Rules, MiniList, Install, Terms, Privacy, Legal, AgeGate } from "./components/Home.jsx";
 import { CreateForm, JoinForm } from "./components/Forms.jsx";
 import { Lobby } from "./components/Lobby.jsx";
 import { GameTable } from "./components/GameTable.jsx";
@@ -147,6 +147,7 @@ export default function App() {
       {screen === "install" && <Install back={() => setScreen("home")} />}
       {screen === "terms" && <Terms back={() => setScreen("home")} />}
       {screen === "privacy" && <Privacy back={() => setScreen("home")} />}
+      {screen === "legal" && <Legal back={() => setScreen("home")} />}
       {screen === "create" && <CreateForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} />}
       {screen === "join" && <JoinForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} />}
       {toast && <div className="toast pop">{toast}</div>}
