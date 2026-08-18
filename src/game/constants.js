@@ -188,9 +188,9 @@ export const LEGAL_UPDATED = "août 2026";
    ------------------------------------------------------------------------ */
 export const SITE_NAME = "aperuno.fr";
 // Nom et prénom de l'éditeur du site (obligatoire).
-export const LEGAL_EDITOR = "[À COMPLÉTER — Prénom NOM de l'éditeur]";
+export const LEGAL_EDITOR = "Gauthier Gâche";
 // Directeur de la publication (en général la même personne que l'éditeur).
-export const LEGAL_PUBLISHER = "[À COMPLÉTER — Prénom NOM du directeur de la publication]";
+export const LEGAL_PUBLISHER = "Gauthier Gâche";
 // Hébergeur (le site est publié via GitHub Pages).
 export const LEGAL_HOST =
   "GitHub Pages — GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis";
