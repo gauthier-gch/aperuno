@@ -176,6 +176,9 @@ export const CONNEXION_CATS = [
 /* Adresse qui reçoit les suggestions d'amélioration (bouton de la home). */
 export const SUGGEST_EMAIL = "gauthier.gache@gmail.com";
 
+/* Page de dons/soutien (bouton « Soutenir le projet » de la home). */
+export const SUPPORT_URL = "https://ko-fi.com/aperuno";
+
 /* Informations légales (CGU / confidentialité). */
 export const APP_NAME = "APERUNO";
 export const CONTACT_EMAIL = "gauthier.gache@gmail.com";

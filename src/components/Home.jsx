@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  GAMES, SUGGEST_EMAIL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED,
+  GAMES, SUGGEST_EMAIL, SUPPORT_URL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED,
   SITE_NAME, LEGAL_EDITOR, LEGAL_PUBLISHER, LEGAL_HOST,
 } from "../game/constants.js";
 
@@ -30,6 +30,7 @@ export function Home({ go }) {
         <button className="btn btn-ghost" onClick={() => go("minijeux")}><span className="ico">🎲</span> Mini-jeux</button>
         <button className="btn btn-ghost" onClick={() => go("install")}><span className="ico">📱</span> Installe l'app sur ton tél</button>
         <a className="btn btn-ghost" href={SUGGEST_HREF} style={{ textDecoration: "none" }}><span className="ico">💡</span> Suggérer une amélioration</a>
+        <a className="btn btn-gold" href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}><span className="ico">❤️</span> Soutenir le projet</a>
       </div>
 
       <div className="home-foot">
