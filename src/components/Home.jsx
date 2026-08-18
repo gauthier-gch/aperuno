@@ -26,11 +26,10 @@ export function Home({ go }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <button className="btn btn-primary" onClick={() => go("create")}><span className="ico">🎴</span> Créer une partie</button>
         <button className="btn btn-blue" onClick={() => go("join")}><span className="ico">🔗</span> Rejoindre une partie</button>
-        <button className="btn btn-ghost" onClick={() => go("rules")}><span className="ico">📜</span> Règles</button>
-        <button className="btn btn-ghost" onClick={() => go("minijeux")}><span className="ico">🎲</span> Mini-jeux</button>
+        <button className="btn btn-ghost" onClick={() => go("rules")}><span className="ico">📜</span> Règles & mini-jeux</button>
         <button className="btn btn-ghost" onClick={() => go("install")}><span className="ico">📱</span> Installe l'app sur ton tél</button>
         <a className="btn btn-ghost" href={SUGGEST_HREF} style={{ textDecoration: "none" }}><span className="ico">💡</span> Suggérer une amélioration</a>
-        <a className="btn btn-gold" href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}><span className="ico">❤️</span> Soutenir le projet</a>
+        <a className="btn btn-support" href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}><span className="ico">❤️</span> Soutenir le projet</a>
       </div>
 
       <div className="home-foot">
@@ -292,35 +291,10 @@ export function Rules({ back }) {
           <b style={{ color: "#37a6ff" }}>Les cartes Jeu</b> lancent un mini-jeu. En général, le <b>perdant du mini-jeu boit</b>.
         </p>
       </div>
-      <div className="panel">
-        <p className="muted mb-sm">
-          <b className="w">🎲 Les {GAMES.length} mini-jeux disponibles</b>
-          <span className="dim"> — 🔥 = réservé au mode Harr. Règles détaillées dans l'onglet <b>Mini-jeux</b>.</span>
-        </p>
-        <div className="wrap">
-          {[...GAMES].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((g) => (
-            <span key={g.id} className={"chip" + (g.harrOnly ? " harr-chip" : "")}>
-              {g.harrOnly ? "🔥 " : ""}{g.name}
-            </span>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* Un jeu est « hors-app » quand l'appli ne fait que le lancer/annoncer (le jeu
-   se joue à l'oral ou physiquement) ; sinon il est piloté « in-app ». */
-const HORS_APP_KINDS = ["offapp", "facilitator", "regard", "inapp_connexion"];
-
-export function MiniList({ back }) {
-  const games = [...GAMES].sort((a, b) => a.name.localeCompare(b.name, "fr"));
-  return (
-    <div className="fade">
-      <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
-      <h2 className="h-title">Mini-jeux</h2>
+      <h2 className="h-title" style={{ marginTop: 28 }}>🎲 Les {GAMES.length} mini-jeux</h2>
+      <p className="muted dim mb">🔥 = réservé au mode Harr · « in-app » = piloté par l'appli, « hors-app » = à l'oral / physique.</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {games.map((g) => {
+        {[...GAMES].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((g) => {
           const horsApp = HORS_APP_KINDS.includes(g.kind);
           return (
             <div className={"panel" + (g.harrOnly ? " harr-mini" : "")} key={g.id} style={{ padding: 14 }}>
@@ -339,3 +313,7 @@ export function MiniList({ back }) {
     </div>
   );
 }
+
+/* Un jeu est « hors-app » quand l'appli ne fait que le lancer/annoncer (le jeu
+   se joue à l'oral ou physiquement) ; sinon il est piloté « in-app ». */
+const HORS_APP_KINDS = ["offapp", "facilitator", "regard", "inapp_connexion"];
