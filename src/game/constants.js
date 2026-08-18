@@ -181,3 +181,17 @@ export const APP_NAME = "APERUNO";
 export const CONTACT_EMAIL = "gauthier.gache@gmail.com";
 export const LEGAL_UPDATED = "août 2026";
 
+/* ------------------------------------------------------------------------
+   Mentions légales (obligatoires en France — LCEN, art. 6-III).
+   Éditeur = personne physique (particulier). ⚠️ À COMPLÉTER avant mise en
+   ligne : remplace les valeurs entre crochets par tes informations réelles.
+   ------------------------------------------------------------------------ */
+export const SITE_NAME = "aperuno.fr";
+// Nom et prénom de l'éditeur du site (obligatoire).
+export const LEGAL_EDITOR = "[À COMPLÉTER — Prénom NOM de l'éditeur]";
+// Directeur de la publication (en général la même personne que l'éditeur).
+export const LEGAL_PUBLISHER = "[À COMPLÉTER — Prénom NOM du directeur de la publication]";
+// Hébergeur (le site est publié via GitHub Pages).
+export const LEGAL_HOST =
+  "GitHub Pages — GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis";
+
