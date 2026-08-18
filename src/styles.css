@@ -32,6 +32,8 @@ html, body, #root { margin: 0; height: 100%; }
 .btn-blue { background:linear-gradient(135deg,#37a6ff,#5b6bff); box-shadow:0 12px 30px rgba(55,166,255,.35); }
 .btn-ghost { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); }
 .btn-gold { background:linear-gradient(135deg,var(--gold),#e0a93a); color:#3a2a06; box-shadow:0 10px 24px rgba(244,201,93,.3); }
+/* Bouton « Soutenir le projet » : discret, teinte rosée douce (pas criard). */
+.btn-support { background:rgba(255,107,134,.1); border:1px solid rgba(255,107,134,.4); color:#f3ecff; }
 .btn-sm { padding:12px 14px; font-size:14px; border-radius:14px; }
 .btn.auto { width:auto; }
 .btn:disabled { opacity:.4; }
