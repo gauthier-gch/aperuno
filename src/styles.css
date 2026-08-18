@@ -13,7 +13,11 @@ html, body, #root { margin: 0; height: 100%; }
     radial-gradient(900px 600px at 50% 110%, rgba(55,166,255,.30), transparent 60%),
     #0a0718;
 }
-.apr-app { width:100%; max-width:440px; min-height:100dvh; position:relative; padding:22px 18px 34px; }
+.apr-app { width:100%; max-width:440px; min-height:100dvh; position:relative;
+  /* Zone sûre (encoche / barre d'état / barre gestuelle) : évite que le haut
+     de l'écran — dont le bouton « Quitter la partie » — passe sous le wifi,
+     la batterie, etc. Vaut 0 sur les téléphones sans encoche. */
+  padding:calc(22px + env(safe-area-inset-top)) 18px calc(34px + env(safe-area-inset-bottom)); }
 .apr-serif { font-family:'Marcellus',serif; }
 .apr-logo { font-family:'Marcellus',serif; text-align:center; letter-spacing:.5px; }
 .apr-logo .a { font-size:54px; line-height:1; background:linear-gradient(180deg,#fff,var(--gold)); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 4px 18px rgba(244,201,93,.45)); }

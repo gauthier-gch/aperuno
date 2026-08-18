@@ -65,7 +65,7 @@ export const GAMES = [
   { id: "dix", name: "C'est un 10 mais", chill: 2, harr: 2, kind: "inapp_dix",
     rule: "Le lanceur voit une carte (1 à 10) et lance un « c'est un 10 mais… » à l'oral. Chacun note de 1 à 10. Au dévoilement de la carte, chacun boit l'écart entre sa note et la carte, et le lanceur boit la moyenne des écarts." },
   { id: "cascade", name: "Cascade", chill: 0, harr: 2, kind: "facilitator", noLoser: true, harrOnly: true,
-    rule: "Tout le monde boit en même temps. Un joueur ne peut s'arrêter que lorsque le précédent a reposé son verre." },
+    rule: "Tout le monde commence à boire en même temps. Le lanceur pose son verre quand il veut. Un joueur ne peut reposer son verre que lorsque le joueur précédent a reposé le sien. Si un joueur finit son verre avant que le précédent n'ait reposé le sien, ce dernier doit finir son verre cul sec." },
   { id: "russe", name: "Shot russe", chill: 0, harr: 3, kind: "facilitator", noLoser: true, harrOnly: true,
     rule: "Le joueur prépare plusieurs shots, un seul contient de l'alcool. Chacun en prend un à tour de rôle, en pokerface. Le lanceur choisit son shot en dernier. À vous de découvrir qui avait le shot alcoolisé." },
   { id: "duelsec", name: "Duel de sec", chill: 0, harr: 1, kind: "facilitator", drawLoser: true, duel: true, harrOnly: true,
