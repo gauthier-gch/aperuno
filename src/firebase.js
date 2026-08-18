@@ -29,7 +29,7 @@ const app = initializeApp(firebaseConfig);
    pas un secret. Tant que la valeur reste vide, App Check ne s'initialise pas
    → aucun risque de casser l'appli avant que tout soit prêt côté console.
    ------------------------------------------------------------------------- */
-const APPCHECK_SITE_KEY = "";
+const APPCHECK_SITE_KEY = "6Lf2jowtAAAAAOmpTshgP3u6EyP-BVPrIMxOpH5o";
 
 if (APPCHECK_SITE_KEY) {
   // En développement local, on autorise un « jeton de debug » (à enregistrer
