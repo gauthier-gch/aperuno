@@ -20,9 +20,67 @@ export function actionDrink(sips, unit) {
   return `boit ${sips} ${unit}${sips > 1 ? "s" : ""}`;
 }
 
-/* Gorgées infligées au perdant d'un mini-jeu, selon le mode. */
-export function sipsFor(mode) {
+/* Gorgées infligées au perdant d'un mini-jeu, selon le mode.
+   En premium, la valeur est réglable par l'hôte (défaut 2, comme Harr). */
+export function sipsFor(mode, premium) {
+  if (mode === "premium") return (premium && premium.mgSips) || 2;
   return mode === "harr" ? 2 : 1;
+}
+
+/* -------------------------------------------------------------------------
+   Mode PREMIUM : l'hôte compose lui-même le paquet.
+   - Cartes « spéciales » (hors gorgée / hors échange) : réglables de 0 à
+     5× leur nombre classique (le nombre classique = valeur ci-dessous, fixe
+     quel que soit le mode dans le paquet standard).
+   - Mini-jeux : chacun réglable de 0 à 10 (défaut = valeur du mode Harr).
+   - mgSips : gorgées infligées au perdant d'un mini-jeu (1 à 3, défaut 2).
+   Les cartes gorgée/shot et les cartes Échange restent aux valeurs Harr.
+   ------------------------------------------------------------------------- */
+export const CLASSIC_COUNTS = { diable: 24, joker: 8, plus2: 8, plus4: 4 };
+export const PREMIUM_MAX_MULT = 5; // scale « de 0 à 5× le nombre classique »
+export const PREMIUM_GAME_MAX = 10; // scale des mini-jeux « de 0 à 10 »
+export const PREMIUM_SIPS_MAX = 3; // scale des gorgées perdant mini-jeu
+
+/* Métadonnées des scales « cartes spéciales » du mode premium. */
+export const PREMIUM_CARD_SCALES = [
+  { key: "diable", label: "Diables", ic: "😈", classic: CLASSIC_COUNTS.diable },
+  { key: "joker", label: "Jokers", ic: "🃏", classic: CLASSIC_COUNTS.joker },
+  { key: "plus2", label: "Relance +2", ic: "⏫", classic: CLASSIC_COUNTS.plus2 },
+  { key: "plus4", label: "Relance +4", ic: "⏫", classic: CLASSIC_COUNTS.plus4 },
+];
+
+/* Config premium par défaut : reproduit le mode Harr. */
+export function defaultPremium() {
+  const games = {};
+  GAMES.forEach((g) => { games[g.id] = g.harr; });
+  return {
+    diable: CLASSIC_COUNTS.diable,
+    joker: CLASSIC_COUNTS.joker,
+    plus2: CLASSIC_COUNTS.plus2,
+    plus4: CLASSIC_COUNTS.plus4,
+    games,
+    mgSips: 2,
+  };
+}
+
+/* Borne + assainit une config premium reçue (défensif : valeurs hors bornes,
+   clés manquantes). Renvoie toujours un objet complet et valide. */
+export function sanitizePremium(p) {
+  const d = defaultPremium();
+  if (!p || typeof p !== "object") return d;
+  const clamp = (v, max, fallback) =>
+    Number.isFinite(v) ? Math.max(0, Math.min(Math.round(v), max)) : fallback;
+  const out = {
+    diable: clamp(p.diable, CLASSIC_COUNTS.diable * PREMIUM_MAX_MULT, d.diable),
+    joker: clamp(p.joker, CLASSIC_COUNTS.joker * PREMIUM_MAX_MULT, d.joker),
+    plus2: clamp(p.plus2, CLASSIC_COUNTS.plus2 * PREMIUM_MAX_MULT, d.plus2),
+    plus4: clamp(p.plus4, CLASSIC_COUNTS.plus4 * PREMIUM_MAX_MULT, d.plus4),
+    games: {},
+    mgSips: p.mgSips ? Math.max(1, Math.min(Math.round(p.mgSips), PREMIUM_SIPS_MAX)) : d.mgSips,
+  };
+  const src = (p.games && typeof p.games === "object") ? p.games : {};
+  GAMES.forEach((g) => { out.games[g.id] = clamp(src[g.id], PREMIUM_GAME_MAX, g.harr); });
+  return out;
 }
 
 /* kind : inapp_dice | inapp_vote | inapp_timer | inapp_letter | regard |

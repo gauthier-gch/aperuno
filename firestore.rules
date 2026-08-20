@@ -11,7 +11,8 @@ service cloud.firestore {
     // facultatives pour rester bien en dessous.
     function validRoom(d) {
       return d.code is string
-        && d.mode in ['chill', 'harr']
+        && d.mode in ['chill', 'harr', 'premium']
+        && (d.mode != 'premium' || d.premium is map)
         && d.status in ['lobby', 'playing', 'finished']
         && d.hostId is string
         && d.players is list

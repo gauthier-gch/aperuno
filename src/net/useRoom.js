@@ -81,13 +81,13 @@ export function usePresence(code, myId, active) {
   return online;
 }
 
-export async function createRoom(mode, host) {
+export async function createRoom(mode, host, premium) {
   for (let attempt = 0; attempt < 6; attempt++) {
     const code = genCode();
     const ref = roomRef(code);
     const exists = (await getDoc(ref)).exists();
     if (!exists) {
-      await setDoc(ref, stamp(newLobby(code, mode, { ...host, uid: myUid() })));
+      await setDoc(ref, stamp(newLobby(code, mode, { ...host, uid: myUid() }, premium)));
       return code;
     }
   }

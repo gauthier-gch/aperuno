@@ -20,18 +20,23 @@ les gorgées peuvent être remplacées par une boisson sans alcool.
 
 Une variante « soirée » du jeu de cartes classique : on enchaîne les tours, on
 pose des cartes qui font **boire**, et des **mini-jeux** viennent pimenter la
-partie. Deux ambiances :
+partie. Trois ambiances :
 
 - **Chill** — la version conviviale.
 - **Harr** — la version qui pique (mini-jeux plus intenses : roulette, patate
   chaude…).
+- **Premium** — l'hôte **compose lui-même le paquet** : réglettes pour le
+  nombre de Diables / Jokers / +2 / +4 (de 0 à 5× la quantité classique), une
+  réglette par mini-jeu (0 à 10) et le nombre de gorgées infligées au perdant
+  d'un mini-jeu. Par défaut, chaque réglette est calée sur le mode Harr. Les
+  cartes gorgée/shot et Échange restent aux valeurs Harr.
 
 Jusqu'à **15 joueurs** par salon.
 
 ## 📜 Les règles
 
-- **Créer une partie** → tu choisis le mode (**chill** / **Harr**), ton prénom et
-  ta photo → tu obtiens un **code à 4 lettres** à partager.
+- **Créer une partie** → tu choisis le mode (**chill** / **Harr** / **Premium**),
+  ton prénom et ta photo → tu obtiens un **code à 4 lettres** à partager.
 - Les autres joueurs font **Rejoindre une partie** avec ce code.
 - L'**hôte** (👑) choisit qui commence, puis lance la partie.
 - À **chaque tour** : tu **pioches** d'abord une carte (obligatoire), puis tu

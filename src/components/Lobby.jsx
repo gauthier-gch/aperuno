@@ -11,7 +11,7 @@ export function Lobby({ room, onStart, leave, online = {} }) {
       <div className="center-col" style={{ marginBottom: 18 }}>
         <p className="muted">Code du salon — partage-le !</p>
         <div className="code-big">{room.code}</div>
-        <span className="chip">{room.mode === "chill" ? "😎 Chill" : "🔥 Harr"}</span>
+        <span className="chip">{room.mode === "chill" ? "😎 Chill" : room.mode === "premium" ? "💎 Premium" : "🔥 Harr"}</span>
       </div>
       <p className="muted mb">Joueurs connectés ({room.players.length}/15)</p>
       <div className="players-grid">

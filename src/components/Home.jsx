@@ -20,7 +20,7 @@ export function Home({ go }) {
         <img className="apr-logo-img" src={LOGO} alt="apéruno" />
         <div className="apr-logo">
           <span className="a">apéruno</span>
-          <span className="sub">On se tue chill ou Harr ?</span>
+          <span className="sub">Chill, Harr ou Premium ?</span>
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
