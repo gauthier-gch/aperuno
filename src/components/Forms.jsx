@@ -2,9 +2,10 @@ import React, { useRef, useState } from "react";
 import { MYID } from "../me.js";
 import { compressPhoto } from "../util.js";
 import { createRoom, joinRoom } from "../net/useRoom.js";
+import { Overlay } from "./common.jsx";
 import {
   GAMES, defaultPremium, PREMIUM_CARD_SCALES, PREMIUM_GAME_MAX,
-  PREMIUM_MAX_MULT, PREMIUM_SIPS_MAX,
+  PREMIUM_MAX_MULT, PREMIUM_SIPS_MAX, MODE_INFO, premiumRecos,
 } from "../game/constants.js";
 import { buildDeck } from "../game/deck.js";
 
@@ -18,6 +19,24 @@ function Scale({ label, ic, value, min = 0, max, onChange, hint }) {
       </div>
       <input type="range" min={min} max={max} step={1} value={value}
         onChange={(e) => onChange(Number(e.target.value))} />
+    </div>
+  );
+}
+
+/* Reco personnalisée sur la composition premium (dans la modale de confirmation). */
+function PremiumReco({ cfg }) {
+  const recos = premiumRecos(cfg);
+  const total = buildDeck("premium", cfg).length;
+  return (
+    <div className="reco-box">
+      <p className="reco-title">💡 Notre reco sur ta composition <span className="dim">({total} cartes)</span></p>
+      {recos.length ? (
+        <ul className="reco-list">
+          {recos.map((r, i) => <li key={i}>{r}</li>)}
+        </ul>
+      ) : (
+        <p className="muted">👌 Composition bien équilibrée — bonne partie !</p>
+      )}
     </div>
   );
 }
@@ -72,8 +91,12 @@ export function CreateForm({ back, onDone, flash }) {
   const [mode, setMode] = useState("chill");
   const [premium, setPremium] = useState(defaultPremium);
   const [busy, setBusy] = useState(false);
-  async function go() {
+  const [confirm, setConfirm] = useState(false);
+  function review() {
     if (!name.trim()) return flash("Indique ton prénom 🙂");
+    setConfirm(true);
+  }
+  async function go() {
     setBusy(true);
     try {
       const code = await createRoom(mode, { id: MYID, name: name.trim(), photo },
@@ -94,10 +117,21 @@ export function CreateForm({ back, onDone, flash }) {
       {mode === "premium" && <PremiumConfig cfg={premium} setCfg={setPremium} />}
       <p className="muted mt mb">Ton profil</p>
       <PhotoName name={name} setName={setName} photo={photo} setPhoto={setPhoto} />
-      <button className="btn btn-primary" style={{ marginTop: 22 }} disabled={busy} onClick={go}>
+      <button className="btn btn-primary" style={{ marginTop: 22 }} disabled={busy} onClick={review}>
         {busy ? "Création…" : "Créer le salon 🎴"}
       </button>
       <p className="muted dim center" style={{ marginTop: 10 }}>🔞 En continuant, tu confirmes avoir 18 ans et acceptes les CGU et la politique de confidentialité (accessibles sur l'accueil).</p>
+      {confirm && (
+        <Overlay>
+          <h3 className="apr-serif" style={{ marginTop: 0, fontSize: 24 }}>{MODE_INFO[mode].emoji} Mode {MODE_INFO[mode].name}</h3>
+          <p className="muted">{MODE_INFO[mode].blurb}</p>
+          {mode === "premium" && <PremiumReco cfg={premium} />}
+          <div className="row" style={{ marginTop: 20 }}>
+            <button className="btn btn-ghost" style={{ flex: 1 }} disabled={busy} onClick={() => setConfirm(false)}>← Retour</button>
+            <button className="btn btn-primary" style={{ flex: 1 }} disabled={busy} onClick={go}>{busy ? "Création…" : "Continuer"}</button>
+          </div>
+        </Overlay>
+      )}
     </div>
   );
 }

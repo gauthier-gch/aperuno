@@ -49,6 +49,61 @@ export const PREMIUM_CARD_SCALES = [
   { key: "plus4", label: "Relance +4", ic: "⏫", classic: CLASSIC_COUNTS.plus4 },
 ];
 
+/* Présentation courte de chaque mode (modale de confirmation + onglet Règles). */
+export const MODE_INFO = {
+  chill: {
+    emoji: "😎", name: "Chill",
+    blurb: "Ce mode se marie très bien avec une soirée en bar ou en terrasse !",
+  },
+  harr: {
+    emoji: "🔥", name: "Harr",
+    blurb: "Ce mode contient des culs secs et des shots, il est donc idéal pour un before ou une soirée en appart !",
+  },
+  premium: {
+    emoji: "💎", name: "Premium",
+    blurb: "Ce mode te permet de personnaliser complètement la composition du jeu, en te laissant le choix du nombre de chaque carte !",
+  },
+};
+
+/* Recommandations personnalisées sur une composition premium.
+   Renvoie une liste de messages (vide = composition équilibrée). */
+export function premiumRecos(cfg) {
+  const c = sanitizePremium(cfg);
+  const actionTotal = ACTION_CARDS.reduce((s, a) => s + a.harr, 0); // gorgées/shots (fixes)
+  const echange = 6; // 3 échange de main + 3 échange de carte (fixes)
+  const gamesTotal = Object.values(c.games).reduce((s, n) => s + n, 0);
+  const plus = c.plus2 + c.plus4;
+  const special = c.diable + c.joker + plus;
+  const total = actionTotal + echange + gamesTotal + special;
+  const recos = [];
+
+  if (c.diable === 0)
+    recos.push("😈 Aucun Diable : les joueurs ne pourront pas s'attaquer entre eux. Comme le Diable aide aussi à vider sa main, la partie risque de ne jamais se terminer.");
+  else if (c.diable < CLASSIC_COUNTS.diable / 2)
+    recos.push("😈 Peu de Diables : les attaques entre joueurs seront rares.");
+
+  if (c.joker === 0)
+    recos.push("🃏 Aucun Joker : impossible de bloquer un Diable dirigé contre soi.");
+
+  if (plus === 0)
+    recos.push("⏫ Aucune Relance (+2/+4) : pas de contre-attaque possible face à un Diable.");
+
+  if (gamesTotal === 0)
+    recos.push("🎲 Aucun mini-jeu : la partie se jouera uniquement aux cartes.");
+  else if (gamesTotal / total > 0.45)
+    recos.push("🎲 Beaucoup de mini-jeux : peu de cartes pour vider sa main, la partie risque de traîner en longueur.");
+
+  if (c.mgSips >= PREMIUM_SIPS_MAX)
+    recos.push("🥃 Pénalité mini-jeu au maximum : les perdants vont boire fort !");
+
+  if (total > 220)
+    recos.push(`🃏 Gros paquet (${total} cartes) : prévois une longue partie.`);
+  else if (total < 70)
+    recos.push(`🃏 Petit paquet (${total} cartes) : la partie sera rapide.`);
+
+  return recos;
+}
+
 /* Config premium par défaut : reproduit le mode Harr. */
 export function defaultPremium() {
   const games = {};

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  GAMES, SUGGEST_EMAIL, SUPPORT_URL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED,
+  GAMES, MODE_INFO, SUGGEST_EMAIL, SUPPORT_URL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED,
   SITE_NAME, LEGAL_EDITOR, LEGAL_PUBLISHER, LEGAL_HOST,
 } from "../game/constants.js";
 
@@ -290,6 +290,22 @@ export function Rules({ back }) {
         <p className="muted">
           <b style={{ color: "#37a6ff" }}>Les cartes Jeu</b> lancent un mini-jeu. En général, le <b>perdant du mini-jeu boit</b>.
         </p>
+      </div>
+      <h2 className="h-title" style={{ marginTop: 28 }}>🎮 Les modes de jeu</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="panel" style={{ padding: 14 }}>
+          <b className="apr-serif" style={{ fontSize: 18 }}>{MODE_INFO.chill.emoji} {MODE_INFO.chill.name}</b>
+          <p className="muted" style={{ marginTop: 6 }}>{MODE_INFO.chill.blurb}</p>
+        </div>
+        <div className="panel harr-mini" style={{ padding: 14 }}>
+          <b className="apr-serif" style={{ fontSize: 18 }}>{MODE_INFO.harr.emoji} {MODE_INFO.harr.name}</b>
+          <p className="muted" style={{ marginTop: 6 }}>{MODE_INFO.harr.blurb}</p>
+        </div>
+        <div className="panel" style={{ padding: 14 }}>
+          <b className="apr-serif" style={{ fontSize: 18 }}>{MODE_INFO.premium.emoji} {MODE_INFO.premium.name}</b>
+          <p className="muted" style={{ marginTop: 6 }}>{MODE_INFO.premium.blurb}</p>
+          <p className="muted dim" style={{ marginTop: 6 }}>L'hôte règle le nombre de Diables, Jokers, +2, +4 (jusqu'à 5× la quantité habituelle), le nombre de chaque mini-jeu (0 à 10) et les gorgées infligées au perdant d'un mini-jeu. Les cartes gorgée/shot et Échange restent aux valeurs Harr.</p>
+        </div>
       </div>
       <h2 className="h-title" style={{ marginTop: 28 }}>🎲 Les {GAMES.length} mini-jeux</h2>
       <p className="muted dim mb">🔥 = réservé au mode Harr · « in-app » = piloté par l'appli, « hors-app » = à l'oral / physique.</p>
