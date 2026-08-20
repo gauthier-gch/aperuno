@@ -40,7 +40,7 @@ export function ConnexionGame({ room, mg, isLauncher, launcher, act, busy, waiti
           </div>
 
           <button className="btn btn-primary mt" disabled={busy} onClick={() => {
-            const sips = sipsFor(room.mode);
+            const sips = sipsFor(room.mode, room.premium);
             const names = picked.map((id) => (room.players.find((p) => p.id === id) || {}).name).filter(Boolean).join(", ");
             act(picked.length
               ? { type: "mgFinish", text: `Connexion 🔗 : ${names} ${picked.length > 1 ? "étaient connectés et boivent" : "était connecté et boit"} ${sips} gorgée${sips > 1 ? "s" : ""} 🍻` }

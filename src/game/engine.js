@@ -9,16 +9,18 @@
 import {
   GAMES, game, PETITBAC_LETTERS, PETITBAC_DURATION, TEN_MIN, MIME_WORDS,
   ROULETTE, sipsFor, actionDrink, IMPOSTER_PAIRS, imposterSetup, CARD_SUITS,
-  CONNEXION_CATS,
+  CONNEXION_CATS, sanitizePremium,
 } from "./constants.js";
 import { buildDeck, shuffle, makeUid } from "./deck.js";
 import { CITIES, project, unproject, distanceKm } from "./cities.js";
 
 /* ----------------------------- création d'état --------------------------- */
 
-export function newLobby(code, mode, host) {
+export function newLobby(code, mode, host, premium) {
   return {
     code, mode, status: "lobby", hostId: host.id,
+    // Config du mode premium (composition du paquet) — null pour chill/harr.
+    premium: mode === "premium" ? sanitizePremium(premium) : null,
     players: [{ id: host.id, name: host.name, photo: host.photo || null, hand: [] }],
     // members : { <uid Firebase> : true } — utilisé par les règles Firestore
     // pour n'autoriser l'écriture qu'aux membres du salon (voir firestore.rules).
@@ -32,7 +34,7 @@ export function newLobby(code, mode, host) {
 
 export function dealNewGame(s0, starterIdx) {
   const s = clone(s0);
-  const deck = shuffle(buildDeck(s.mode));
+  const deck = shuffle(buildDeck(s.mode, s.premium));
   s.players = s.players.map((p) => ({ ...p, hand: deck.splice(0, 7) }));
   s.deck = deck;
   s.discard = [];
@@ -576,7 +578,7 @@ export function applyMove(s0, move, myId) {
 
     case "mgFinish": {
       mgGuard(s, isLauncher);
-      const n = move.sips || sipsFor(mode);
+      const n = move.sips || sipsFor(mode, s.premium);
       const ids = move.loserIds && move.loserIds.length ? move.loserIds : (move.loserId ? [move.loserId] : []);
       const g = game(s.minigame.gameId);
       if (move.text) {

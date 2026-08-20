@@ -20,9 +20,122 @@ export function actionDrink(sips, unit) {
   return `boit ${sips} ${unit}${sips > 1 ? "s" : ""}`;
 }
 
-/* Gorgées infligées au perdant d'un mini-jeu, selon le mode. */
-export function sipsFor(mode) {
+/* Gorgées infligées au perdant d'un mini-jeu, selon le mode.
+   En premium, la valeur est réglable par l'hôte (défaut 2, comme Harr). */
+export function sipsFor(mode, premium) {
+  if (mode === "premium") return (premium && premium.mgSips) || 2;
   return mode === "harr" ? 2 : 1;
+}
+
+/* -------------------------------------------------------------------------
+   Mode PREMIUM : l'hôte compose lui-même le paquet.
+   - Cartes « spéciales » (hors gorgée / hors échange) : réglables de 0 à
+     5× leur nombre classique (le nombre classique = valeur ci-dessous, fixe
+     quel que soit le mode dans le paquet standard).
+   - Mini-jeux : chacun réglable de 0 à 10 (défaut = valeur du mode Harr).
+   - mgSips : gorgées infligées au perdant d'un mini-jeu (1 à 3, défaut 2).
+   Les cartes gorgée/shot et les cartes Échange restent aux valeurs Harr.
+   ------------------------------------------------------------------------- */
+export const CLASSIC_COUNTS = { diable: 24, joker: 8, plus2: 8, plus4: 4 };
+export const PREMIUM_MAX_MULT = 5; // scale « de 0 à 5× le nombre classique »
+export const PREMIUM_GAME_MAX = 10; // scale des mini-jeux « de 0 à 10 »
+export const PREMIUM_SIPS_MAX = 3; // scale des gorgées perdant mini-jeu
+
+/* Métadonnées des scales « cartes spéciales » du mode premium. */
+export const PREMIUM_CARD_SCALES = [
+  { key: "diable", label: "Diables", ic: "😈", classic: CLASSIC_COUNTS.diable },
+  { key: "joker", label: "Jokers", ic: "🃏", classic: CLASSIC_COUNTS.joker },
+  { key: "plus2", label: "Relance +2", ic: "⏫", classic: CLASSIC_COUNTS.plus2 },
+  { key: "plus4", label: "Relance +4", ic: "⏫", classic: CLASSIC_COUNTS.plus4 },
+];
+
+/* Présentation courte de chaque mode (modale de confirmation + onglet Règles). */
+export const MODE_INFO = {
+  chill: {
+    emoji: "😎", name: "Chill",
+    blurb: "Ce mode se marie très bien avec une soirée en bar ou en terrasse !",
+  },
+  harr: {
+    emoji: "🔥", name: "Harr",
+    blurb: "Ce mode contient des culs secs et des shots, il est donc idéal pour un before ou une soirée en appart !",
+  },
+  premium: {
+    emoji: "💎", name: "Premium",
+    blurb: "Ce mode te permet de personnaliser complètement la composition du jeu, en te laissant le choix du nombre de chaque carte !",
+  },
+};
+
+/* Recommandations personnalisées sur une composition premium.
+   Renvoie une liste de messages (vide = composition équilibrée). */
+export function premiumRecos(cfg) {
+  const c = sanitizePremium(cfg);
+  const actionTotal = ACTION_CARDS.reduce((s, a) => s + a.harr, 0); // gorgées/shots (fixes)
+  const echange = 6; // 3 échange de main + 3 échange de carte (fixes)
+  const gamesTotal = Object.values(c.games).reduce((s, n) => s + n, 0);
+  const plus = c.plus2 + c.plus4;
+  const special = c.diable + c.joker + plus;
+  const total = actionTotal + echange + gamesTotal + special;
+  const recos = [];
+
+  if (c.diable === 0)
+    recos.push("😈 Aucun Diable : les joueurs ne pourront pas s'attaquer entre eux. Comme le Diable aide aussi à vider sa main, la partie risque de ne jamais se terminer.");
+  else if (c.diable < CLASSIC_COUNTS.diable / 2)
+    recos.push("😈 Peu de Diables : les attaques entre joueurs seront rares.");
+
+  if (c.joker === 0)
+    recos.push("🃏 Aucun Joker : impossible de bloquer un Diable dirigé contre soi.");
+
+  if (plus === 0)
+    recos.push("⏫ Aucune Relance (+2/+4) : pas de contre-attaque possible face à un Diable.");
+
+  if (gamesTotal === 0)
+    recos.push("🎲 Aucun mini-jeu : la partie se jouera uniquement aux cartes.");
+  else if (gamesTotal / total > 0.45)
+    recos.push("🎲 Beaucoup de mini-jeux : peu de cartes pour vider sa main, la partie risque de traîner en longueur.");
+
+  if (c.mgSips >= PREMIUM_SIPS_MAX)
+    recos.push("🥃 Pénalité mini-jeu au maximum : les perdants vont boire fort !");
+
+  if (total > 220)
+    recos.push(`🃏 Gros paquet (${total} cartes) : prévois une longue partie.`);
+  else if (total < 70)
+    recos.push(`🃏 Petit paquet (${total} cartes) : la partie sera rapide.`);
+
+  return recos;
+}
+
+/* Config premium par défaut : reproduit le mode Harr. */
+export function defaultPremium() {
+  const games = {};
+  GAMES.forEach((g) => { games[g.id] = g.harr; });
+  return {
+    diable: CLASSIC_COUNTS.diable,
+    joker: CLASSIC_COUNTS.joker,
+    plus2: CLASSIC_COUNTS.plus2,
+    plus4: CLASSIC_COUNTS.plus4,
+    games,
+    mgSips: 2,
+  };
+}
+
+/* Borne + assainit une config premium reçue (défensif : valeurs hors bornes,
+   clés manquantes). Renvoie toujours un objet complet et valide. */
+export function sanitizePremium(p) {
+  const d = defaultPremium();
+  if (!p || typeof p !== "object") return d;
+  const clamp = (v, max, fallback) =>
+    Number.isFinite(v) ? Math.max(0, Math.min(Math.round(v), max)) : fallback;
+  const out = {
+    diable: clamp(p.diable, CLASSIC_COUNTS.diable * PREMIUM_MAX_MULT, d.diable),
+    joker: clamp(p.joker, CLASSIC_COUNTS.joker * PREMIUM_MAX_MULT, d.joker),
+    plus2: clamp(p.plus2, CLASSIC_COUNTS.plus2 * PREMIUM_MAX_MULT, d.plus2),
+    plus4: clamp(p.plus4, CLASSIC_COUNTS.plus4 * PREMIUM_MAX_MULT, d.plus4),
+    games: {},
+    mgSips: p.mgSips ? Math.max(1, Math.min(Math.round(p.mgSips), PREMIUM_SIPS_MAX)) : d.mgSips,
+  };
+  const src = (p.games && typeof p.games === "object") ? p.games : {};
+  GAMES.forEach((g) => { out.games[g.id] = clamp(src[g.id], PREMIUM_GAME_MAX, g.harr); });
+  return out;
 }
 
 /* kind : inapp_dice | inapp_vote | inapp_timer | inapp_letter | regard |

@@ -63,6 +63,21 @@ html, body, #root { margin: 0; height: 100%; }
 .seg button.on { color:#fff; }
 .seg button.on.chill { background:linear-gradient(135deg,#37a6ff,#27d17c); }
 .seg button.on.harr { background:linear-gradient(135deg,#ff3b5c,#b15bff); }
+.seg button.on.premium { background:linear-gradient(135deg,#f4c95d,#b15bff); }
+
+/* Panneau de composition du mode premium (réglettes). */
+.premium-panel { margin-top:12px; max-height:46vh; overflow-y:auto; }
+.pscale { margin:10px 0; }
+.pscale-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; font-size:13px; }
+.pscale-lbl { font-weight:600; }
+.pscale-val { font-weight:800; color:var(--gold); font-variant-numeric:tabular-nums; }
+.pscale input[type="range"] { width:100%; accent-color:var(--gold); }
+
+/* Reco de composition (modale de confirmation premium). */
+.reco-box { margin-top:14px; padding:14px; border-radius:16px; background:rgba(244,201,93,.08); border:1px solid rgba(244,201,93,.28); }
+.reco-title { font-weight:800; font-size:14px; margin:0 0 8px; }
+.reco-list { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px; }
+.reco-list li { font-size:13px; line-height:1.4; color:#e7e0ff; }
 
 .avatar { border-radius:50%; object-fit:cover; background:#2a2150; display:flex; align-items:center; justify-content:center; font-weight:800; color:#cbbcff; }
 .avatar.off { filter:grayscale(.8) brightness(.6); }
