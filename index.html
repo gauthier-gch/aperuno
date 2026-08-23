@@ -4,7 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="theme-color" content="#0a0718" />
-<title>apéruno</title>
+
+<!-- Le <title> est le texte cliquable affiché dans Google / Bing et repris par
+     les IA. On y met la marque + les mots-clés d'intention de recherche. -->
+<title>apéruno — jeu à boire multijoueur en ligne & gratuit</title>
 
 <!-- Icône d'application + écran d'accueil (iPhone & Android) -->
 <link rel="icon" type="image/png" href="./logo_aperuno.png" />
@@ -14,14 +17,20 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="apéruno" />
 <meta name="mobile-web-app-capable" content="yes" />
-<meta name="description" content="apéruno — le meilleur jeu d'alcool multijoueur." />
+
+<!-- Description = le résumé affiché sous le titre dans les résultats de recherche. -->
+<meta name="description" content="apéruno, le jeu à boire multijoueur en ligne et gratuit. Crée un salon, invite tes amis et enchaîne cartes et mini-jeux d'apéro sur ton téléphone. 3 modes : Chill, Harr et Premium. Réservé aux 18 ans et plus." />
+<meta name="keywords" content="apéruno, aperuno, jeu à boire, jeu d'alcool, jeu d'apéro, jeu de soirée, jeu à boire en ligne, jeu multijoueur, mini-jeux à boire, jeu de cartes à boire, drinking game" />
+<meta name="author" content="Gauthier Gâche" />
+<meta name="robots" content="index, follow, max-image-preview:large" />
+<meta name="rating" content="adult" />
 
 <!-- Aperçu au partage du lien (Open Graph : WhatsApp, iMessage, Messenger,
      Discord, LinkedIn…). Les URL d'image doivent être ABSOLUES. -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="apéruno" />
-<meta property="og:title" content="apéruno" />
-<meta property="og:description" content="apéruno — le meilleur jeu d'alcool multijoueur." />
+<meta property="og:title" content="apéruno — jeu à boire multijoueur en ligne & gratuit" />
+<meta property="og:description" content="Crée un salon, invite tes amis et enchaîne cartes et mini-jeux d'apéro. 3 modes : Chill, Harr et Premium. Gratuit, sans installation. Réservé aux 18 ans et plus." />
 <meta property="og:url" content="https://aperuno.fr/" />
 <meta property="og:image" content="https://aperuno.fr/logo_aperuno.png" />
 <meta property="og:image:width" content="315" />
@@ -30,22 +39,112 @@
 
 <!-- Aperçu au partage (Twitter/X) -->
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="apéruno" />
-<meta name="twitter:description" content="apéruno — le meilleur jeu d'alcool multijoueur." />
+<meta name="twitter:title" content="apéruno — jeu à boire multijoueur en ligne & gratuit" />
+<meta name="twitter:description" content="Crée un salon, invite tes amis et enchaîne cartes et mini-jeux d'apéro. Gratuit, sans installation. Réservé aux 18 ans et plus." />
 <meta name="twitter:image" content="https://aperuno.fr/logo_aperuno.png" />
 
 <link rel="canonical" href="https://aperuno.fr/" />
+
+<!-- Données structurées (schema.org / JSON-LD). Décrit apéruno de façon
+     lisible par Google et les IA : nom de la marque, catégorie, prix (gratuit),
+     langue, public visé. Aide à l'affichage enrichi et à la compréhension. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://aperuno.fr/#website",
+      "url": "https://aperuno.fr/",
+      "name": "apéruno",
+      "alternateName": "aperuno",
+      "description": "Le jeu à boire multijoueur en ligne et gratuit.",
+      "inLanguage": "fr-FR"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://aperuno.fr/#app",
+      "name": "apéruno",
+      "alternateName": "aperuno",
+      "url": "https://aperuno.fr/",
+      "description": "apéruno est un jeu à boire multijoueur en ligne et gratuit. Crée un salon, partage le lien avec tes amis et jouez ensemble depuis vos téléphones : un jeu de cartes rythmé par une vingtaine de mini-jeux d'apéro. Trois modes de jeu : Chill, Harr et Premium.",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web (iOS, Android, ordinateur)",
+      "browserRequirements": "Nécessite JavaScript. Fonctionne dans un navigateur récent.",
+      "inLanguage": "fr-FR",
+      "isAccessibleForFree": true,
+      "isFamilyFriendly": false,
+      "contentRating": "Réservé aux 18 ans et plus",
+      "image": "https://aperuno.fr/logo_aperuno.png",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "Gauthier Gâche"
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "Gauthier Gâche"
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <div id="root">
-  <!-- Écran de secours + diagnostic : reste visible si le JS ne se charge pas.
-       React le remplace dès qu'il monte. -->
-  <div id="boot" style="font-family:sans-serif;color:#f3ecff;background:#0a0718;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;">
-    <div style="font-size:40px">🍸</div>
-    <div style="font-weight:700">Chargement d'apéruno…</div>
-    <div id="boot-hint" style="font-size:13px;opacity:.75;display:none">Souci de chargement. Détails (à m'envoyer en capture) :</div>
+  <!-- Contenu de secours + SEO : ce bloc est présent dans le HTML brut, donc
+       lisible par Google, Bing et les IA (qui n'exécutent pas toujours le JS).
+       Il sert AUSSI d'écran de repli si le JavaScript ne se charge pas.
+       React remplace intégralement ce contenu dès qu'il monte. -->
+  <div id="boot" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#f3ecff;background:#0a0718;min-height:100dvh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:32px 20px;line-height:1.5;">
+    <img src="./logo_aperuno.png" alt="Logo apéruno" width="120" height="120" style="border-radius:24px;margin-top:8px" />
+    <h1 style="font-size:32px;margin:4px 0 0">apéruno</h1>
+    <p style="font-size:17px;max-width:560px;margin:0;opacity:.95">
+      Le <strong>jeu à boire multijoueur en ligne et gratuit</strong>. Crée un salon,
+      partage le lien avec tes amis et jouez ensemble depuis vos téléphones —
+      un jeu de cartes rythmé par une vingtaine de mini-jeux d'apéro.
+    </p>
+
+    <p id="boot-status" style="font-size:14px;opacity:.7;margin:2px 0">🍸 Chargement d'apéruno…</p>
+
+    <div style="max-width:620px;text-align:left;margin-top:8px">
+      <h2 style="font-size:19px;margin:18px 0 6px">Comment ça marche</h2>
+      <p style="margin:0;opacity:.9">
+        Un joueur crée une partie et obtient un lien de salon à partager. Chacun rejoint
+        depuis son navigateur, sans installation. À chaque tour, tu pioches une carte puis
+        tu en joues une ; certaines cartes déclenchent un mini-jeu. Le premier à vider sa
+        main gagne. Jouable dès 3 joueurs, à l'apéro, en before ou en soirée.
+      </p>
+
+      <h2 style="font-size:19px;margin:22px 0 6px">Les 3 modes de jeu</h2>
+      <ul style="margin:0;padding-left:20px;opacity:.9">
+        <li><strong>😎 Chill</strong> — parfait pour une soirée en bar ou en terrasse.</li>
+        <li><strong>🔥 Harr</strong> — culs secs et shots, idéal pour un before ou une soirée en appart.</li>
+        <li><strong>💎 Premium</strong> — compose toi-même le paquet : nombre de chaque carte et de chaque mini-jeu réglable.</li>
+      </ul>
+
+      <h2 style="font-size:19px;margin:22px 0 6px">Une vingtaine de mini-jeux d'apéro</h2>
+      <p style="margin:0;opacity:.9">
+        Le 21, La valise, Défi de dé, Catégorie, Le chanteur, Connexion, Petit bac,
+        Ni oui ni non, Mot interdit, Le regard, Vote secret, Mime, Jeu du doigt,
+        Coupe la poire, Place la ville, Undercover, C'est un 10 mais, Cascade, Shot russe,
+        Duel de sec, Duel de regard, L'enchère des secs, Roulette Harr et Patate chaude.
+      </p>
+
+      <p style="margin:20px 0 0;font-size:13px;opacity:.75">
+        🔞 Réservé aux 18 ans et plus — l'abus d'alcool est dangereux pour la santé,
+        à consommer avec modération.
+      </p>
+    </div>
+
+    <!-- Diagnostic affiché uniquement si le chargement échoue (voir script ci-dessous). -->
+    <div id="boot-hint" style="font-size:13px;opacity:.75;display:none;margin-top:16px">Souci de chargement. Détails (à m'envoyer en capture) :</div>
     <div id="boot-diag" style="display:none;font-size:11px;line-height:1.4;opacity:.9;max-width:92%;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.35);padding:10px 12px;border-radius:10px;text-align:left;"></div>
-    <button id="boot-reload" style="display:none;border:none;border-radius:14px;padding:12px 18px;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff3b5c,#b15bff)">Recharger</button>
+    <button id="boot-reload" style="display:none;border:none;border-radius:14px;padding:12px 18px;font-weight:700;color:#fff;background:linear-gradient(135deg,#ff3b5c,#b15bff);cursor:pointer">Recharger</button>
   </div>
 </div>
 <script>
