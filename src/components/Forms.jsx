@@ -92,6 +92,12 @@ export function CreateForm({ back, onDone, flash }) {
   const [premium, setPremium] = useState(defaultPremium);
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [premiumIntro, setPremiumIntro] = useState(false);
+  /* En entrant dans l'onglet Premium, on présente le mode (1re modale). */
+  function selectMode(m) {
+    if (m === "premium" && mode !== "premium") setPremiumIntro(true);
+    setMode(m);
+  }
   function review() {
     if (!name.trim()) return flash("Indique ton prénom 🙂");
     setConfirm(true);
@@ -110,9 +116,9 @@ export function CreateForm({ back, onDone, flash }) {
       <h2 className="h-title">Créer une partie</h2>
       <p className="muted mt mb">Mode</p>
       <div className="seg">
-        <button className={"chill " + (mode === "chill" ? "on" : "")} onClick={() => setMode("chill")}>😎 Chill</button>
-        <button className={"harr " + (mode === "harr" ? "on" : "")} onClick={() => setMode("harr")}>🔥 Harr</button>
-        <button className={"premium " + (mode === "premium" ? "on" : "")} onClick={() => setMode("premium")}>💎 Premium</button>
+        <button className={"chill " + (mode === "chill" ? "on" : "")} onClick={() => selectMode("chill")}>😎 Chill</button>
+        <button className={"harr " + (mode === "harr" ? "on" : "")} onClick={() => selectMode("harr")}>🔥 Harr</button>
+        <button className={"premium " + (mode === "premium" ? "on" : "")} onClick={() => selectMode("premium")}>💎 Premium</button>
       </div>
       {mode === "premium" && <PremiumConfig cfg={premium} setCfg={setPremium} />}
       <p className="muted mt mb">Ton profil</p>
@@ -121,11 +127,29 @@ export function CreateForm({ back, onDone, flash }) {
         {busy ? "Création…" : "Créer le salon 🎴"}
       </button>
       <p className="muted dim center" style={{ marginTop: 10 }}>🔞 En continuant, tu confirmes avoir 18 ans et acceptes les CGU et la politique de confidentialité (accessibles sur l'accueil).</p>
+      {/* 1re modale : présentation du mode Premium à l'entrée dans l'onglet. */}
+      {premiumIntro && (
+        <Overlay>
+          <h3 className="apr-serif" style={{ marginTop: 0, fontSize: 24 }}>{MODE_INFO.premium.emoji} Mode {MODE_INFO.premium.name}</h3>
+          <p className="muted">{MODE_INFO.premium.blurb}</p>
+          <p className="muted"><b className="w">⚠️ Attention :</b> il est vivement recommandé d'avoir masterisé le jeu avant de l'utiliser.</p>
+          <button className="btn btn-primary" style={{ marginTop: 20, width: "100%" }} onClick={() => setPremiumIntro(false)}>J'ai compris 💎</button>
+        </Overlay>
+      )}
+      {/* 2de modale : au clic sur « Créer le salon », reco sur les volumes choisis (premium) ou rappel du mode. */}
       {confirm && (
         <Overlay>
-          <h3 className="apr-serif" style={{ marginTop: 0, fontSize: 24 }}>{MODE_INFO[mode].emoji} Mode {MODE_INFO[mode].name}</h3>
-          <p className="muted">{MODE_INFO[mode].blurb}</p>
-          {mode === "premium" && <PremiumReco cfg={premium} />}
+          {mode === "premium" ? (
+            <>
+              <h3 className="apr-serif" style={{ marginTop: 0, fontSize: 24 }}>{MODE_INFO.premium.emoji} Ta composition</h3>
+              <PremiumReco cfg={premium} />
+            </>
+          ) : (
+            <>
+              <h3 className="apr-serif" style={{ marginTop: 0, fontSize: 24 }}>{MODE_INFO[mode].emoji} Mode {MODE_INFO[mode].name}</h3>
+              <p className="muted">{MODE_INFO[mode].blurb}</p>
+            </>
+          )}
           <div className="row" style={{ marginTop: 20 }}>
             <button className="btn btn-ghost" style={{ flex: 1 }} disabled={busy} onClick={() => setConfirm(false)}>← Retour</button>
             <button className="btn btn-primary" style={{ flex: 1 }} disabled={busy} onClick={go}>{busy ? "Création…" : "Continuer"}</button>
