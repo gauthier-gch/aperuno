@@ -7,7 +7,7 @@
    ========================================================================= */
 
 // Colle ici l'URL « /exec » du déploiement du web app Apps Script.
-const SHEET_WEBHOOK_URL = "";
+const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyjGAr1lUkLx6B4o9wWTUplOAkg0rZ-yWs5veyIIrt8jCQO_W2znEhqkQj9eBsrrWN4bQ/exec";
 
 /* Appelé côté HÔTE au lancement de la partie. `room` contient déjà tout le
    monde (les joueurs ont rejoint le lobby avant le lancement). */
