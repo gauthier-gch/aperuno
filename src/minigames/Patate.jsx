@@ -123,7 +123,7 @@ function makeAudio() {
 }
 
 export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
-  const [phase, setPhase] = useState("playing"); // playing | dropped
+  const [phase, setPhase] = useState("intro"); // intro (avertissement son) | playing | dropped
   const [value, setValue] = useState(null);
   const [rolling, setRolling] = useState(false);
   const audioRef = useRef(null);
@@ -135,10 +135,11 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
   const startedRef = useRef(false);
   const gestureCleanup = useRef(null);
 
-  // Démarrage automatique dès l'ouverture du mini-jeu (côté lanceur) :
-  // la musique se déclenche immédiatement et monte jusqu'au drop.
+  // Le son ne démarre plus automatiquement : le lanceur lit d'abord
+  // l'avertissement (volume + mode silencieux) puis appuie sur « Lancer », ce
+  // qui déclenche l'audio (un vrai geste utilisateur = autoplay garanti).
+  // Ce useEffect ne gère plus que le nettoyage au démontage.
   useEffect(() => {
-    if (isLauncher && !startedRef.current) startGame();
     return () => {
       startedRef.current = false;
       clearTimeout(rollTimer.current); clearTimeout(tickTimer.current);
@@ -146,7 +147,7 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
       if (audioRef.current) audioRef.current.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLauncher]);
+  }, []);
 
   if (!isLauncher) {
     return (
@@ -234,6 +235,18 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
     }, 650);
   }
 
+  // Avertissement son AVANT de lancer : le son ne part qu'au clic (geste réel).
+  if (phase === "intro") {
+    return (
+      <div className="center-col">
+        <div style={{ fontSize: 56 }}>🥔🔥</div>
+        <p className="b" style={{ color: "var(--gold)", fontSize: 18 }}>🔊 Volume à fond + désactive le mode silencieux !</p>
+        <p className="muted dim" style={{ fontSize: 13, marginTop: -2 }}>Sur iPhone, le petit switch « silencieux » coupe le son 🤫</p>
+        <button className="btn btn-primary mt" disabled={busy} onClick={startGame}>Lancer la patate chaude 🥔🔥</button>
+      </div>
+    );
+  }
+
   if (phase === "dropped") {
     return (
       <div className="center-col pop">
@@ -245,13 +258,10 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
     );
   }
 
-  // phase playing
+  // phase playing : juste le dé + le bouton (les règles sont affichées au-dessus).
   const isSix = value === 6;
   return (
     <div className="center-col">
-      <p className="b" style={{ color: "var(--gold)" }}>🔊 Volume à fond + désactive le mode silencieux !</p>
-      <p className="muted dim" style={{ fontSize: 13, marginTop: -4 }}>Sur iPhone, le petit switch « silencieux » coupe le son 🤫</p>
-      <p className="muted">La tension monte… lance le dé !</p>
       <div className="dice-row"><div className="dice-col"><Die value={value} rolling={rolling} /></div></div>
       {isSix && !rolling
         ? <p className="b" style={{ color: "var(--gold)", fontSize: 18 }}>6 ! 👉 Passe le téléphone (garde le 6 affiché) !</p>

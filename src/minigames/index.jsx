@@ -68,11 +68,14 @@ export function Minigame({ room, act, busy, leave }) {
       <p className="muted mb">{g.rule}</p>
       {body}
       {/* Débloquer un mini-jeu quand quelqu'un (y compris le lanceur) est absent :
-          accessible à TOUS, car seul le lanceur a les boutons de fin. */}
-      <ManualEscape
-        players={room.players}
-        onPick={(id) => act({ type: "mgAbort", loserId: id })}
-        onClose={() => act({ type: "mgAbort" })} />
+          accessible à TOUS, car seul le lanceur a les boutons de fin.
+          Inutile pour la patate chaude (un seul téléphone, piloté par le lanceur). */}
+      {mg.kind !== "inapp_patate" && (
+        <ManualEscape
+          players={room.players}
+          onPick={(id) => act({ type: "mgAbort", loserId: id })}
+          onClose={() => act({ type: "mgAbort" })} />
+      )}
     </Overlay>
   );
 }
