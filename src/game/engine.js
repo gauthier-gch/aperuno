@@ -234,6 +234,13 @@ export function applyMove(s0, move, myId) {
       };
       return offerOrResolve(s);
     }
+    /* Le lanceur de la gorgée valide « gorgées prises » lui-même si le joueur
+       visé est absent et ne réagit pas → débloque tout le monde. */
+    case "reactForce": {
+      if (!s.reaction) throw new Error("Aucune gorgée en attente.");
+      if (s.reaction.byId !== myId) throw new Error("Seul le lanceur de la gorgée peut valider à sa place.");
+      return resolveDrink(s);
+    }
     case "reactDrink": {
       if (!s.reaction || s.reaction.targetId !== myId) throw new Error("Aucune réaction attendue de ta part.");
       const r = s.reaction;
@@ -473,6 +480,28 @@ export function applyMove(s0, move, myId) {
       return s;
     }
 
+    /* ---------- virer définitivement un joueur du salon (n'importe qui) ----------
+       À utiliser quand quelqu'un a quitté la pièce sans quitter le jeu : il
+       cessait de compter dans les mini-jeux/gorgées et bloquait la partie. */
+    case "removePlayer": {
+      if (s.minigame || s.reaction) throw new Error("Impossible pendant un mini-jeu ou une réaction.");
+      const t = idx(s, move.targetId);
+      if (t < 0) throw new Error("Joueur introuvable.");
+      if (move.targetId === myId) throw new Error("Pour partir, utilise « Quitter la partie ».");
+      if (s.players.length <= 2) throw new Error("Il faut rester au moins 2 joueurs.");
+      const removed = s.players[t];
+      // Ses cartes retournent dans la défausse (le paquet reste complet).
+      if (removed.hand && removed.hand.length) s.discard = [...removed.hand, ...s.discard];
+      const wasCurrent = t === s.current;
+      s.players.splice(t, 1);
+      if (t < s.current) s.current -= 1;
+      if (s.current >= s.players.length) s.current = 0;
+      if (wasCurrent) s.turn = { drawn: false }; // le tour passe au joueur suivant
+      s.announce = note(`${removed.name} a été retiré du salon 🚪`, true);
+      checkWinner(s);
+      return s;
+    }
+
     /* ---------- duels (regard / sec) : choisir l'adversaire ---------- */
     case "mgDuelPick": {
       mgGuard(s, isLauncher);
@@ -491,17 +520,14 @@ export function applyMove(s0, move, myId) {
       const v = move.value;
       if (typeof v !== "number" || v < 1 || v > 10) throw new Error("Note invalide (1 à 10).");
       s.minigame.guesses[myId] = v;
+      // Dévoilement automatique dès que tous les autres joueurs ont noté.
+      const guessers = s.players.length - 1; // tout le monde sauf le lanceur
+      if (Object.keys(s.minigame.guesses).length >= guessers) dixReveal(s);
       return s;
     }
     case "mgDixReveal": {
       mgGuard(s, isLauncher);
-      // Le lanceur boit la moyenne (arrondie) des écarts des autres joueurs.
-      const ecarts = Object.values(s.minigame.guesses || {})
-        .filter((v) => typeof v === "number")
-        .map((v) => Math.abs(v - s.minigame.value));
-      s.minigame.launcherSips = ecarts.length
-        ? Math.round(ecarts.reduce((a, b) => a + b, 0) / ecarts.length) : 0;
-      s.minigame.phase = "reveal";
+      dixReveal(s);
       return s;
     }
 
@@ -576,6 +602,24 @@ export function applyMove(s0, move, myId) {
       return s;
     }
 
+    /* ---------- débloquer / terminer un mini-jeu (n'importe qui) ----------
+       Utile si le LANCEUR lui-même est absent (lui seul a les boutons de fin)
+       ou si un participant déconnecté bloque une phase collective. */
+    case "mgAbort": {
+      if (!s.minigame) throw new Error("Aucun mini-jeu en cours.");
+      const ids = move.loserIds && move.loserIds.length ? move.loserIds : (move.loserId ? [move.loserId] : []);
+      if (ids.length) {
+        const n = move.sips || sipsFor(mode, s.premium);
+        const names = ids.map((id) => { const i = idx(s, id); if (i < 0) throw new Error("Perdant invalide."); return s.players[i].name; }).join(", ");
+        const many = ids.length > 1;
+        s.announce = note(`${names} ${many ? "perdent et boivent" : "perd et boit"} ${n} gorgée${n > 1 ? "s" : ""} 🍻`, true);
+      } else {
+        s.announce = note(`« ${game(s.minigame.gameId).name} » terminé (débloqué) ⏭️`);
+      }
+      endTurn(s);
+      return s;
+    }
+
     case "mgFinish": {
       mgGuard(s, isLauncher);
       const n = move.sips || sipsFor(mode, s.premium);
@@ -637,6 +681,16 @@ function imposteurCheckOver(s) {
   const civ = roles.filter((r) => r === "civil").length;
   if (imp === 0 && white === 0) { s.minigame.result = "civils"; s.minigame.phase = "over"; }
   else if (imp > 0 && civ <= imp) { s.minigame.result = "imposteurs"; s.minigame.phase = "over"; }
+}
+/* C'est un 10 mais… : le lanceur boit la moyenne (arrondie) des écarts entre
+   la carte cachée et les notes des autres joueurs, puis on révèle. */
+function dixReveal(s) {
+  const ecarts = Object.values(s.minigame.guesses || {})
+    .filter((v) => typeof v === "number")
+    .map((v) => Math.abs(v - s.minigame.value));
+  s.minigame.launcherSips = ecarts.length
+    ? Math.round(ecarts.reduce((a, b) => a + b, 0) / ecarts.length) : 0;
+  s.minigame.phase = "reveal";
 }
 function handCard(player, cardId, type) {
   const c = player.hand.find((x) => x.id === cardId);

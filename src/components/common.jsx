@@ -45,15 +45,17 @@ export function Overlay({ children }) {
   );
 }
 
-/* Échappatoire pour le lanceur si un joueur déconnecté bloque un mini-jeu
-   collectif (vote / poire / carte / petit bac) : il peut désigner le perdant. */
-export function ManualEscape({ players, onPick }) {
+/* Échappatoire universelle si un joueur (ou le lanceur lui-même) a quitté la
+   pièce et bloque un mini-jeu : n'importe qui peut désigner le perdant ou
+   simplement terminer le jeu sans perdant. */
+export function ManualEscape({ players, onPick, onClose }) {
   const [open, setOpen] = useState(false);
   if (!open)
-    return <button className="btn btn-ghost btn-sm mt" onClick={() => setOpen(true)}>⚠️ Un joueur est bloqué ?</button>;
+    return <button className="btn btn-ghost btn-sm mt" onClick={() => setOpen(true)}>⚠️ Un joueur absent bloque le jeu ?</button>;
   return (
     <div className="mt">
-      <DesignateLoser players={players} onPick={onPick} label="Désigner manuellement le perdant (il/elle boit) :" />
+      <DesignateLoser players={players} onPick={onPick} label="Débloquer — désigner le perdant (il/elle boit) :" />
+      {onClose && <button className="btn btn-ghost btn-sm mt" onClick={onClose}>Terminer sans perdant ⏭️</button>}
       <button className="btn btn-ghost btn-sm mt" onClick={() => setOpen(false)}>Annuler</button>
     </div>
   );

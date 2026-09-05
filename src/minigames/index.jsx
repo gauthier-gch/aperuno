@@ -17,18 +17,6 @@ import { ImposteurGame } from "./Imposteur.jsx";
 import { ConnexionGame } from "./Connexion.jsx";
 import { PatateGame } from "./Patate.jsx";
 
-/* Phases où l'on attend la contribution de chaque joueur (risque de blocage
-   si quelqu'un se déconnecte) → le lanceur peut débloquer manuellement. */
-function collecting(mg) {
-  return (
-    (mg.kind === "inapp_vote" && mg.phase !== "result") ||
-    (mg.kind === "inapp_pear" && mg.phase === "cut") ||
-    (mg.kind === "inapp_city" && mg.phase === "mark") ||
-    (mg.kind === "inapp_dix" && mg.phase === "guess") ||
-    (mg.kind === "inapp_letter" && mg.phase === "play")
-  );
-}
-
 export function Minigame({ room, act, busy, leave }) {
   const mg = room.minigame;
   const g = game(mg.gameId);
@@ -79,9 +67,12 @@ export function Minigame({ room, act, busy, leave }) {
       <h3 className="h-title">{g.name}</h3>
       <p className="muted mb">{g.rule}</p>
       {body}
-      {isLauncher && collecting(mg) && (
-        <ManualEscape players={room.players} onPick={(id) => act({ type: "mgFinish", loserId: id })} />
-      )}
+      {/* Débloquer un mini-jeu quand quelqu'un (y compris le lanceur) est absent :
+          accessible à TOUS, car seul le lanceur a les boutons de fin. */}
+      <ManualEscape
+        players={room.players}
+        onPick={(id) => act({ type: "mgAbort", loserId: id })}
+        onClose={() => act({ type: "mgAbort" })} />
     </Overlay>
   );
 }
