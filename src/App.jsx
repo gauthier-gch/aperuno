@@ -15,8 +15,8 @@ import { Win } from "./components/Win.jsx";
    un jeu / mini-jeux : dés, lettres, roulette, cartes…), qui doit venir du
    serveur pour être cohérent entre les téléphones. */
 const OPTIMISTIC_MOVES = new Set([
-  "drawTurn", "action", "actionDiable", "reactDrink",
-  "echange", "echangeCarte", "pass", "skipCurrent", "winnerSec",
+  "drawTurn", "action", "actionDiable", "reactDrink", "reactForce",
+  "echange", "echangeCarte", "pass", "skipCurrent", "removePlayer", "winnerSec",
 ]);
 
 export default function App() {

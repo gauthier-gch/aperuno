@@ -85,7 +85,8 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
   const [swap, setSwap] = useState(null);          // { cardId } -> échange de main
   const [swapCard, setSwapCard] = useState(null);  // { cardId } -> échange de carte
   const [reactPlus, setReactPlus] = useState(null);
-  const [skipConfirm, setSkipConfirm] = useState(null); // joueur dont on veut passer le tour
+  const [playerMenu, setPlayerMenu] = useState(null); // joueur sur lequel agir (passer / virer)
+  const [kickConfirm, setKickConfirm] = useState(null); // confirmation avant de virer un joueur
   const [confirmLeave, setConfirmLeave] = useState(false); // confirmation avant de quitter
   const [drawReveal, setDrawReveal] = useState(null);      // carte piochée à révéler
   const pendingDraw = useRef(false);
@@ -140,15 +141,15 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
           : canPlay ? "🎯 À toi — joue une carte !"
           : `Au tour de ${turnName}`}
       </div>
-      {!isMyTurn && !room.minigame && !room.reaction && (
-        <p className="muted dim center" style={{ marginBottom: 10 }}>Un joueur absent ? Touche son avatar pour passer son tour.</p>
+      {!room.minigame && !room.reaction && (
+        <p className="muted dim center" style={{ marginBottom: 10 }}>Un joueur absent ? Touche son avatar pour passer son tour ou le retirer du salon.</p>
       )}
 
       <div className="opps">
         {room.players.map((p, i) => p.id !== MYID && (
           <div className={"opp" + (i === room.current ? " turn" : "")} key={p.id}
-            onClick={() => i === room.current && !room.minigame && !room.reaction && setSkipConfirm(p)}
-            style={i === room.current && !room.minigame && !room.reaction ? { cursor: "pointer" } : undefined}>
+            onClick={() => !room.minigame && !room.reaction && setPlayerMenu(p)}
+            style={!room.minigame && !room.reaction ? { cursor: "pointer" } : undefined}>
             <div className="av-wrap"><Ava p={p} size={40} online={online[p.id] !== false} /></div>
             <div className="stack">
               {Array.from({ length: Math.min(p.hand.length, 4) }).map((_, k) => (
@@ -211,15 +212,38 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
         </Overlay>
       )}
 
-      {skipConfirm && (
+      {playerMenu && (() => {
+        const isCurrent = room.players[room.current] && room.players[room.current].id === playerMenu.id;
+        return (
+          <Overlay>
+            <div className="center-col">
+              <Ava p={playerMenu} size={64} />
+              <h3 className="h-title">{playerMenu.name}</h3>
+              {isCurrent && (
+                <>
+                  <p className="muted mb">C'est son tour — s'il/elle est absent(e), tu peux le sauter.</p>
+                  <button className="btn btn-primary" disabled={busy}
+                    onClick={() => { setPlayerMenu(null); act({ type: "skipCurrent" }); }}>⏭️ Passer son tour</button>
+                </>
+              )}
+              <p className="muted dim mt mb">A quitté la pièce ? Retire-le/la du salon (ses cartes retournent dans la pioche).</p>
+              <button className="btn" style={{ background: "linear-gradient(135deg,#ff5c7a,#e8401e)" }} disabled={busy}
+                onClick={() => { setKickConfirm(playerMenu); setPlayerMenu(null); }}>🚪 Virer du salon</button>
+              <button className="btn btn-ghost btn-sm mt" onClick={() => setPlayerMenu(null)}>Annuler</button>
+            </div>
+          </Overlay>
+        );
+      })()}
+
+      {kickConfirm && (
         <Overlay>
           <div className="center-col">
-            <Ava p={skipConfirm} size={64} />
-            <h3 className="h-title">Passer le tour de {skipConfirm.name} ?</h3>
-            <p className="muted mb">S'il/elle est absent(e), tu peux sauter son tour.</p>
+            <div style={{ fontSize: 44 }}>🚪</div>
+            <h3 className="h-title">Virer {kickConfirm.name} ?</h3>
+            <p className="muted mb">Ce joueur sera retiré définitivement du salon. À utiliser s'il/elle a quitté la pièce sans quitter le jeu.</p>
             <button className="btn btn-primary" disabled={busy}
-              onClick={() => { setSkipConfirm(null); act({ type: "skipCurrent" }); }}>⏭️ Passer le tour</button>
-            <button className="btn btn-ghost btn-sm mt" onClick={() => setSkipConfirm(null)}>Annuler</button>
+              onClick={() => { const id = kickConfirm.id; setKickConfirm(null); act({ type: "removePlayer", targetId: id }); }}>Oui, virer du salon</button>
+            <button className="btn btn-ghost btn-sm mt" onClick={() => setKickConfirm(null)}>Annuler</button>
           </div>
         </Overlay>
       )}
@@ -292,6 +316,14 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
         <Overlay>
           <div className="center-col">
             <p className="muted">😈 {(room.players.find((p) => p.id === room.reaction.targetId) || {}).name || "Un joueur"} décide : subir, joker ou relancer…</p>
+            {room.reaction.byId === MYID && (
+              <>
+                <p className="muted dim mt mb">Le joueur visé est absent et ne répond pas ?</p>
+                <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "reactForce" })}>
+                  ✅ Valider « gorgées prises »
+                </button>
+              </>
+            )}
           </div>
         </Overlay>
       )}

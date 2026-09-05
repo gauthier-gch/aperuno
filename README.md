@@ -56,6 +56,23 @@ et l'hôte peut **passer le tour** d'un joueur absent. Si un joueur recharge la
 page, il **revient automatiquement** dans son salon (le code est mémorisé
 localement).
 
+### 🚪 Joueur parti sans quitter le jeu
+
+Quand quelqu'un s'absente sans fermer l'appli, plus rien ne doit bloquer la
+table :
+
+- **Passer son tour** ou **virer du salon** — touche l'avatar d'un joueur : tu
+  peux sauter son tour ou le **retirer définitivement** du salon (ses cartes
+  retournent dans la pioche). Il ne compte alors plus dans les gorgées ni les
+  mini-jeux.
+- **Gorgées prises** — si tu envoies une gorgée (Diable) à quelqu'un d'absent,
+  tu peux **valider toi-même** « gorgées prises » sans attendre sa réponse.
+- **Débloquer un mini-jeu** — n'importe quel mini-jeu peut être **terminé**
+  (avec ou sans perdant) via « ⚠️ Un joueur absent bloque le jeu ? », même si
+  c'est le lanceur lui-même qui est parti.
+- Les mini-jeux où **chaque joueur vote** (vote, poire, ville, « c'est un 10
+  mais… ») se **valident automatiquement** dès que tout le monde a répondu.
+
 > Tout l'aléatoire (dés, lettres, roulette, distances, désignation des perdants)
 > est tiré **dans la transaction Firestore**, donc identique sur tous les
 > téléphones — aucun écart d'affichage entre joueurs.
