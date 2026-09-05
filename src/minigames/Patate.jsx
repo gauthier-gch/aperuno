@@ -33,14 +33,21 @@ function makeAudio() {
   // Palier AUDIBLE dès la première seconde : la tension vient de la nappe qui
   // monte en fréquence, du filtre qui s'ouvre et des tics qui s'accélèrent —
   // pas d'un fondu depuis le silence (qui rendait le début inaudible).
-  master.gain.value = 0.35;
-  master.connect(ctx.destination);
+  master.gain.value = 0.55;
+  // Compresseur + gain de sortie : on peut pousser le volume fort sans que ça
+  // sature/craque quand tous les éléments (riser + tics + drop) se cumulent.
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -18; comp.knee.value = 24; comp.ratio.value = 4;
+  comp.attack.value = 0.003; comp.release.value = 0.25;
+  const outGain = ctx.createGain();
+  outGain.gain.value = 1.6; // gain de rattrapage après compression
+  master.connect(comp); comp.connect(outGain); outGain.connect(ctx.destination);
 
   // Riser : nappe qui monte en fréquence pendant tout le build-up.
   const riser = ctx.createOscillator();
   riser.type = "sawtooth";
   const riserGain = ctx.createGain();
-  riserGain.gain.value = 0.09;
+  riserGain.gain.value = 0.14;
   const lp = ctx.createBiquadFilter();
   lp.type = "lowpass";
   lp.frequency.value = 500;
@@ -55,7 +62,7 @@ function makeAudio() {
     o.connect(g); g.connect(master);
     const t = ctx.currentTime;
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.42, t + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
     o.start(t); o.stop(t + 0.14);
   };
@@ -66,8 +73,8 @@ function makeAudio() {
     // Volume : audible tout de suite, monte légèrement (ramp LINÉAIRE depuis un
     // palier audible, et non exponentielle depuis ~0 qui restait muette longtemps).
     master.gain.cancelScheduledValues(t);
-    master.gain.setValueAtTime(0.35, t);
-    master.gain.linearRampToValueAtTime(0.6, t + d);
+    master.gain.setValueAtTime(0.55, t);
+    master.gain.linearRampToValueAtTime(0.95, t + d);
     // Tension : la nappe monte en fréquence et le filtre s'ouvre progressivement.
     riser.frequency.setValueAtTime(120, t);
     riser.frequency.exponentialRampToValueAtTime(900, t + d);
@@ -80,13 +87,13 @@ function makeAudio() {
     try { riserGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.05); } catch {}
     const t = ctx.currentTime;
     master.gain.cancelScheduledValues(t);
-    master.gain.setValueAtTime(0.7, t);
+    master.gain.setValueAtTime(1.0, t);
 
     const boom = ctx.createOscillator();
     const bg = ctx.createGain();
     boom.type = "sine"; boom.frequency.setValueAtTime(160, t);
     boom.frequency.exponentialRampToValueAtTime(38, t + 0.9);
-    bg.gain.setValueAtTime(0.9, t);
+    bg.gain.setValueAtTime(1.15, t);
     bg.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
     boom.connect(bg); bg.connect(master);
     boom.start(t); boom.stop(t + 1.2);
@@ -98,7 +105,7 @@ function makeAudio() {
     for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
     const noise = ctx.createBufferSource(); noise.buffer = buf;
     const nf = ctx.createBiquadFilter(); nf.type = "bandpass"; nf.frequency.value = 900;
-    const ng = ctx.createGain(); ng.gain.value = 0.5;
+    const ng = ctx.createGain(); ng.gain.value = 0.75;
     noise.connect(nf); nf.connect(ng); ng.connect(master);
     noise.start(t);
   };
@@ -242,7 +249,9 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
   const isSix = value === 6;
   return (
     <div className="center-col">
-      <p className="muted">🔊 Monte le son ! La tension monte… lance le dé !</p>
+      <p className="b" style={{ color: "var(--gold)" }}>🔊 Volume à fond + désactive le mode silencieux !</p>
+      <p className="muted dim" style={{ fontSize: 13, marginTop: -4 }}>Sur iPhone, le petit switch « silencieux » coupe le son 🤫</p>
+      <p className="muted">La tension monte… lance le dé !</p>
       <div className="dice-row"><div className="dice-col"><Die value={value} rolling={rolling} /></div></div>
       {isSix && !rolling
         ? <p className="b" style={{ color: "var(--gold)", fontSize: 18 }}>6 ! 👉 Passe le téléphone (garde le 6 affiché) !</p>

@@ -3,6 +3,7 @@ import { MYID } from "./me.js";
 import { ensureAuth } from "./firebase.js";
 import { useRoom, usePresence, startGame, doMove } from "./net/useRoom.js";
 import { applyMove } from "./game/engine.js";
+import { logGameStart } from "./analytics.js";
 import { Shell } from "./components/common.jsx";
 import { Home, Rules, Install, Terms, Privacy, Legal, AgeGate } from "./components/Home.jsx";
 import { CreateForm, JoinForm } from "./components/Forms.jsx";
@@ -115,6 +116,18 @@ export default function App() {
   };
   const leave = () => { clearTimeout(optTimer.current); setOptimistic(null); busyRef.current = false; setBusy(false); setCode(null); setScreen("home"); };
 
+  // Lancement de la partie. On enregistre une ligne de suivi (côté HÔTE
+  // uniquement, une seule fois par salon) avec le roster complet du lobby.
+  const beginGame = (starterIdx) => {
+    if (room && room.hostId === MYID && room.status === "lobby") {
+      try {
+        const key = "aperuno_logged_" + code;
+        if (!localStorage.getItem(key)) { logGameStart(room); localStorage.setItem(key, "1"); }
+      } catch (e) { logGameStart(room); }
+    }
+    startGame(code, starterIdx);
+  };
+
   if (authErr) return <Shell><p className="muted">Connexion impossible : {authErr}. Vérifie la config Firebase.</p></Shell>;
   if (!authed) return <Shell><div className="center-col"><div className="apr-logo"><span className="a">apéruno</span></div><p className="muted">Connexion…</p></div></Shell>;
 
@@ -129,7 +142,7 @@ export default function App() {
     if (!room) return <Shell><div className="center-col"><p className="muted">Chargement du salon…</p></div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>;
     return (
       <Shell timers={room.timers}>
-        {room.status === "lobby" && <Lobby room={room} onStart={(i) => startGame(code, i)} leave={leave} online={online} />}
+        {room.status === "lobby" && <Lobby room={room} onStart={beginGame} leave={leave} online={online} />}
         {room.status === "playing" && <GameTable room={room} act={act} flash={flash} leave={leave} busy={busy} online={online} />}
         {room.status === "finished" && <Win room={room} onReplay={(i) => startGame(code, i)} leave={leave} act={act} busy={busy} />}
         {announce && <div className="announce-banner pop" onClick={() => setAnnounce(null)}>{announce}</div>}

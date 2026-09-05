@@ -162,6 +162,47 @@ Firestore**. Pour repartir d'un projet Firebase neuf :
 6. **Firestore Database → TTL** → crée une règle sur le champ **`expireAt`**
    (supprime automatiquement les salons inactifs depuis ~12 h).
 
+### 📊 Suivi des salons (Google Sheet, optionnel)
+
+L'appli peut ajouter **une ligne dans un Google Sheet à chaque partie lancée**
+(date/heure, mode, nombre de joueurs, pseudos). **RGPD : seuls les pseudos sont
+envoyés — jamais les photos.** L'écriture se fait côté **hôte uniquement**, une
+seule fois par salon. Désactivé par défaut (aucun envoi tant que l'URL n'est pas
+renseignée).
+
+Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
+
+1. Crée un Google Sheet (par ex. un onglet `Salons`) avec les en-têtes :
+   `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs`.
+2. Dans le Sheet : **Extensions → Apps Script**, colle ce code :
+
+   ```js
+   function doPost(e) {
+     var ss = SpreadsheetApp.getActiveSpreadsheet();
+     var sheet = ss.getSheetByName('Salons') || ss.getSheets()[0];
+     var d = JSON.parse(e.postData.contents);
+     sheet.appendRow([
+       new Date(d.at),                 // Date + heure
+       d.code,                          // Code du salon
+       d.mode,                          // chill / harr / premium
+       d.playerCount,                   // Nombre de joueurs
+       (d.players || []).join(', ')     // Pseudos (pas de photo — RGPD)
+     ]);
+     return ContentService.createTextOutput('ok');
+   }
+   ```
+
+3. **Déployer → Nouveau déploiement → Application Web** :
+   « Exécuter en tant que : moi », « Accès : tout le monde ». Copie l'URL
+   `…/exec`.
+4. Colle cette URL dans `SHEET_WEBHOOK_URL` (fichier `src/analytics.js`), puis
+   redéploie l'appli.
+
+> L'envoi est « fire-and-forget » (`fetch` en `no-cors`) : il n'affiche jamais
+> d'erreur au joueur et ne peut pas bloquer la partie. L'URL du web app est
+> publique (visible dans le bundle) — n'y mets aucune donnée sensible ; au pire
+> quelqu'un pourrait y insérer des lignes, sans lire le Sheet.
+
 ## 🚀 Déploiement
 
 Le site est déployé sur **GitHub Pages** avec un domaine perso (`aperuno.fr`,
