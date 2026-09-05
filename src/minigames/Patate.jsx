@@ -241,7 +241,7 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
       <div className="center-col">
         <div style={{ fontSize: 56 }}>🥔🔥</div>
         <p className="b" style={{ color: "var(--gold)", fontSize: 18 }}>🔊 Volume à fond + désactive le mode silencieux !</p>
-        <p className="muted dim" style={{ fontSize: 13, marginTop: -2 }}>Sur iPhone, le petit switch « silencieux » coupe le son 🤫</p>
+        <p className="muted dim" style={{ fontSize: 13, marginTop: -2 }}>Sur iPhone, le petit switch « silencieux » peut parfois bloquer le son</p>
         <button className="btn btn-primary mt" disabled={busy} onClick={startGame}>Lancer la patate chaude 🥔🔥</button>
       </div>
     );
