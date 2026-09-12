@@ -191,6 +191,8 @@ export const GAMES = [
     rule: "Réservée au mode Harr. Lance la roue et applique le sort qui tombe !" },
   { id: "patate", name: "Patate chaude", chill: 0, harr: 2, kind: "inapp_patate", harrOnly: true, noLoser: true,
     rule: "Réservée au mode Harr. La musique monte… Lance le dé : dès que tu fais 6, passe le téléphone (le 6 affiché !) au voisin, qui relance. Celui qui tient le téléphone au moment du drop finit son verre cul sec 🥃 !" },
+  { id: "buffalo", name: "Le Buffalo", chill: 0, harr: 2, kind: "inapp_timer", harrOnly: true,
+    rule: "Réservée au mode Harr. Un chrono de 10 minutes est lancé. Pendant toute la durée, si un joueur se fait repérer en train de boire de sa bonne main (la droite pour les droitiers, la gauche pour les gauchers), il doit finir son verre cul sec 🥃 !" },
 ];
 
 export function game(id) { return GAMES.find((g) => g.id === id); }

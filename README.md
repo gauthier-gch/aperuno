@@ -92,7 +92,9 @@ In-app (jouables directement dans l'appli) :
 - 🔟 **C'est un 10 mais…** — le lanceur boit la moyenne des écarts.
 - 🔗 **Connexion** — un mot commun au décompte : les « connectés » boivent.
 - 🎡 **Roulette Harr**, 🥔 **Patate chaude** (build-up sonore + drop, un seul
-  téléphone qu'on se passe), ⏱️ **chronos**, 👀 **le regard**, ⚔️ **duels**.
+  téléphone qu'on se passe), ⏱️ **chronos** (ni oui ni non, mot interdit,
+  🐃 **le Buffalo** — bois de ta bonne main, tu finis ton verre !),
+  👀 **le regard**, ⚔️ **duels**.
 
 ## 🗂️ Structure du repo
 

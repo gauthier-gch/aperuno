@@ -14,7 +14,7 @@ export function TimerGame({ mg, g, isLauncher, act, busy, waiting }) {
     );
   }
   return (
-    <button className="btn btn-blue" disabled={busy} onClick={() => act({ type: "mgStartTimer", label: "Ni oui ni non" })}>
+    <button className="btn btn-blue" disabled={busy} onClick={() => act({ type: "mgStartTimer", label: g.name })}>
       Lancer le chrono 10 min ⏳
     </button>
   );
