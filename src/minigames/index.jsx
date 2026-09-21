@@ -16,6 +16,7 @@ import { DixGame } from "./Dix.jsx";
 import { ImposteurGame } from "./Imposteur.jsx";
 import { ConnexionGame } from "./Connexion.jsx";
 import { PatateGame } from "./Patate.jsx";
+import { PiraterieGame } from "./Piraterie.jsx";
 
 export function Minigame({ room, act, busy, leave }) {
   const mg = room.minigame;
@@ -41,6 +42,7 @@ export function Minigame({ room, act, busy, leave }) {
     case "inapp_imposteur": body = <ImposteurGame {...shared} />; break;
     case "inapp_connexion": body = <ConnexionGame {...shared} />; break;
     case "inapp_patate": body = <PatateGame {...shared} />; break;
+    case "inapp_piraterie": body = <PiraterieGame {...shared} />; break;
     default:
       if (g.duel) {
         // duels : choisir l'adversaire PUIS désigner le perdant.

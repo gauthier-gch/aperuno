@@ -92,7 +92,9 @@ In-app (jouables directement dans l'appli) :
 - 🔟 **C'est un 10 mais…** — le lanceur boit la moyenne des écarts.
 - 🔗 **Connexion** — un mot commun au décompte : les « connectés » boivent.
 - 🎡 **Roulette Harr**, 🥔 **Patate chaude** (build-up sonore + drop, un seul
-  téléphone qu'on se passe), ⏱️ **chronos** (ni oui ni non, mot interdit,
+  téléphone qu'on se passe), 🏴‍☠️ **La Piraterie** (20 coffres, une bombe cachée :
+  on ouvre les coffres à tour de rôle sur un seul téléphone, celui qui déterre la
+  bombe finit son verre), ⏱️ **chronos** (ni oui ni non, mot interdit,
   🐃 **le Buffalo** — bois de ta bonne main, tu finis ton verre !),
   👀 **le regard**, ⚔️ **duels**.
 
@@ -124,8 +126,8 @@ src/
     cities.js                  → 50 villes + projection + tracé de la France
   components/                  → Home, Rules, Forms, Lobby, GameTable, Win, common
   minigames/                   → Dice, Vote, PetitBac, Timer, Regard, Mime, Pear, City,
-                                 Roulette, Patate, Imposteur, Duel, Dix, Connexion, Pear…
-                                 + dispatcher (index.jsx)
+                                 Roulette, Patate, Piraterie, Imposteur, Duel, Dix,
+                                 Connexion, Pear… + dispatcher (index.jsx)
 .github/workflows/deploy.yml   → build Vite + déploiement GitHub Pages
 ```
 

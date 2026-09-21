@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   GAMES, MODE_INFO, SUGGEST_EMAIL, SUPPORT_URL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED,
-  SITE_NAME, LEGAL_EDITOR, LEGAL_PUBLISHER, LEGAL_HOST,
+  SITE_NAME, LEGAL_EDITOR, LEGAL_PUBLISHER, LEGAL_HOST, INSTAGRAM_URL, TIKTOK_URL,
 } from "../game/constants.js";
 
 const LOGO = `${import.meta.env.BASE_URL}logo_aperuno.png`;
@@ -30,6 +30,18 @@ export function Home({ go }) {
         <button className="btn btn-ghost" onClick={() => go("install")}><span className="ico">📱</span> Installe l'app sur ton tél</button>
         <a className="btn btn-ghost" href={SUGGEST_HREF} style={{ textDecoration: "none" }}><span className="ico">💡</span> Suggérer une amélioration</a>
         <a className="btn btn-support" href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}><span className="ico">❤️</span> Soutenir le projet</a>
+      </div>
+
+      <div className="social-row">
+        <p className="muted dim">Suis-nous 👇</p>
+        <div className="social-links">
+          <a className="social-btn" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="apéruno sur Instagram">
+            <span className="social-ic">📸</span> Instagram
+          </a>
+          <a className="social-btn" href={TIKTOK_URL} target="_blank" rel="noopener noreferrer" aria-label="apéruno sur TikTok">
+            <span className="social-ic">🎵</span> TikTok
+          </a>
+        </div>
       </div>
 
       <div className="home-foot">
