@@ -229,3 +229,22 @@ html, body, #root { margin: 0; height: 100%; }
 .map-viewport .map-stage { width:100%; max-width:none; margin:0; }
 .map-zoom-ctrl { position:absolute; right:8px; bottom:8px; display:flex; flex-direction:column; gap:5px; z-index:2; }
 .map-zoom-ctrl button { width:34px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:rgba(20,14,44,.85); color:#fff; font-size:18px; font-weight:800; }
+
+/* ---- réseaux sociaux (home) ---- */
+.social-row { text-align:center; margin-top:18px; }
+.social-row .muted { margin-bottom:8px; }
+.social-links { display:flex; gap:10px; justify-content:center; }
+.social-btn { display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#f3ecff; font-weight:700; font-size:14px; padding:10px 16px; border-radius:14px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); transition:transform .12s ease, filter .12s; }
+.social-btn:active { transform:scale(.97); }
+.social-btn .social-ic { font-size:18px; }
+
+/* ---- La Piraterie (coffres à trésor) ---- */
+.pirate-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; width:min(100%,320px); margin:14px auto; }
+.chest { position:relative; aspect-ratio:1/1; border:none; cursor:pointer; border-radius:14px; font-size:30px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#3a2a06,#6b4e12); box-shadow:0 6px 16px rgba(0,0,0,.45), inset 0 0 0 1px rgba(244,201,93,.35); transition:transform .12s ease, filter .12s; }
+.chest:active { transform:scale(.94); }
+.chest:disabled { cursor:default; }
+.chest.open { background:rgba(255,255,255,.05); box-shadow:inset 0 0 0 1px rgba(255,255,255,.1); }
+.chest.open.empty { opacity:.5; }
+.chest.bomb { background:linear-gradient(135deg,#ff3b5c,#7d1020); box-shadow:0 0 0 2px #ff3b5c, 0 0 26px rgba(255,59,92,.7); }
+@keyframes chestpop { from{transform:scale(.6); opacity:.2;} to{transform:scale(1); opacity:1;} }
+.chest .chest-face { animation:chestpop .25s cubic-bezier(.2,1.4,.5,1); }

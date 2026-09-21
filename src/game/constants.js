@@ -140,7 +140,7 @@ export function sanitizePremium(p) {
 
 /* kind : inapp_dice | inapp_vote | inapp_timer | inapp_letter | regard |
           inapp_mime | inapp_pear | inapp_city | inapp_roulette |
-          inapp_connexion | inapp_patate | facilitator | offapp
+          inapp_connexion | inapp_patate | inapp_piraterie | facilitator | offapp
    harrOnly : carte présente uniquement dans le deck du mode Harr. */
 export const GAMES = [
   { id: "21", name: "Le 21", chill: 3, harr: 1, kind: "offapp",
@@ -193,6 +193,8 @@ export const GAMES = [
     rule: "Réservée au mode Harr. La musique monte… Lance le dé : dès que tu fais 6, passe le téléphone (le 6 affiché !) au voisin, qui relance. Celui qui tient le téléphone au moment du drop finit son verre cul sec 🥃 !" },
   { id: "buffalo", name: "Le Buffalo", chill: 0, harr: 2, kind: "inapp_timer", harrOnly: true,
     rule: "Réservée au mode Harr. Un chrono de 10 minutes est lancé. Pendant toute la durée, si un joueur se fait repérer en train de boire de sa bonne main (la droite pour les droitiers, la gauche pour les gauchers), il doit finir son verre cul sec 🥃 !" },
+  { id: "piraterie", name: "La Piraterie", chill: 0, harr: 2, kind: "inapp_piraterie", harrOnly: true, noLoser: true,
+    rule: "Réservée au mode Harr. 20 coffres de pirates, un seul cache une bombe 💣. Sur le téléphone du lanceur, chacun son tour, ouvre autant de coffres que tu oses puis passe l'appareil au voisin. Celui qui déterre la bombe finit son verre cul sec 🥃 !" },
 ];
 
 export function game(id) { return GAMES.find((g) => g.id === id); }
@@ -293,6 +295,12 @@ export const SUGGEST_EMAIL = "gauthier.gache@gmail.com";
 
 /* Page de dons/soutien (bouton « Soutenir le projet » de la home). */
 export const SUPPORT_URL = "https://ko-fi.com/aperuno";
+
+/* Réseaux sociaux (liens cliquables de la home). Ce sont des « universal links »
+   https://… : sur mobile, iOS/Android les ouvrent directement dans l'app native
+   Instagram / TikTok si elle est installée (sinon dans le navigateur). */
+export const INSTAGRAM_URL = "https://www.instagram.com/aperuno.app/";
+export const TIKTOK_URL = "https://www.tiktok.com/@aperuno.app";
 
 /* Informations légales (CGU / confidentialité). */
 export const APP_NAME = "APERUNO";
