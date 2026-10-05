@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 /* Schémas animés des règles : une petite « table » de 4 joueurs qui rejoue un
    exemple de partie en boucle. Chaque schéma est une liste d'étapes (frames)
@@ -8,12 +8,12 @@ import React, { useEffect, useState } from "react";
    État joueur : { say, glass (0..1), drink, mark, dim, hl, lose, finger, down } */
 
 const SEATS = [
-  { name: "Léa", color: "#ff3b5c", x: 50, y: 13, bub: "r" },
-  { name: "Tom", color: "#37a6ff", x: 86, y: 50, bub: "tl" },
-  { name: "Max", color: "#27d17c", x: 50, y: 87, bub: "r" },
-  { name: "Zoé", color: "#f4c95d", x: 14, y: 50, bub: "tr" },
+  { name: "G", ini: "G", color: "#ff3b5c", x: 50, y: 13, bub: "r" },
+  { name: "Ju", ini: "Ju", color: "#37a6ff", x: 86, y: 50, bub: "tl" },
+  { name: "Chloé", ini: "Ch", color: "#27d17c", x: 50, y: 87, bub: "r" },
+  { name: "Le C", ini: "LC", color: "#f4c95d", x: 14, y: 50, bub: "tr" },
 ];
-const [LEA, TOM, MAX, ZOE] = [0, 1, 2, 3];
+const [G_, JU, CHLOE, LEC] = [0, 1, 2, 3];
 
 /* Raccourci : 4 joueurs à l'état `base`, avec des surcharges par index. */
 const ps = (base, over = {}) => SEATS.map((_, i) => ({ ...base, ...(over[i] || {}) }));
@@ -22,11 +22,11 @@ const ps = (base, over = {}) => SEATS.map((_, i) => ({ ...base, ...(over[i] || {
 const CASCADE = [
   { ms: 1600, cap: "Top départ : tout le monde lève son verre", p: ps({ glass: 1 }), center: { big: "3, 2, 1…" } },
   { ms: 2200, cap: "Tout le monde boit en même temps", p: ps({ glass: 0.75, drink: true }), center: { big: "🍺" } },
-  { ms: 2200, cap: "Léa (lanceur) s'arrête quand elle veut", p: ps({ glass: 0.55, drink: true }, { [LEA]: { glass: 0.75, drink: false, mark: "✋", hl: true } }), center: { order: true } },
-  { ms: 2200, cap: "Léa s'est arrêtée → Tom a le droit de s'arrêter", p: ps({ glass: 0.4, drink: true }, { [LEA]: { glass: 0.75, mark: "✋", drink: false }, [TOM]: { glass: 0.55, drink: false, mark: "✋", hl: true } }), center: { order: true } },
-  { ms: 2400, cap: "Zoé ne peut pas s'arrêter : Max boit encore !", p: ps({ glass: 0.25, drink: true }, { [LEA]: { glass: 0.75, mark: "✋", drink: false }, [TOM]: { glass: 0.55, mark: "✋", drink: false }, [ZOE]: { glass: 0.15, drink: true, mark: "🚫", say: "Je peux ?" } }), center: { order: true } },
-  { ms: 2200, cap: "Zoé finit son verre avant que Max ne s'arrête…", p: ps({ glass: 0.18, drink: true }, { [LEA]: { glass: 0.75, mark: "✋", drink: false }, [TOM]: { glass: 0.55, mark: "✋", drink: false }, [ZOE]: { glass: 0, drink: false, mark: "✅", say: "Fini !" } }), center: { order: true } },
-  { ms: 2800, cap: "…alors Max, le précédent, finit son verre cul sec 🥃", p: ps({ drink: false }, { [LEA]: { glass: 0.75, dim: true }, [TOM]: { glass: 0.55, dim: true }, [MAX]: { glass: 0, drink: true, lose: true, mark: "🥃" }, [ZOE]: { glass: 0, dim: true } }), center: { big: "Cul sec !" } },
+  { ms: 2200, cap: "G (lanceur) s'arrête quand bon lui semble", p: ps({ glass: 0.55, drink: true }, { [G_]: { glass: 0.75, drink: false, mark: "✋", hl: true } }), center: { order: true } },
+  { ms: 2200, cap: "G a posé son verre → Ju a le droit de s'arrêter", p: ps({ glass: 0.4, drink: true }, { [G_]: { glass: 0.75, mark: "✋", drink: false }, [JU]: { glass: 0.55, drink: false, mark: "✋", hl: true } }), center: { order: true } },
+  { ms: 2400, cap: "Le C ne peut pas s'arrêter : Chloé boit encore !", p: ps({ glass: 0.25, drink: true }, { [G_]: { glass: 0.75, mark: "✋", drink: false }, [JU]: { glass: 0.55, mark: "✋", drink: false }, [LEC]: { glass: 0.15, drink: true, mark: "🚫", say: "Je peux ?" } }), center: { order: true } },
+  { ms: 2200, cap: "Le C finit son verre avant que Chloé ne s'arrête…", p: ps({ glass: 0.18, drink: true }, { [G_]: { glass: 0.75, mark: "✋", drink: false }, [JU]: { glass: 0.55, mark: "✋", drink: false }, [LEC]: { glass: 0, drink: false, mark: "✅", say: "Fini !" } }), center: { order: true } },
+  { ms: 2800, cap: "…alors Chloé, juste avant Le C, finit son verre cul sec 🥃", p: ps({ drink: false }, { [G_]: { glass: 0.75, dim: true }, [JU]: { glass: 0.55, dim: true }, [CHLOE]: { glass: 0, drink: true, lose: true, mark: "🥃" }, [LEC]: { glass: 0, dim: true } }), center: { big: "Cul sec !" } },
 ];
 
 /* ---------------- Connexion ---------------- */
@@ -35,44 +35,44 @@ const CONNEXION = [
   { ms: 900, cap: "Tout le monde ensemble…", p: ps({ say: "1…" }), center: { tag: "Catégorie", big: "Sport" } },
   { ms: 900, cap: "Tout le monde ensemble…", p: ps({ say: "2…" }), center: { tag: "Catégorie", big: "Sport" } },
   { ms: 900, cap: "Tout le monde ensemble…", p: ps({ say: "3 !" }), center: { tag: "Catégorie", big: "Sport" } },
-  { ms: 2400, cap: "Chacun crie un mot de la catégorie", p: ps({}, { [LEA]: { say: "Basket" }, [TOM]: { say: "Foot" }, [MAX]: { say: "Basket" }, [ZOE]: { say: "Danse" } }), center: { tag: "Catégorie", big: "Sport" } },
-  { ms: 3000, cap: "Léa et Max ont dit « Basket » : connectés, ils boivent !", p: ps({ dim: true }, { [LEA]: { say: "Basket", hl: true, lose: true, mark: "🍺", dim: false }, [TOM]: { say: "Foot" }, [MAX]: { say: "Basket", hl: true, lose: true, mark: "🍺", dim: false }, [ZOE]: { say: "Danse" } }), links: [[LEA, MAX, "both"]], center: { big: "🔗" } },
+  { ms: 2400, cap: "Chacun crie un mot de la catégorie", p: ps({}, { [G_]: { say: "Basket" }, [JU]: { say: "Foot" }, [CHLOE]: { say: "Basket" }, [LEC]: { say: "Danse" } }), center: { tag: "Catégorie", big: "Sport" } },
+  { ms: 3000, cap: "G et Chloé ont dit « Basket » : connectés, les deux boivent !", p: ps({ dim: true }, { [G_]: { say: "Basket", hl: true, lose: true, mark: "🍺", dim: false }, [JU]: { say: "Foot" }, [CHLOE]: { say: "Basket", hl: true, lose: true, mark: "🍺", dim: false }, [LEC]: { say: "Danse" } }), links: [[G_, CHLOE, "both"]], center: { big: "🔗" } },
 ];
 
 /* ---------------- Jeu du doigt ---------------- */
 const ON = { finger: "on" }, OFF = { finger: "off" }, OUT = { finger: "out", dim: true, mark: "🏆" };
 const DOIGT = [
   { ms: 2000, cap: "Chacun pose un doigt sur le verre", p: ps(ON), center: { glassBig: true } },
-  { ms: 1300, cap: "Léa compte…", p: ps(ON, { [LEA]: { ...ON, say: "1, 2, 3…" } }), center: { glassBig: true } },
-  { ms: 2400, cap: "Léa annonce 4… mais Tom a retiré son doigt", p: ps(ON, { [LEA]: { ...ON, say: "4 !", hl: true }, [TOM]: OFF }), center: { glassBig: true, count: 3 } },
-  { ms: 2000, cap: "Il reste 3 doigts : raté, on remet tout en jeu", p: ps(ON, { [LEA]: { ...ON, mark: "❌" } }), center: { glassBig: true } },
-  { ms: 1300, cap: "Au tour de Tom…", p: ps(ON, { [TOM]: { ...ON, say: "1, 2, 3…" } }), center: { glassBig: true } },
-  { ms: 2400, cap: "Tom annonce 2 : Max et Zoé retirent leur doigt", p: ps(ON, { [TOM]: { ...ON, say: "2 !", hl: true }, [MAX]: OFF, [ZOE]: OFF }), center: { glassBig: true, count: 2 } },
-  { ms: 2200, cap: "Il reste bien 2 doigts : Tom retire définitivement le sien", p: ps(ON, { [TOM]: OUT }), center: { glassBig: true } },
-  { ms: 1300, cap: "Plus que 3 joueurs. Au tour de Max…", p: ps(ON, { [TOM]: OUT, [MAX]: { ...ON, say: "1, 2, 3…" } }), center: { glassBig: true } },
-  { ms: 2200, cap: "Max annonce 1 : Léa et Zoé retirent, il en reste bien 1", p: ps(OFF, { [TOM]: OUT, [MAX]: { ...ON, say: "1 !", hl: true } }), center: { glassBig: true, count: 1 } },
-  { ms: 2000, cap: "Max gagne… et célèbre en levant la main !", p: ps(ON, { [TOM]: OUT, [MAX]: { ...OFF, say: "Yesss 🙌", mark: "🎉" } }), center: { glassBig: true } },
-  { ms: 2800, cap: "Interdit de célébrer : Max doit remettre son doigt !", p: ps(ON, { [TOM]: OUT, [MAX]: { ...ON, lose: true, mark: "😬" } }), center: { glassBig: true } },
+  { ms: 1300, cap: "G compte…", p: ps(ON, { [G_]: { ...ON, say: "1, 2, 3…" } }), center: { glassBig: true } },
+  { ms: 2400, cap: "G annonce 4… mais Ju a retiré son doigt", p: ps(ON, { [G_]: { ...ON, say: "4 !", hl: true }, [JU]: OFF }), center: { glassBig: true, count: 3 } },
+  { ms: 2000, cap: "Il reste 3 doigts : raté, on remet tout en jeu", p: ps(ON, { [G_]: { ...ON, mark: "❌" } }), center: { glassBig: true } },
+  { ms: 1300, cap: "Au tour de Ju…", p: ps(ON, { [JU]: { ...ON, say: "1, 2, 3…" } }), center: { glassBig: true } },
+  { ms: 2400, cap: "Ju annonce 2 : Chloé et Le C retirent leur doigt", p: ps(ON, { [JU]: { ...ON, say: "2 !", hl: true }, [CHLOE]: OFF, [LEC]: OFF }), center: { glassBig: true, count: 2 } },
+  { ms: 2200, cap: "Il reste bien 2 doigts : Ju retire définitivement le sien", p: ps(ON, { [JU]: OUT }), center: { glassBig: true } },
+  { ms: 1300, cap: "Plus que 3 joueurs. Au tour de Chloé…", p: ps(ON, { [JU]: OUT, [CHLOE]: { ...ON, say: "1, 2, 3…" } }), center: { glassBig: true } },
+  { ms: 2200, cap: "Chloé annonce 1 : G et Le C retirent, il en reste bien 1", p: ps(OFF, { [JU]: OUT, [CHLOE]: { ...ON, say: "1 !", hl: true } }), center: { glassBig: true, count: 1 } },
+  { ms: 2000, cap: "Chloé gagne… et célèbre en levant la main !", p: ps(ON, { [JU]: OUT, [CHLOE]: { ...OFF, say: "Yesss 🙌", mark: "🎉" } }), center: { glassBig: true } },
+  { ms: 2800, cap: "Interdit de célébrer : Chloé doit remettre son doigt !", p: ps(ON, { [JU]: OUT, [CHLOE]: { ...ON, lose: true, mark: "😬" } }), center: { glassBig: true } },
 ];
 
 /* ---------------- L'enchère des secs ---------------- */
 const ENCHERE = [
-  { ms: 2200, cap: "Léa annonce un temps pour finir son verre", p: ps({ glass: 1 }, { [LEA]: { glass: 1, say: "En 40 s !" } }), center: { big: "⏱" } },
-  { ms: 2200, cap: "Tom surenchérit", p: ps({ glass: 1 }, { [TOM]: { glass: 1, say: "Moi en 20 s !", hl: true } }), center: { big: "⏱" } },
-  { ms: 2200, cap: "Max n'y croit pas…", p: ps({ glass: 1 }, { [TOM]: { glass: 1, say: "20 s" }, [MAX]: { glass: 1, say: "Menteur !", hl: true } }), center: { big: "🤨" } },
-  { ms: 3200, cap: "Tom doit le prouver : 20 s pour finir son verre", p: ps({ glass: 1 }, { [TOM]: { glass: 0, drink: true, hl: true } }), center: { timer: 20 } },
-  { ms: 1800, cap: "Fini à temps ✅", p: ps({ glass: 1 }, { [TOM]: { glass: 0, mark: "✅", say: "Et voilà !" } }), center: { big: "18 s" } },
-  { ms: 3000, cap: "Max l'a traité de menteur à tort : il finit aussi son verre !", p: ps({ glass: 1, dim: true }, { [TOM]: { glass: 0, mark: "✅" }, [MAX]: { glass: 0, drink: true, lose: true, mark: "🥃", dim: false } }), center: { big: "Cul sec !" } },
+  { ms: 2200, cap: "G annonce un temps pour finir son verre", p: ps({ glass: 1 }, { [G_]: { glass: 1, say: "En 40 s !" } }), center: { big: "⏱" } },
+  { ms: 2200, cap: "Ju surenchérit", p: ps({ glass: 1 }, { [JU]: { glass: 1, say: "Moi en 20 s !", hl: true } }), center: { big: "⏱" } },
+  { ms: 2200, cap: "Chloé n'y croit pas…", p: ps({ glass: 1 }, { [JU]: { glass: 1, say: "20 s" }, [CHLOE]: { glass: 1, say: "Menteur !", hl: true } }), center: { big: "🤨" } },
+  { ms: 3200, cap: "Ju doit le prouver : 20 s pour finir son verre", p: ps({ glass: 1 }, { [JU]: { glass: 0, drink: true, hl: true } }), center: { timer: 20 } },
+  { ms: 1800, cap: "Fini à temps ✅", p: ps({ glass: 1 }, { [JU]: { glass: 0, mark: "✅", say: "Et voilà !" } }), center: { big: "18 s" } },
+  { ms: 3000, cap: "Chloé a crié « menteur » à tort : verre fini aussi !", p: ps({ glass: 1, dim: true }, { [JU]: { glass: 0, mark: "✅" }, [CHLOE]: { glass: 0, drink: true, lose: true, mark: "🥃", dim: false } }), center: { big: "Cul sec !" } },
 ];
 
 /* ---------------- Le 21 ---------------- */
-const SEQ_21 = [[LEA, "1-2-3"], [TOM, "4-5"], [MAX, "6-7-8"], [ZOE, "9"], [LEA, "10-11"], [TOM, "12-13-14"], [MAX, "15"], [ZOE, "16-17"], [LEA, "18-19-20"]];
+const SEQ_21 = [[G_, "1-2-3"], [JU, "4-5"], [CHLOE, "6-7-8"], [LEC, "9"], [G_, "10-11"], [JU, "12-13-14"], [CHLOE, "15"], [LEC, "16-17"], [G_, "18-19-20"]];
 const LE21 = [
   ...SEQ_21.map(([who, s]) => ({
     ms: 1150, cap: "1, 2 ou 3 nombres, jamais autant que le joueur précédent",
     p: ps({}, { [who]: { say: s, hl: true } }), center: { big: s.split("-").pop(), tag: "compteur" },
   })),
-  { ms: 3000, cap: "Tom tombe sur 21 : il perd et boit !", p: ps({ dim: true }, { [TOM]: { say: "21…", lose: true, mark: "🍺", dim: false } }), center: { big: "21", tag: "perdu" } },
+  { ms: 3000, cap: "Ju tombe sur 21 : perdu, Ju boit !", p: ps({ dim: true }, { [JU]: { say: "21…", lose: true, mark: "🍺", dim: false } }), center: { big: "21", tag: "perdu" } },
 ];
 
 /* ---------------- Le regard ---------------- */
@@ -82,19 +82,19 @@ const REGARD = [
   { ms: 800, cap: "Décompte…", p: ps(DOWN), center: { big: "3" } },
   { ms: 800, cap: "Décompte…", p: ps(DOWN), center: { big: "2" } },
   { ms: 800, cap: "Décompte…", p: ps(DOWN), center: { big: "1" } },
-  { ms: 2400, cap: "Top ! Chacun lève les yeux vers un joueur", p: ps({ mark: "👀" }), links: [[LEA, MAX], [TOM, LEA], [MAX, LEA], [ZOE, TOM]], center: { big: "Top !" } },
-  { ms: 3000, cap: "Léa et Max se regardent : ils boivent !", p: ps({ dim: true }, { [LEA]: { hl: true, lose: true, mark: "🍺", dim: false }, [MAX]: { hl: true, lose: true, mark: "🍺", dim: false } }), links: [[LEA, MAX, "both"]], center: { big: "😳" } },
+  { ms: 2400, cap: "Top ! Chacun lève les yeux vers un joueur", p: ps({ mark: "👀" }), links: [[G_, CHLOE], [JU, G_], [CHLOE, G_], [LEC, JU]], center: { big: "Top !" } },
+  { ms: 3000, cap: "G et Chloé se regardent : les deux boivent !", p: ps({ dim: true }, { [G_]: { hl: true, lose: true, mark: "🍺", dim: false }, [CHLOE]: { hl: true, lose: true, mark: "🍺", dim: false } }), links: [[G_, CHLOE, "both"]], center: { big: "😳" } },
 ];
 
 /* ---------------- Patate chaude ---------------- */
 const PATATE = [
-  { ms: 1400, cap: "La musique monte… Léa lance le dé", p: ps({}, { [LEA]: { hl: true } }), phone: { at: LEA, roll: true }, center: { notes: true } },
-  { ms: 1700, cap: "4 : pas de 6, Léa relance", p: ps({}, { [LEA]: { hl: true } }), phone: { at: LEA, die: 4 }, center: { notes: true } },
-  { ms: 1200, cap: "Léa relance…", p: ps({}, { [LEA]: { hl: true } }), phone: { at: LEA, roll: true }, center: { notes: true } },
-  { ms: 1700, cap: "6 ! Léa passe le téléphone", p: ps({}, { [LEA]: { hl: true, say: "6 !" } }), phone: { at: LEA, die: 6 }, center: { notes: true } },
-  { ms: 1400, cap: "Tom récupère le téléphone et lance", p: ps({}, { [TOM]: { hl: true } }), phone: { at: TOM, roll: true }, center: { notes: true } },
-  { ms: 1300, cap: "2…", p: ps({}, { [TOM]: { hl: true } }), phone: { at: TOM, die: 2 }, center: { notes: true } },
-  { ms: 3200, cap: "Ça explose ! Tom tient le téléphone : il finit son verre 🥃", p: ps({ dim: true }, { [TOM]: { lose: true, mark: "🥃", dim: false } }), phone: { at: TOM, boom: true } },
+  { ms: 1400, cap: "La musique monte… G lance le dé", p: ps({}, { [G_]: { hl: true } }), phone: { at: G_, roll: true }, center: { notes: true } },
+  { ms: 1700, cap: "4 : pas de 6, G relance", p: ps({}, { [G_]: { hl: true } }), phone: { at: G_, die: 4 }, center: { notes: true } },
+  { ms: 1200, cap: "G relance…", p: ps({}, { [G_]: { hl: true } }), phone: { at: G_, roll: true }, center: { notes: true } },
+  { ms: 1700, cap: "6 ! G passe le téléphone", p: ps({}, { [G_]: { hl: true, say: "6 !" } }), phone: { at: G_, die: 6 }, center: { notes: true } },
+  { ms: 1400, cap: "Ju récupère le téléphone et lance", p: ps({}, { [JU]: { hl: true } }), phone: { at: JU, roll: true }, center: { notes: true } },
+  { ms: 1300, cap: "2…", p: ps({}, { [JU]: { hl: true } }), phone: { at: JU, die: 2 }, center: { notes: true } },
+  { ms: 3200, cap: "Ça explose ! Ju tient le téléphone : verre cul sec 🥃", p: ps({ dim: true }, { [JU]: { lose: true, mark: "🥃", dim: false } }), phone: { at: JU, boom: true } },
 ];
 
 /* ---------------- Shot russe ---------------- */
@@ -102,26 +102,30 @@ const SHOTS0 = [{ k: "eau" }, { k: "eau" }, { k: "vodka" }, { k: "eau" }];
 const RUSSE = [
   { ms: 2400, cap: "1 shot de vodka, 3 shots d'eau…", p: ps({}), shots: { reveal: true } },
   { ms: 2000, cap: "…ils se ressemblent tous. On mélange !", p: ps({}), shots: { shuffle: true } },
-  { ms: 1500, cap: "Chacun prend un shot à tour de rôle (le lanceur en dernier)", p: ps({}, { [TOM]: { hl: true } }), shots: { taken: [TOM] } },
-  { ms: 1300, cap: "Chacun boit en pokerface 😐", p: ps({}, { [TOM]: { mark: "😐" }, [MAX]: { hl: true } }), shots: { taken: [TOM, MAX], drunk: [TOM] } },
-  { ms: 1300, cap: "Chacun boit en pokerface 😐", p: ps({}, { [TOM]: { mark: "😐" }, [MAX]: { mark: "😐" }, [ZOE]: { hl: true } }), shots: { taken: [TOM, MAX, ZOE], drunk: [TOM, MAX] } },
-  { ms: 1500, cap: "Chacun boit en pokerface 😐", p: ps({ mark: "😐" }, { [LEA]: { hl: true } }), shots: { taken: [TOM, MAX, ZOE, LEA], drunk: [TOM, MAX, ZOE, LEA] } },
-  { ms: 2600, cap: "Votez : qui avait la vodka ?", p: ps({ mark: "🤔" }), links: [[LEA, MAX], [TOM, MAX], [MAX, ZOE], [ZOE, MAX]], shots: { taken: [TOM, MAX, ZOE, LEA], drunk: [TOM, MAX, ZOE, LEA] } },
-  { ms: 3000, cap: "Raté ! C'était Zoé : bien joué le pokerface 🥃", p: ps({ dim: true }, { [ZOE]: { hl: true, mark: "😏", dim: false } }), shots: { taken: [TOM, MAX, ZOE, LEA], drunk: [TOM, MAX, ZOE, LEA], vodkaAt: ZOE } },
+  { ms: 1500, cap: "Chacun prend un shot à tour de rôle (G, le lanceur, en dernier)", p: ps({}, { [JU]: { hl: true } }), shots: { taken: [JU] } },
+  { ms: 1300, cap: "Chacun boit en pokerface 😐", p: ps({}, { [JU]: { mark: "😐" }, [CHLOE]: { hl: true } }), shots: { taken: [JU, CHLOE], drunk: [JU] } },
+  { ms: 1300, cap: "Chacun boit en pokerface 😐", p: ps({}, { [JU]: { mark: "😐" }, [CHLOE]: { mark: "😐" }, [LEC]: { hl: true } }), shots: { taken: [JU, CHLOE, LEC], drunk: [JU, CHLOE] } },
+  { ms: 1500, cap: "Chacun boit en pokerface 😐", p: ps({ mark: "😐" }, { [G_]: { hl: true } }), shots: { taken: [JU, CHLOE, LEC, G_], drunk: [JU, CHLOE, LEC, G_] } },
+  { ms: 2600, cap: "Votez : qui avait la vodka ?", p: ps({ mark: "🤔" }), links: [[G_, CHLOE], [JU, CHLOE], [CHLOE, LEC], [LEC, CHLOE]], shots: { taken: [JU, CHLOE, LEC, G_], drunk: [JU, CHLOE, LEC, G_] } },
+  { ms: 3000, cap: "Raté ! C'était Le C : bien joué le pokerface 🥃", p: ps({ dim: true }, { [LEC]: { hl: true, mark: "😏", dim: false } }), shots: { taken: [JU, CHLOE, LEC, G_], drunk: [JU, CHLOE, LEC, G_], vodkaAt: LEC } },
 ];
 
 const DIAGRAMS = { cascade: CASCADE, connexion: CONNEXION, doigt: DOIGT, enchere: ENCHERE, "21": LE21, regard: REGARD, patate: PATATE, russe: RUSSE };
 
 export function hasRuleDiagram(id) { return !!DIAGRAMS[id]; }
 
-function useLoop(frames) {
+/* Avance automatiquement d'étape en étape, en boucle. `go` permet de sauter
+   à une étape (swipe / points) : le minuteur repart de cette étape. */
+function useLoop(frames, playing) {
   const [i, setI] = useState(0);
   useEffect(() => { setI(0); }, [frames]);
   useEffect(() => {
+    if (!playing) return undefined;
     const t = setTimeout(() => setI((x) => (x + 1) % frames.length), frames[i].ms);
     return () => clearTimeout(t);
-  }, [i, frames]);
-  return i;
+  }, [i, frames, playing]);
+  const go = (k) => setI(((k % frames.length) + frames.length) % frames.length);
+  return [i, go];
 }
 
 /* Verre individuel : le niveau descend en douceur pendant la durée de l'étape. */
@@ -201,8 +205,8 @@ function Phone({ ph }) {
 function Shots({ sh }) {
   if (!sh) return null;
   const taken = sh.taken || [], drunk = sh.drunk || [];
-  // shot n°k revient au k-ième joueur servi (Tom, Max, Zoé, Léa) ; la vodka est chez Zoé.
-  const order = [TOM, MAX, ZOE, LEA];
+  // shot n°k revient au k-ième joueur servi (Ju, Chloé, Le C, G) ; la vodka est chez Le C.
+  const order = [JU, CHLOE, LEC, G_];
   return SHOTS0.map((shot, k) => {
     const owner = order[k];
     const isTaken = taken.includes(owner);
@@ -224,7 +228,7 @@ function Seat({ seat, st, ms }) {
   return (
     <div className={cls} style={{ left: `${seat.x}%`, top: `${seat.y}%` }}>
       <div className="rd-ava" style={{ background: seat.color }}>
-        {st.down ? "🙇" : seat.name[0]}
+        {st.down ? "🙇" : seat.ini}
         {st.mark && <span className="rd-mark" key={st.mark}>{st.mark}</span>}
       </div>
       <div className="rd-name">{seat.name}</div>
@@ -257,10 +261,29 @@ export function RuleDiagram({ id }) {
 }
 
 function DiagramPlayer({ frames }) {
-  const i = useLoop(frames);
+  // en pause hors de l'écran (page des règles : plusieurs schémas à la suite).
+  const box = useRef(null);
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    if (!box.current || typeof IntersectionObserver === "undefined") return undefined;
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting));
+    io.observe(box.current);
+    return () => io.disconnect();
+  }, []);
+  const [i, go] = useLoop(frames, visible);
   const f = frames[i];
+  // swipe horizontal : gauche = étape suivante, droite = étape précédente.
+  const startX = useRef(null);
+  const onDown = (e) => { startX.current = e.clientX; };
+  const onUp = (e) => {
+    if (startX.current == null) return;
+    const dx = e.clientX - startX.current;
+    startX.current = null;
+    if (Math.abs(dx) > 30) go(i + (dx < 0 ? 1 : -1));
+  };
   return (
-    <div className="rd-box mb" aria-hidden="true">
+    <div ref={box} className={"rd-box mb" + (visible ? "" : " paused")} aria-hidden="true"
+      onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => { startX.current = null; }}>
       <div className="rd-stage">
         <div className="rd-table" />
         <Links links={f.links} />
@@ -271,7 +294,7 @@ function DiagramPlayer({ frames }) {
         {SEATS.map((s, k) => <Seat key={k} seat={s} st={f.p[k]} ms={f.ms} />)}
       </div>
       <div className="rd-cap" key={i}>{f.cap}</div>
-      <div className="rd-dots">{frames.map((_, k) => <span key={k} className={k === i ? "on" : k < i ? "done" : ""} />)}</div>
+      <div className="rd-dots">{frames.map((_, k) => <button key={k} type="button" className={k === i ? "on" : k < i ? "done" : ""} onClick={() => go(k)} />)}</div>
     </div>
   );
 }
