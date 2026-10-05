@@ -3,6 +3,7 @@ import { MYID } from "../me.js";
 import { TYPE_META, CARD_INFO, GAMES, actionDrink } from "../game/constants.js";
 import { Overlay, Ava } from "./common.jsx";
 import { Minigame } from "../minigames/index.jsx";
+import { RuleDiagram } from "./RuleDiagram.jsx";
 
 function CardFace({ c, onClick, selected }) {
   const m = TYPE_META[c.type];
@@ -38,6 +39,7 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
         </div>
       </div>
       <p className="muted mb">{rule}</p>
+      {g && <RuleDiagram id={g.id} />}
       {!canPlay && <p className="muted dim mb">Ce n'est pas ton tour (ou tu dois d'abord piocher) — tu peux seulement consulter la règle.</p>}
 
       {canPlay && card.type === "action" && (

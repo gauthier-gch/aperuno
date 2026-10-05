@@ -2,6 +2,7 @@ import React from "react";
 import { MYID } from "../me.js";
 import { game } from "../game/constants.js";
 import { Overlay, DesignateLoser, ManualEscape } from "../components/common.jsx";
+import { RuleDiagram } from "../components/RuleDiagram.jsx";
 import { DiceGame } from "./Dice.jsx";
 import { VoteGame } from "./Vote.jsx";
 import { PetitBacGame } from "./PetitBac.jsx";
@@ -68,6 +69,7 @@ export function Minigame({ room, act, busy, leave }) {
       </div>
       <h3 className="h-title">{g.name}</h3>
       <p className="muted mb">{g.rule}</p>
+      <RuleDiagram id={g.id} />
       {body}
       {/* Débloquer un mini-jeu quand quelqu'un (y compris le lanceur) est absent :
           accessible à TOUS, car seul le lanceur a les boutons de fin.

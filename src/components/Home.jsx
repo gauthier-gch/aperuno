@@ -3,6 +3,7 @@ import {
   GAMES, MODE_INFO, SUGGEST_EMAIL, SUPPORT_URL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED,
   SITE_NAME, LEGAL_EDITOR, LEGAL_PUBLISHER, LEGAL_HOST, INSTAGRAM_URL, TIKTOK_URL,
 } from "../game/constants.js";
+import { RuleDiagram, hasRuleDiagram } from "./RuleDiagram.jsx";
 
 const LOGO = `${import.meta.env.BASE_URL}logo_aperuno.png`;
 
@@ -334,6 +335,7 @@ export function Rules({ back }) {
                 </div>
               </div>
               <p className="muted mt">{g.rule}</p>
+              {hasRuleDiagram(g.id) && <div className="mt"><RuleDiagram id={g.id} /></div>}
             </div>
           );
         })}
