@@ -189,6 +189,12 @@ html, body, #root { margin: 0; height: 100%; }
 @keyframes fade { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
 .pop { animation:pop .35s cubic-bezier(.2,1.4,.5,1); }
 @keyframes pop { from{opacity:0; transform:scale(.85);} to{opacity:1; transform:scale(1);} }
+/* Toast et bandeau d'annonce sont centrés via translate : leur « pop » doit le
+   conserver, sinon ils apparaissent décalés en bas à droite puis sautent en place. */
+.toast.pop { animation:popx .35s cubic-bezier(.2,1.4,.5,1); }
+.announce-banner.pop { animation:popxy .35s cubic-bezier(.2,1.4,.5,1); }
+@keyframes popx { from{opacity:0; transform:translateX(-50%) scale(.85);} to{opacity:1; transform:translateX(-50%) scale(1);} }
+@keyframes popxy { from{opacity:0; transform:translate(-50%,-50%) scale(.85);} to{opacity:1; transform:translate(-50%,-50%) scale(1);} }
 .big-num { font-family:'Marcellus'; font-size:80px; line-height:1; color:var(--gold); }
 
 /* ---- chronos en bandeau (dans le flux, ne cachent rien) ---- */
