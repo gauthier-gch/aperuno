@@ -36,10 +36,10 @@ export default function App() {
   const confirmAdult = () => {
     try { localStorage.setItem("aperuno_adult", "1"); } catch (e) {}
     setAdult(true);
-    // Joueur sur navigateur : on lui propose d'installer le raccourci écran.
-    if (!isInstalledApp()) setInstallPrompt(true);
   };
-  const [installPrompt, setInstallPrompt] = useState(false);
+  // Pop-up « installe le raccourci » : à chaque ouverture depuis le navigateur,
+  // sauf si la porte d'âge s'affiche (une seule pop-up à la fois).
+  const [installPrompt, setInstallPrompt] = useState(() => adult && !isInstalledApp());
   // Tutoriel d'installation ouvert depuis la pop-up alors qu'on est dans un salon.
   const [roomInstall, setRoomInstall] = useState(false);
   const openInstall = () => {
