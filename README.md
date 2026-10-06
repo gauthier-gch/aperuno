@@ -177,7 +177,7 @@ renseignée).
 Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
 
 1. Crée un Google Sheet (par ex. un onglet `Salons`) avec les en-têtes :
-   `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs`.
+   `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs` · `Nb via raccourci` · `Lancement`.
 2. Dans le Sheet : **Extensions → Apps Script**, colle ce code :
 
    ```js
@@ -190,7 +190,11 @@ Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
        d.code,                          // Code du salon
        d.mode,                          // chill / harr / premium
        d.playerCount,                   // Nombre de joueurs
-       (d.players || []).join(', ')     // Pseudos (pas de photo — RGPD)
+       (d.players || []).join(', '),    // Pseudos (pas de photo — RGPD)
+       d.appCount || 0,                 // Joueurs lancés depuis le raccourci écran
+       (d.players || []).map(function (n, i) {
+         return n + ' (' + ((d.launch || [])[i] || '?') + ')';
+       }).join(', ')                    // ex. « Léa (app), Tom (navigateur) »
      ]);
      return ContentService.createTextOutput('ok');
    }

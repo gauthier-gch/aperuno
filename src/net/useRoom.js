@@ -105,12 +105,13 @@ export async function joinRoom(code, player) {
     if (existing) {
       // déjà dans le salon (reconnexion) : on met juste à jour le profil.
       existing.name = player.name; existing.photo = player.photo || existing.photo;
+      existing.app = !!player.app;
       tx.set(ref, stamp(s));
       return;
     }
     if (s.players.length >= 15) throw new Error("Salon plein (15 joueurs max).");
     if (s.status === "lobby") {
-      s.players.push({ id: player.id, name: player.name, photo: player.photo || null, hand: [] });
+      s.players.push({ id: player.id, name: player.name, photo: player.photo || null, app: !!player.app, hand: [] });
       tx.set(ref, stamp(s));
     } else {
       // partie en cours : on distribue 7 cartes au nouveau venu.

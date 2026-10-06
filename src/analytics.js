@@ -21,6 +21,8 @@ export function logGameStart(room) {
       mode: room.mode,                        // chill / harr / premium
       playerCount: room.players.length,       // nombre de joueurs
       players: room.players.map((p) => p.name), // pseudos uniquement — PAS de photo (RGPD)
+      appCount: room.players.filter((p) => p.app).length, // lancés depuis le raccourci écran
+      launch: room.players.map((p) => (p.app ? "app" : "navigateur")), // même ordre que players
     };
     // Envoi « fire and forget » : on ne lit pas la réponse (mode no-cors avec
     // un Content-Type simple, ce qu'Apps Script accepte sans pré-vol CORS).
