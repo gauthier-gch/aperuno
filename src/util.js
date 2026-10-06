@@ -16,3 +16,13 @@ export function compressPhoto(file, cb) {
   };
   r.readAsDataURL(file);
 }
+
+/* true si l'appli est lancée depuis le raccourci écran d'accueil (PWA
+   installée), false si elle tourne dans un onglet de navigateur. */
+export function isInstalledApp() {
+  try {
+    return window.matchMedia("(display-mode: standalone)").matches
+      || window.matchMedia("(display-mode: fullscreen)").matches
+      || window.navigator.standalone === true; // iOS Safari
+  } catch (e) { return false; }
+}

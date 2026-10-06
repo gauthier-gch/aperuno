@@ -5,7 +5,8 @@ import { useRoom, usePresence, startGame, doMove } from "./net/useRoom.js";
 import { applyMove } from "./game/engine.js";
 import { logGameStart } from "./analytics.js";
 import { Shell } from "./components/common.jsx";
-import { Home, Rules, Install, Terms, Privacy, Legal, AgeGate } from "./components/Home.jsx";
+import { Home, Rules, Install, Terms, Privacy, Legal, AgeGate, InstallPrompt } from "./components/Home.jsx";
+import { isInstalledApp } from "./util.js";
 import { CreateForm, JoinForm } from "./components/Forms.jsx";
 import { Lobby } from "./components/Lobby.jsx";
 import { GameTable } from "./components/GameTable.jsx";
@@ -36,6 +37,13 @@ export default function App() {
     try { localStorage.setItem("aperuno_adult", "1"); } catch (e) {}
     setAdult(true);
   };
+  // Pop-up « installe le raccourci » : à chaque ouverture depuis le navigateur,
+  // sauf si la porte d'âge s'affiche (une seule pop-up à la fois) ou si on
+  // revient dans un salon / une partie en cours (refresh).
+  const [installPrompt, setInstallPrompt] = useState(() => adult && !code && !isInstalledApp());
+  const openInstall = () => { setInstallPrompt(false); setScreen("install"); };
+  const installPopup = installPrompt &&
+    <InstallPrompt onInstall={openInstall} onClose={() => setInstallPrompt(false)} />;
   const [, tick] = useState(0);
   const { room: serverRoom, error } = useRoom(code);
   // Affichage optimiste : on montre le coup localement tout de suite, puis on
@@ -164,6 +172,7 @@ export default function App() {
       {screen === "join" && <JoinForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} />}
       {toast && <div className="toast pop">{toast}</div>}
       {!adult && <AgeGate onConfirm={confirmAdult} />}
+      {installPopup}
     </Shell>
   );
 }
