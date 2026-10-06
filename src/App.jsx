@@ -123,6 +123,9 @@ export default function App() {
       });
   };
   const leave = () => { clearTimeout(optTimer.current); setOptimistic(null); busyRef.current = false; setBusy(false); setCode(null); setScreen("home"); };
+  // Salon en cache introuvable → retour à l'accueil : joueur navigateur, on
+  // lui propose aussi le raccourci écran.
+  const leaveNotFound = () => { leave(); if (!isInstalledApp()) setInstallPrompt(true); };
 
   // Lancement de la partie. On enregistre une ligne de suivi (côté HÔTE
   // uniquement, une seule fois par salon) avec le roster complet du lobby.
@@ -144,7 +147,7 @@ export default function App() {
       <Shell><div className="center-col">
         <h2 className="h-title">Salon introuvable</h2>
         <p className="muted">Le code « {code} » n'existe pas (ou la partie est terminée).</p>
-        <button className="btn btn-primary" onClick={leave}>Accueil</button>
+        <button className="btn btn-primary" onClick={leaveNotFound}>Accueil</button>
       </div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>
     );
     if (!room) return <Shell><div className="center-col"><p className="muted">Chargement du salon…</p></div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>;
