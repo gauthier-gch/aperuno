@@ -38,14 +38,10 @@ export default function App() {
     setAdult(true);
   };
   // Pop-up « installe le raccourci » : à chaque ouverture depuis le navigateur,
-  // sauf si la porte d'âge s'affiche (une seule pop-up à la fois).
-  const [installPrompt, setInstallPrompt] = useState(() => adult && !isInstalledApp());
-  // Tutoriel d'installation ouvert depuis la pop-up alors qu'on est dans un salon.
-  const [roomInstall, setRoomInstall] = useState(false);
-  const openInstall = () => {
-    setInstallPrompt(false);
-    if (code) setRoomInstall(true); else setScreen("install");
-  };
+  // sauf si la porte d'âge s'affiche (une seule pop-up à la fois) ou si on
+  // revient dans un salon / une partie en cours (refresh).
+  const [installPrompt, setInstallPrompt] = useState(() => adult && !code && !isInstalledApp());
+  const openInstall = () => { setInstallPrompt(false); setScreen("install"); };
   const installPopup = installPrompt &&
     <InstallPrompt onInstall={openInstall} onClose={() => setInstallPrompt(false)} />;
   const [, tick] = useState(0);
@@ -149,10 +145,9 @@ export default function App() {
         <h2 className="h-title">Salon introuvable</h2>
         <p className="muted">Le code « {code} » n'existe pas (ou la partie est terminée).</p>
         <button className="btn btn-primary" onClick={leave}>Accueil</button>
-      </div>{!adult && <AgeGate onConfirm={confirmAdult} />}{installPopup}</Shell>
+      </div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>
     );
-    if (!room) return <Shell><div className="center-col"><p className="muted">Chargement du salon…</p></div>{!adult && <AgeGate onConfirm={confirmAdult} />}{installPopup}</Shell>;
-    if (roomInstall) return <Shell><Install back={() => setRoomInstall(false)} /></Shell>;
+    if (!room) return <Shell><div className="center-col"><p className="muted">Chargement du salon…</p></div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>;
     return (
       <Shell timers={room.timers}>
         {room.status === "lobby" && <Lobby room={room} onStart={beginGame} leave={leave} online={online} />}
@@ -161,7 +156,6 @@ export default function App() {
         {announce && <div className="announce-banner pop" onClick={() => setAnnounce(null)}>{announce}</div>}
         {toast && <div className="toast pop">{toast}</div>}
         {!adult && <AgeGate onConfirm={confirmAdult} />}
-        {installPopup}
       </Shell>
     );
   }
