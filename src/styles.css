@@ -242,7 +242,7 @@ html, body, #root { margin: 0; height: 100%; }
 .social-links { display:flex; gap:10px; justify-content:center; }
 .social-btn { display:inline-flex; align-items:center; gap:8px; text-decoration:none; color:#f3ecff; font-weight:700; font-size:14px; padding:10px 16px; border-radius:14px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); transition:transform .12s ease, filter .12s; }
 .social-btn:active { transform:scale(.97); }
-.social-btn .social-ic { font-size:18px; }
+.social-btn .social-ic { width:18px; height:18px; flex:0 0 auto; }
 
 /* ---- La Piraterie (coffres à trésor) ---- */
 .pirate-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; width:min(100%,320px); margin:14px auto; }

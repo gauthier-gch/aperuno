@@ -21,7 +21,7 @@ export function newLobby(code, mode, host, premium) {
     code, mode, status: "lobby", hostId: host.id,
     // Config du mode premium (composition du paquet) — null pour chill/harr.
     premium: mode === "premium" ? sanitizePremium(premium) : null,
-    players: [{ id: host.id, name: host.name, photo: host.photo || null, app: !!host.app, hand: [] }],
+    players: [{ id: host.id, name: host.name, photo: host.photo || null, hand: [] }],
     // members : { <uid Firebase> : true } — utilisé par les règles Firestore
     // pour n'autoriser l'écriture qu'aux membres du salon (voir firestore.rules).
     members: host.uid ? { [host.uid]: true } : {},
@@ -57,7 +57,7 @@ export function joinInProgress(s0, player) {
     if (s.deck.length === 0) break;
     hand.push(s.deck.shift());
   }
-  s.players.push({ id: player.id, name: player.name, photo: player.photo || null, app: !!player.app, hand });
+  s.players.push({ id: player.id, name: player.name, photo: player.photo || null, hand });
   s.announce = note(`${player.name} rejoint la partie en cours 👋`);
   return s;
 }

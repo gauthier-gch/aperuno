@@ -5,7 +5,8 @@ import { useRoom, usePresence, startGame, doMove } from "./net/useRoom.js";
 import { applyMove } from "./game/engine.js";
 import { logGameStart } from "./analytics.js";
 import { Shell } from "./components/common.jsx";
-import { Home, Rules, Install, Terms, Privacy, Legal, AgeGate } from "./components/Home.jsx";
+import { Home, Rules, Install, Terms, Privacy, Legal, AgeGate, InstallPrompt } from "./components/Home.jsx";
+import { isInstalledApp } from "./util.js";
 import { CreateForm, JoinForm } from "./components/Forms.jsx";
 import { Lobby } from "./components/Lobby.jsx";
 import { GameTable } from "./components/GameTable.jsx";
@@ -35,7 +36,18 @@ export default function App() {
   const confirmAdult = () => {
     try { localStorage.setItem("aperuno_adult", "1"); } catch (e) {}
     setAdult(true);
+    // Joueur sur navigateur : on lui propose d'installer le raccourci écran.
+    if (!isInstalledApp()) setInstallPrompt(true);
   };
+  const [installPrompt, setInstallPrompt] = useState(false);
+  // Tutoriel d'installation ouvert depuis la pop-up alors qu'on est dans un salon.
+  const [roomInstall, setRoomInstall] = useState(false);
+  const openInstall = () => {
+    setInstallPrompt(false);
+    if (code) setRoomInstall(true); else setScreen("install");
+  };
+  const installPopup = installPrompt &&
+    <InstallPrompt onInstall={openInstall} onClose={() => setInstallPrompt(false)} />;
   const [, tick] = useState(0);
   const { room: serverRoom, error } = useRoom(code);
   // Affichage optimiste : on montre le coup localement tout de suite, puis on
@@ -137,9 +149,10 @@ export default function App() {
         <h2 className="h-title">Salon introuvable</h2>
         <p className="muted">Le code « {code} » n'existe pas (ou la partie est terminée).</p>
         <button className="btn btn-primary" onClick={leave}>Accueil</button>
-      </div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>
+      </div>{!adult && <AgeGate onConfirm={confirmAdult} />}{installPopup}</Shell>
     );
-    if (!room) return <Shell><div className="center-col"><p className="muted">Chargement du salon…</p></div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>;
+    if (!room) return <Shell><div className="center-col"><p className="muted">Chargement du salon…</p></div>{!adult && <AgeGate onConfirm={confirmAdult} />}{installPopup}</Shell>;
+    if (roomInstall) return <Shell><Install back={() => setRoomInstall(false)} /></Shell>;
     return (
       <Shell timers={room.timers}>
         {room.status === "lobby" && <Lobby room={room} onStart={beginGame} leave={leave} online={online} />}
@@ -148,6 +161,7 @@ export default function App() {
         {announce && <div className="announce-banner pop" onClick={() => setAnnounce(null)}>{announce}</div>}
         {toast && <div className="toast pop">{toast}</div>}
         {!adult && <AgeGate onConfirm={confirmAdult} />}
+        {installPopup}
       </Shell>
     );
   }
@@ -164,6 +178,7 @@ export default function App() {
       {screen === "join" && <JoinForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} />}
       {toast && <div className="toast pop">{toast}</div>}
       {!adult && <AgeGate onConfirm={confirmAdult} />}
+      {installPopup}
     </Shell>
   );
 }

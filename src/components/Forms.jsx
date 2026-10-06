@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { MYID } from "../me.js";
-import { compressPhoto, flipPhoto, isInstalledApp } from "../util.js";
+import { compressPhoto } from "../util.js";
 import { createRoom, joinRoom } from "../net/useRoom.js";
 import { Overlay } from "./common.jsx";
 import {
@@ -80,10 +80,6 @@ function PhotoName({ name, setName, photo, setPhoto }) {
         <input className="input" placeholder="Ton prénom" value={name} maxLength={14}
           onChange={(e) => setName(e.target.value)} />
       </div>
-      {photo && (
-        <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8, width: "auto" }}
-          onClick={() => flipPhoto(photo, setPhoto)}>↔️ Photo à l'envers ? Retourner</button>
-      )}
       <p className="muted dim" style={{ marginTop: 6 }}>📷 Photo facultative — ton prénom suffit. En l'ajoutant, tu acceptes qu'elle soit visible par les joueurs de ton salon et stockée temporairement (supprimée sous ~12 h).</p>
     </>
   );
@@ -109,7 +105,7 @@ export function CreateForm({ back, onDone, flash }) {
   async function go() {
     setBusy(true);
     try {
-      const code = await createRoom(mode, { id: MYID, name: name.trim(), photo, app: isInstalledApp() },
+      const code = await createRoom(mode, { id: MYID, name: name.trim(), photo },
         mode === "premium" ? premium : undefined);
       onDone(code);
     } catch (e) { flash(e.message); setBusy(false); }
@@ -175,7 +171,7 @@ export function JoinForm({ back, onDone, flash }) {
     setBusy(true);
     const C = code.trim().toUpperCase();
     try {
-      await joinRoom(C, { id: MYID, name: name.trim(), photo, app: isInstalledApp() });
+      await joinRoom(C, { id: MYID, name: name.trim(), photo });
       onDone(C);
     } catch (e) { flash(e.message); setBusy(false); }
   }
