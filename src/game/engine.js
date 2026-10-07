@@ -9,7 +9,7 @@
 import {
   GAMES, game, PETITBAC_LETTERS, PETITBAC_DURATION, TEN_MIN, MIME_WORDS,
   ROULETTE, sipsFor, actionDrink, IMPOSTER_PAIRS, imposterSetup, CARD_SUITS,
-  CONNEXION_CATS, sanitizePremium,
+  CONNEXION_CATS, CATEGORIE_CATS, VOTE_QUESTIONS, sanitizePremium,
 } from "./constants.js";
 import { buildDeck, shuffle, makeUid } from "./deck.js";
 import { CITIES, project, unproject, distanceKm } from "./cities.js";
@@ -136,16 +136,17 @@ function initMinigame(s, gameId) {
   const base = { gameId: g.id, kind: g.kind, phase: "intro", launcherIdx: s.current };
   switch (g.kind) {
     case "inapp_dice": return { ...base, phase: "intro", d1: null, d2: null, oppIdx: null };
-    case "inapp_vote": return { ...base, votes: {} };
+    case "inapp_vote": return { ...base, phase: "intro", word: pickFrom(VOTE_QUESTIONS), votes: {} };
     case "inapp_letter":
       return { ...base, phase: "intro", letter: randLetter(), answers: {} };
-    case "inapp_mime": return { ...base, word: MIME_WORDS[Math.floor(Math.random() * MIME_WORDS.length)] };
+    case "inapp_mime": return { ...base, word: pickFrom(MIME_WORDS) };
+    case "inapp_categorie": return { ...base, word: pickFrom(CATEGORIE_CATS) };
     case "inapp_pear": return { ...base, phase: "cut", targetAngle: Math.floor(Math.random() * 180), cuts: {} };
     case "inapp_city": return { ...base, phase: "mark", cityIdx: Math.floor(Math.random() * CITIES.length), marks: {} };
     case "inapp_roulette": return { ...base, segment: null };
     case "inapp_dix": {
       const suit = CARD_SUITS[Math.floor(Math.random() * CARD_SUITS.length)];
-      return { ...base, phase: "guess", value: 1 + Math.floor(Math.random() * 10), suit: suit.s, red: suit.red, guesses: {} };
+      return { ...base, phase: "guess", value: 1 + Math.floor(Math.random() * 9), suit: suit.s, red: suit.red, guesses: {} };
     }
     case "inapp_imposteur": return initImposteur(s, base);
     case "inapp_connexion":
@@ -155,6 +156,15 @@ function initMinigame(s, gameId) {
 }
 function randLetter() { return PETITBAC_LETTERS[Math.floor(Math.random() * PETITBAC_LETTERS.length)]; }
 function randCategory() { return CONNEXION_CATS[Math.floor(Math.random() * CONNEXION_CATS.length)]; }
+function pickFrom(list, avoid) {
+  if (list.length < 2) return list[0];
+  let w;
+  do { w = list[Math.floor(Math.random() * list.length)]; } while (w === avoid);
+  return w;
+}
+/* Mini-jeux où le lanceur choisit un texte (suggestion ou le sien) avant de lancer. */
+const PROMPT_POOLS = { inapp_mime: MIME_WORDS, inapp_categorie: CATEGORIE_CATS, inapp_vote: VOTE_QUESTIONS };
+const PROMPT_START_PHASE = { inapp_mime: "play", inapp_categorie: "play", inapp_vote: "vote" };
 
 function initImposteur(s, base) {
   const n = s.players.length;
@@ -350,6 +360,8 @@ export function applyMove(s0, move, myId) {
     }
     case "mgVote": {
       if (!s.minigame || s.minigame.kind !== "inapp_vote") throw new Error("Pas de vote en cours.");
+      if (s.minigame.phase === "intro") throw new Error("La question n'est pas encore posée.");
+      if (s.minigame.phase === "result") throw new Error("Le vote est terminé.");
       const t = idx(s, move.targetId);
       if (t < 0) throw new Error("Vote invalide."); // on autorise le vote pour soi
       s.minigame.votes[myId] = move.targetId;
@@ -408,59 +420,59 @@ export function applyMove(s0, move, myId) {
       s.minigame.endsAt = Date.now() + 3000;
       return s;
     }
-    case "mgMimeReroll": {
+    /* ---------- mime / catégorie / vote : le lanceur choisit le texte ---------- */
+    case "mgMimeReroll":
+    case "mgPromptReroll": {
       mgGuard(s, isLauncher);
-      if (s.minigame.phase !== "intro") throw new Error("Le mime a déjà démarré.");
-      s.minigame.word = MIME_WORDS[Math.floor(Math.random() * MIME_WORDS.length)];
+      const pool = PROMPT_POOLS[s.minigame.kind];
+      if (!pool) throw new Error("Rien à changer ici.");
+      if (s.minigame.phase !== "intro") throw new Error("Le jeu a déjà démarré.");
+      s.minigame.word = pickFrom(pool, s.minigame.word);
       return s;
     }
-    case "mgMimeStart": {
+    case "mgMimeStart":
+    case "mgPromptStart": {
       mgGuard(s, isLauncher);
-      if (s.minigame.phase !== "intro") throw new Error("Le mime a déjà démarré.");
-      const w = (move.word || "").trim() || s.minigame.word;
+      const kind = s.minigame.kind;
+      if (!PROMPT_POOLS[kind]) throw new Error("Rien à lancer ici.");
+      if (s.minigame.phase !== "intro") throw new Error("Le jeu a déjà démarré.");
+      const w = String(move.word || "").trim().slice(0, 140) || s.minigame.word;
       s.minigame.word = w;
-      s.minigame.phase = "play"; // le mot devient visible par tous les joueurs
-      s.announce = note(`Mime lancé : à vous de jouer ! 🎭`);
+      s.minigame.phase = PROMPT_START_PHASE[kind]; // le texte devient visible par tous
+      s.announce = note(
+        kind === "inapp_mime" ? "Mime lancé : à vous de jouer ! 🎭"
+          : kind === "inapp_categorie" ? `Catégorie : ${w} 🗂️`
+          : `Vote secret : ${w} 🗳️`);
       return s;
     }
     case "mgPearCut": {
       if (!s.minigame || s.minigame.kind !== "inapp_pear") throw new Error("Pas de poire en cours.");
       const cut = move.cut;
       if (!cut || typeof cut.angle !== "number") throw new Error("Coupe invalide.");
+      if (s.minigame.phase === "result") throw new Error("Trop tard, les résultats sont affichés.");
       s.minigame.cuts[myId] = cut;
-      if (Object.keys(s.minigame.cuts).length >= s.players.length) {
-        const target = s.minigame.targetAngle;
-        let loserId = null, worst = -1;
-        s.players.forEach((p) => {
-          const c = s.minigame.cuts[p.id];
-          let da = Math.abs((c ? c.angle : 90) - target) % 180;
-          if (da > 90) da = 180 - da;                       // écart d'orientation 0..90
-          const off = c ? Math.abs(c.offset || 0) : 0.5;    // décalage vs le centre
-          const score = da + off * 120;
-          s.minigame.cuts[p.id] = { ...(c || {}), score: Math.round(score) };
-          if (score > worst) { worst = score; loserId = p.id; }
-        });
-        s.minigame.loserId = loserId;
-        s.minigame.phase = "result";
-      }
+      if (Object.keys(s.minigame.cuts).length >= s.players.length) pearResult(s);
       return s;
     }
     case "mgCityMark": {
       if (!s.minigame || s.minigame.kind !== "inapp_city") throw new Error("Pas de carte en cours.");
       if (typeof move.x !== "number" || typeof move.y !== "number") throw new Error("Position invalide.");
+      if (s.minigame.phase === "result") throw new Error("Trop tard, les résultats sont affichés.");
       s.minigame.marks[myId] = { x: move.x, y: move.y };
-      if (Object.keys(s.minigame.marks).length >= s.players.length) {
-        const city = CITIES[s.minigame.cityIdx];
-        let loserId = null, worst = -1;
-        s.players.forEach((p) => {
-          const m = s.minigame.marks[p.id];
-          const d = m ? distanceKm(unproject(m), city) : 1e9;
-          s.minigame.marks[p.id] = { ...m, km: d };
-          if (d > worst) { worst = d; loserId = p.id; }
-        });
-        s.minigame.loserId = loserId;
-        s.minigame.phase = "result";
-      }
+      if (Object.keys(s.minigame.marks).length >= s.players.length) cityResult(s);
+      return s;
+    }
+    /* ---------- poire / ville : arrêt anticipé (joueur absent, n'importe qui) ----------
+       On affiche les résultats de ceux qui ont joué ; le perdant est désigné parmi eux. */
+    case "mgPartialResult": {
+      const k = s.minigame && s.minigame.kind;
+      if (k !== "inapp_pear" && k !== "inapp_city") throw new Error("Rien à arrêter ici.");
+      if (s.minigame.phase === "result") throw new Error("Les résultats sont déjà affichés.");
+      const done = Object.keys(k === "inapp_pear" ? s.minigame.cuts : s.minigame.marks);
+      if (!done.length) throw new Error("Personne n'a encore joué.");
+      s.minigame.partial = true;
+      if (k === "inapp_pear") pearResult(s); else cityResult(s);
+      s.announce = note(`Arrêt anticipé : résultats de ceux qui ont joué (${mine.name}) ⏭️`);
       return s;
     }
     case "mgRouletteSpin": {
@@ -518,12 +530,23 @@ export function applyMove(s0, move, myId) {
       if (me === launcher) throw new Error("Le lanceur ne note pas.");
       if (s.minigame.phase !== "guess") throw new Error("Trop tard pour noter.");
       const v = move.value;
-      if (typeof v !== "number" || v < 1 || v > 10) throw new Error("Note invalide (1 à 10).");
+      if (!Number.isInteger(v) || v < 1 || v > 9) throw new Error("Note invalide (1 à 9).");
       s.minigame.guesses[myId] = v;
       // Dévoilement automatique dès que tous les autres joueurs ont noté.
       const guessers = s.players.length - 1; // tout le monde sauf le lanceur
       if (Object.keys(s.minigame.guesses).length >= guessers) dixReveal(s);
       return s;
+    }
+    case "mgDixReroll": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "guess") throw new Error("Trop tard pour changer de carte.");
+      if (Object.keys(s.minigame.guesses || {}).length) throw new Error("Quelqu'un a déjà noté.");
+      const old = s.minigame.value;
+      let v;
+      do { v = 1 + Math.floor(Math.random() * 9); } while (v === old);
+      const suit = CARD_SUITS[Math.floor(Math.random() * CARD_SUITS.length)];
+      s.minigame.value = v; s.minigame.suit = suit.s; s.minigame.red = suit.red;
+      return s; // pas d'annonce : discret
     }
     case "mgDixReveal": {
       mgGuard(s, isLauncher);
@@ -681,6 +704,38 @@ function imposteurCheckOver(s) {
   const civ = roles.filter((r) => r === "civil").length;
   if (imp === 0 && white === 0) { s.minigame.result = "civils"; s.minigame.phase = "over"; }
   else if (imp > 0 && civ <= imp) { s.minigame.result = "imposteurs"; s.minigame.phase = "over"; }
+}
+/* Coupe la poire : score de chaque joueur ayant coupé (écart d'orientation +
+   décalage vs le centre) ; le plus éloigné perd. Les absents sont ignorés. */
+function pearResult(s) {
+  const target = s.minigame.targetAngle;
+  let loserId = null, worst = -1;
+  s.players.forEach((p) => {
+    const c = s.minigame.cuts[p.id];
+    if (!c) return;
+    let da = Math.abs(c.angle - target) % 180;
+    if (da > 90) da = 180 - da;                // écart d'orientation 0..90
+    const off = Math.abs(c.offset || 0);       // décalage vs le centre
+    const score = da + off * 120;
+    s.minigame.cuts[p.id] = { ...c, score: Math.round(score) };
+    if (score > worst) { worst = score; loserId = p.id; }
+  });
+  s.minigame.loserId = loserId;
+  s.minigame.phase = "result";
+}
+/* Place la ville : distance de chaque marqueur posé ; le plus loin perd. */
+function cityResult(s) {
+  const city = CITIES[s.minigame.cityIdx];
+  let loserId = null, worst = -1;
+  s.players.forEach((p) => {
+    const m = s.minigame.marks[p.id];
+    if (!m) return;
+    const d = distanceKm(unproject(m), city);
+    s.minigame.marks[p.id] = { ...m, km: d };
+    if (d > worst) { worst = d; loserId = p.id; }
+  });
+  s.minigame.loserId = loserId;
+  s.minigame.phase = "result";
 }
 /* C'est un 10 mais… : le lanceur boit la moyenne (arrondie) des écarts entre
    la carte cachée et les notes des autres joueurs, puis on révèle. */

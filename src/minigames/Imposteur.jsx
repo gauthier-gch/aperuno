@@ -21,6 +21,17 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
     );
   }
 
+  /* Composition de la partie, visible par tous. */
+  const roleVals = Object.values(mg.roles || {});
+  const nImp = roleVals.filter((r) => r === "imposteur").length;
+  const nWhite = roleVals.filter((r) => r === "white").length;
+  const Composition = () => (
+    <p className="muted mb center">
+      Dans cette partie : <b className="w">{nImp} Undercover</b>
+      {" · "}<b className="w">{nWhite ? `${nWhite} Mister White` : "pas de Mister White"}</b>
+    </p>
+  );
+
   const MyWordCard = () => (
     <div className="panel mb" style={{ width: "100%", textAlign: "center" }}>
       <p className="dim">Ton mot secret</p>
@@ -58,6 +69,7 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
     return (
       <div className="center-col">
         <MyWordCard />
+        <Composition />
         <p className="muted mb">Chacun regarde son mot en secret. À tour de rôle, décrivez-le sans le dire !</p>
         {isLauncher
           ? <button className="btn btn-blue" disabled={busy} onClick={() => act({ type: "mgImpStart" })}>Commencer les tours de parole 🎤</button>
@@ -66,32 +78,33 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
     );
   }
 
-  /* tours de parole */
+  /* tours de parole : l'ordre est visible par tous, on parle à l'oral sans
+     cliquer entre chaque joueur. Le lanceur passe ensuite à l'élimination. */
   if (mg.phase === "play") {
     /* Ordre de parole calculé par le moteur (Mister White ne commence jamais). */
     const order = mg.speakOrder && mg.speakOrder.length
       ? mg.speakOrder.map((id) => room.players.find((p) => p.id === id)).filter(Boolean)
       : active;
-    const speaker = order[mg.speakerIdx];
-    const allSpoke = mg.speakerIdx >= order.length;
     return (
       <div className="center-col">
         <MyWordCard />
-        {!allSpoke && speaker && (
-          <p className="b mb" style={{ fontSize: 20 }}>
-            {speaker.id === MYID ? "🎤 À toi de parler !" : `🎤 Au tour de ${speaker.name}`}
-          </p>
+        <Composition />
+        <p className="b mb">🎤 Tours de parole — manche {mg.round}</p>
+        <p className="muted mb">Chacun décrit son mot à l'oral, dans cet ordre :</p>
+        <div className="pb-table" style={{ width: "100%" }}>
+          {order.map((p, i) => (
+            <div className="pb-row space" key={p.id}>
+              <b>{i + 1}. {p.name}{p.id === MYID ? " (toi)" : ""}</b>
+              {i === 0 && <span className="muted">commence</span>}
+            </div>
+          ))}
+        </div>
+        {(mg.eliminated || []).length > 0 && (
+          <p className="dim mb">Éliminés : {mg.eliminated.map((id) => (room.players.find((p) => p.id === id) || {}).name).filter(Boolean).join(", ")}</p>
         )}
-        {allSpoke && <p className="muted mb">Tout le monde a parlé.</p>}
-        {isLauncher ? (
-          <div className="col-gap" style={{ width: "100%" }}>
-            {!allSpoke
-              ? <button className="btn btn-blue" disabled={busy} onClick={() => act({ type: "mgImpNext" })}>
-                  {speaker && speaker.id === MYID ? "J'ai parlé — au suivant ▶" : `${speaker ? speaker.name : ""} a parlé — au suivant ▶`}
-                </button>
-              : <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgImpToVote" })}>Heure de l'élimination 🗳️</button>}
-          </div>
-        ) : <p className="muted dim">Manche {mg.round} · l'hôte gère les tours de parole.</p>}
+        {isLauncher
+          ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgImpToVote" })}>Tout le monde a parlé → heure de l'élimination 🗳️</button>
+          : <p className="muted dim">Quand tout le monde a parlé, {launcher.name} lance l'élimination.</p>}
       </div>
     );
   }
@@ -116,6 +129,7 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
       return (
         <div className="center-col">
           <p className="b mb">🗳️ Heure de l'élimination — manche {mg.round}</p>
+          <Composition />
           {isLauncher
             ? <DesignateLoser players={active} onPick={(id) => act({ type: "mgImpEliminate", targetId: id })} label="Qui les joueurs ont-ils voté d'éliminer ?" />
             : <p className="muted">Votez entre vous, puis {launcher.name} indique l'éliminé.</p>}

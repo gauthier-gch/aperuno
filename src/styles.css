@@ -173,6 +173,8 @@ html, body, #root { margin: 0; height: 100%; }
 .map-stage { position:relative; width:100%; max-width:340px; margin:8px auto 14px; touch-action:none; }
 .map-stage svg { width:100%; height:auto; display:block; }
 .marker { position:absolute; transform:translate(-50%,-100%); font-size:20px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)); pointer-events:none; }
+/* zone de prise du pin (placement) : on peut le glisser sans faire défiler la page */
+.pin-hit { position:absolute; width:56px; height:56px; transform:translate(-50%,-70%); border-radius:50%; touch-action:none; }
 .marker small { position:absolute; left:50%; top:100%; transform:translateX(-50%); white-space:nowrap; font-size:9px; background:rgba(0,0,0,.6); padding:1px 5px; border-radius:6px; }
 
 .pb-table { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
@@ -234,6 +236,9 @@ html, body, #root { margin: 0; height: 100%; }
 .pb-grid th, .pb-grid td { border:1px solid rgba(255,255,255,.14); padding:6px 8px; text-align:left; white-space:nowrap; }
 .pb-grid thead th { background:rgba(255,255,255,.08); color:#fff; font-size:11px; }
 .pb-grid tbody th { background:rgba(0,0,0,.22); color:#fff; }
+/* colonne des pseudos figée : on voit à qui sont les réponses en scrollant à droite */
+.pb-grid tr > th:first-child { position:sticky; left:0; z-index:1; background:#1d1540; box-shadow:2px 0 6px rgba(0,0,0,.35); }
+.pb-grid thead tr > th:first-child { background:#2a2150; z-index:2; }
 .pb-grid td { color:#cdbff2; }
 
 /* ---- zoom carte de France (résultats) ---- */
@@ -329,3 +334,10 @@ html, body, #root { margin: 0; height: 100%; }
 @keyframes rdfade { from{opacity:0;} to{opacity:1;} }
 @keyframes rdcenter { from{opacity:0; transform:translate(-50%,-50%) scale(.9);} to{opacity:1; transform:translate(-50%,-50%) scale(1);} }
 @keyframes rddash { to { stroke-dashoffset:-14; } }
+
+/* ---- « C'est un 10 mais » : ligne graduée 1 → 9 ---- */
+.dix-scale { width:100%; max-width:340px; margin:6px auto 0; }
+.dix-scale input[type=range] { width:100%; accent-color:var(--gold); height:32px; margin:0; }
+.dix-ticks { display:flex; justify-content:space-between; padding:0 6px; }
+.dix-ticks span { width:22px; text-align:center; font-size:13px; color:#cdbff2; border-top:2px solid rgba(255,255,255,.35); padding-top:4px; cursor:pointer; }
+.dix-ticks span.on { color:#fff; font-weight:800; border-top-color:var(--gold); }

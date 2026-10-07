@@ -61,6 +61,24 @@ export function ManualEscape({ players, onPick, onClose }) {
   );
 }
 
+/* Poire / ville : au lieu de désigner un perdant à l'aveugle, on arrête la
+   manche et on affiche les résultats de ceux qui ont déjà joué. */
+export function PartialEscape({ mg, room, onStop }) {
+  const [open, setOpen] = useState(false);
+  if (!open)
+    return <button className="btn btn-ghost btn-sm mt" onClick={() => setOpen(true)}>⚠️ Un joueur absent bloque le jeu ?</button>;
+  const done = Object.keys((mg.kind === "inapp_pear" ? mg.cuts : mg.marks) || {}).length;
+  return (
+    <div className="mt center-col">
+      <p className="muted mb">{done}/{room.players.length} joueurs ont joué. Le perdant sera désigné parmi eux.</p>
+      <button className="btn btn-gold btn-sm" disabled={!done} onClick={() => { setOpen(false); onStop(); }}>
+        Arrêter avec les joueurs qui ont joué ⏭️
+      </button>
+      <button className="btn btn-ghost btn-sm mt" onClick={() => setOpen(false)}>Annuler</button>
+    </div>
+  );
+}
+
 /* Boutons de désignation d'un joueur (perdant / cible). */
 export function DesignateLoser({ players, onPick, label, exclude }) {
   return (
