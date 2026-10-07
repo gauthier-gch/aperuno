@@ -1,7 +1,7 @@
 import React from "react";
 import { MYID } from "../me.js";
 import { game } from "../game/constants.js";
-import { Overlay, DesignateLoser, ManualEscape } from "../components/common.jsx";
+import { Overlay, DesignateLoser, ManualEscape, RichText } from "../components/common.jsx";
 import { RuleDiagram } from "../components/RuleDiagram.jsx";
 import { DiceGame } from "./Dice.jsx";
 import { VoteGame } from "./Vote.jsx";
@@ -68,7 +68,7 @@ export function Minigame({ room, act, busy, leave }) {
         <button className="btn btn-ghost auto quit-btn" onClick={leave}>Quitter la partie</button>
       </div>
       <h3 className="h-title">{g.name}</h3>
-      <p className="muted mb">{g.rule}</p>
+      <RichText className="muted mb" text={g.rule} />
       <RuleDiagram id={g.id} />
       {body}
       {/* Débloquer un mini-jeu quand quelqu'un (y compris le lanceur) est absent :

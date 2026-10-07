@@ -76,3 +76,42 @@ export function DesignateLoser({ players, onPick, label, exclude }) {
     </div>
   );
 }
+
+/* Texte de règle légèrement mis en forme (mini-syntaxe façon Markdown) :
+   **gras**, *italique*, __souligné__, saut de ligne avec \n, ligne vide =
+   nouveau paragraphe, lignes commençant par « - » = liste à puces. */
+function inline(s) {
+  return s.split(/(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*)/g).map((t, i) => {
+    if (t.startsWith("**") && t.endsWith("**") && t.length > 4) return <b key={i} className="w">{t.slice(2, -2)}</b>;
+    if (t.startsWith("__") && t.endsWith("__") && t.length > 4) return <u key={i}>{t.slice(2, -2)}</u>;
+    if (t.startsWith("*") && t.endsWith("*") && t.length > 2) return <i key={i}>{t.slice(1, -1)}</i>;
+    return t;
+  });
+}
+
+export function RichText({ text, className = "" }) {
+  const blocks = [];
+  String(text || "").split("\n").forEach((line) => {
+    const last = blocks[blocks.length - 1];
+    if (/^\s*[-•]\s+/.test(line)) {
+      const item = line.replace(/^\s*[-•]\s+/, "");
+      if (last && last.type === "ul") last.items.push(item);
+      else blocks.push({ type: "ul", items: [item] });
+    } else if (!line.trim()) {
+      blocks.push({ type: "gap" });
+    } else if (last && last.type === "p") {
+      last.lines.push(line);
+    } else {
+      blocks.push({ type: "p", lines: [line] });
+    }
+  });
+  return (
+    <div className={"rich " + className}>
+      {blocks.map((b, i) => {
+        if (b.type === "ul") return <ul key={i}>{b.items.map((it, j) => <li key={j}>{inline(it)}</li>)}</ul>;
+        if (b.type === "p") return <p key={i}>{b.lines.map((l, j) => <React.Fragment key={j}>{j > 0 && <br />}{inline(l)}</React.Fragment>)}</p>;
+        return null;
+      })}
+    </div>
+  );
+}
