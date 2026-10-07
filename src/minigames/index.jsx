@@ -2,7 +2,6 @@ import React from "react";
 import { MYID } from "../me.js";
 import { game } from "../game/constants.js";
 import { Overlay, DesignateLoser, ManualEscape, PartialEscape, RichText } from "../components/common.jsx";
-import { RuleDiagram } from "../components/RuleDiagram.jsx";
 import { DiceGame } from "./Dice.jsx";
 import { VoteGame } from "./Vote.jsx";
 import { PetitBacGame } from "./PetitBac.jsx";
@@ -19,6 +18,9 @@ import { ConnexionGame } from "./Connexion.jsx";
 import { PatateGame } from "./Patate.jsx";
 import { PiraterieGame } from "./Piraterie.jsx";
 import { CategorieGame } from "./Categorie.jsx";
+
+/* Mini-jeux qu'on peut arrêter avec les joueurs qui ont déjà joué. */
+const PARTIAL_KINDS = ["inapp_pear", "inapp_city", "inapp_vote"];
 
 export function Minigame({ room, act, busy, leave }) {
   const mg = room.minigame;
@@ -71,12 +73,11 @@ export function Minigame({ room, act, busy, leave }) {
       </div>
       <h3 className="h-title">{g.name}</h3>
       <RichText className="muted mb" text={g.rule} />
-      <RuleDiagram id={g.id} />
       {body}
       {/* Débloquer un mini-jeu quand quelqu'un (y compris le lanceur) est absent :
           accessible à TOUS, car seul le lanceur a les boutons de fin.
           Inutile pour la patate chaude (un seul téléphone, piloté par le lanceur). */}
-      {(mg.kind === "inapp_pear" || mg.kind === "inapp_city") && mg.phase !== "result" ? (
+      {PARTIAL_KINDS.includes(mg.kind) && mg.phase !== "result" && mg.phase !== "intro" ? (
         <PartialEscape mg={mg} room={room} onStop={() => act({ type: "mgPartialResult" })} />
       ) : mg.kind !== "inapp_patate" && (
         <ManualEscape

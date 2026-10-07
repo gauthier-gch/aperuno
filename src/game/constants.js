@@ -283,17 +283,19 @@ export const VOTE_QUESTIONS = [
 
 /* Roulette Harr : segments dans l'ordre d'affichage sur la roue.
    needsTarget → le lanceur choisit une cible avant de valider.
-   give → « <cible> give » ; offer → « <lanceur> offer <cible> ». */
+   give → « <cible> give » ; offer → « <lanceur> offer <cible> ».
+   self / them → texte à la 3e personne affiché sur le téléphone des autres
+   (« Paul finit son verre », et non « Finis ton verre »). */
 export const ROULETTE = [
   { label: "Bois 8 gorgées", color: "#ff3b5c", self: "boit 8 gorgées" },
   { label: "Offre un shot", color: "#37a6ff", needsTarget: true,
-    detail: "Commande ou sers un shot à la personne de ton choix.", offer: "offre un shot à" },
+    detail: "Commande ou sers un shot à la personne de ton choix.", them: "offre un shot", offer: "offre un shot à" },
   { label: "Ajoute de l'alcool dans ton verre", color: "#b15bff", self: "ajoute de l'alcool dans son verre" },
   { label: "Finis ton verre", color: "#ff9b2f", self: "finit son verre 🥃" },
   { label: "Bois 5 gorgées", color: "#e8401e", self: "boit 5 gorgées" },
-  { label: "Distribue 5 gorgées", color: "#27d17c", needsTarget: true, give: "boit 5 gorgées" },
-  { label: "Alcool dans le verre de ton choix", color: "#7d3bff", needsTarget: true, give: "se prend un peu d'alcool en plus dans son verre" },
-  { label: "Distribue un sec", color: "#f4c95d", needsTarget: true, give: "se prend un sec 🥃" },
+  { label: "Distribue 5 gorgées", color: "#27d17c", needsTarget: true, them: "distribue 5 gorgées", give: "boit 5 gorgées" },
+  { label: "Alcool dans le verre de ton choix", color: "#7d3bff", needsTarget: true, them: "met de l'alcool dans le verre de son choix", give: "se prend un peu d'alcool en plus dans son verre" },
+  { label: "Distribue un sec", color: "#f4c95d", needsTarget: true, them: "distribue un sec", give: "se prend un sec 🥃" },
 ];
 
 /* « L'imposteur » : paires (mot des civils / mot de l'imposteur), proches. */
@@ -328,13 +330,29 @@ export const CARD_SUITS = [
   { s: "♥", red: true }, { s: "♦", red: true }, { s: "♣", red: false }, { s: "♠", red: false },
 ];
 
-/* « Connexion » : catégories simples proposées au hasard. */
+/* « Connexion » : catégories proposées au hasard. Mélange de classiques et de
+   catégories loufoques, mais toujours avec des réponses « évidentes » pour
+   que les joueurs aient une chance de dire le même mot. */
 export const CONNEXION_CATS = [
+  /* classiques */
   "Une couleur", "Un fruit", "Un fast-food", "Un animal", "Un pays",
   "Une marque de voiture", "Un sport", "Un métier", "Une boisson", "Un légume",
-  "Un film culte", "Un jour de la semaine", "Une partie du corps", "Un instrument de musique",
-  "Un super-héros", "Une saison", "Un dessert", "Un moyen de transport",
-  "Une pièce de la maison", "Un réseau social",
+  "Un film culte", "Une partie du corps", "Un instrument de musique",
+  "Un super-héros", "Un dessert", "Un moyen de transport", "Un réseau social",
+  /* loufoques */
+  "Un truc qu'on trouve dans le frigo d'un étudiant", "Un animal qu'on n'aimerait pas trouver dans son lit",
+  "Un prénom de chien", "Un prénom de vieux", "Un cri d'animal", "Une excuse pour être en retard",
+  "Un truc qu'on crie en soirée", "Un cocktail", "Un shot", "Un aliment qui fait péter",
+  "Un objet qu'on perd tout le temps", "Un personnage de Disney", "Un méchant de film",
+  "Un truc qui pique", "Un truc qui colle", "Un truc qui pue", "Un truc qui fait peur",
+  "Une sauce de kebab", "Une garniture de pizza", "Un fromage qui pue", "Un mot qui rime avec « apéro »",
+  "Un gros mot", "Un surnom mignon pour son/sa chéri(e)", "Un truc qu'on fait aux toilettes",
+  "Une destination de vacances", "Un dessin animé de notre enfance", "Un jeu de société",
+  "Un Pokémon", "Un personnage de Harry Potter", "Une marque de bière", "Une chanson de mariage",
+  "Un truc qu'on trouve sur une plage", "Un objet dans une boîte à outils", "Un emoji",
+  "Un truc qu'on fait le dimanche", "Un truc qui se mange avec les doigts", "Un animal de la ferme",
+  "Une star de la chanson française", "Une chose qu'on trouve dans un sac à main", "Un truc rouge",
+  "Un truc jaune", "Une position pour dormir", "Un truc qu'on dit quand on a trop bu",
 ];
 
 /* Adresse qui reçoit les suggestions d'amélioration (bouton de la home). */

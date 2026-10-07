@@ -365,13 +365,7 @@ export function applyMove(s0, move, myId) {
       const t = idx(s, move.targetId);
       if (t < 0) throw new Error("Vote invalide."); // on autorise le vote pour soi
       s.minigame.votes[myId] = move.targetId;
-      if (Object.keys(s.minigame.votes).length >= s.players.length) {
-        const tally = {};
-        Object.values(s.minigame.votes).forEach((id) => { tally[id] = (tally[id] || 0) + 1; });
-        const max = Math.max(...Object.values(tally));
-        s.minigame.loserIds = Object.keys(tally).filter((id) => tally[id] === max); // tous les ex æquo
-        s.minigame.phase = "result";
-      }
+      if (Object.keys(s.minigame.votes).length >= s.players.length) voteResult(s);
       return s;
     }
     case "mgPbReroll": {
@@ -462,16 +456,18 @@ export function applyMove(s0, move, myId) {
       if (Object.keys(s.minigame.marks).length >= s.players.length) cityResult(s);
       return s;
     }
-    /* ---------- poire / ville : arrêt anticipé (joueur absent, n'importe qui) ----------
-       On affiche les résultats de ceux qui ont joué ; le perdant est désigné parmi eux. */
+    /* ---------- poire / ville / vote : arrêt anticipé (joueur absent, n'importe qui) ----------
+       On affiche les résultats de ceux qui ont joué (perdant désigné parmi eux ;
+       pour le vote : dépouillement des votes déjà faits). */
     case "mgPartialResult": {
       const k = s.minigame && s.minigame.kind;
-      if (k !== "inapp_pear" && k !== "inapp_city") throw new Error("Rien à arrêter ici.");
+      if (k !== "inapp_pear" && k !== "inapp_city" && k !== "inapp_vote") throw new Error("Rien à arrêter ici.");
       if (s.minigame.phase === "result") throw new Error("Les résultats sont déjà affichés.");
-      const done = Object.keys(k === "inapp_pear" ? s.minigame.cuts : s.minigame.marks);
+      if (s.minigame.phase === "intro") throw new Error("Le jeu n'a pas encore commencé.");
+      const done = Object.keys(k === "inapp_pear" ? s.minigame.cuts : k === "inapp_vote" ? s.minigame.votes : s.minigame.marks);
       if (!done.length) throw new Error("Personne n'a encore joué.");
       s.minigame.partial = true;
-      if (k === "inapp_pear") pearResult(s); else cityResult(s);
+      if (k === "inapp_pear") pearResult(s); else if (k === "inapp_vote") voteResult(s); else cityResult(s);
       s.announce = note(`Arrêt anticipé : résultats de ceux qui ont joué (${mine.name}) ⏭️`);
       return s;
     }
@@ -721,6 +717,14 @@ function pearResult(s) {
     if (score > worst) { worst = score; loserId = p.id; }
   });
   s.minigame.loserId = loserId;
+  s.minigame.phase = "result";
+}
+/* Vote secret : le (ou les ex æquo) plus voté(s) perd(ent). */
+function voteResult(s) {
+  const tally = {};
+  Object.values(s.minigame.votes).forEach((id) => { tally[id] = (tally[id] || 0) + 1; });
+  const max = Math.max(...Object.values(tally));
+  s.minigame.loserIds = Object.keys(tally).filter((id) => tally[id] === max); // tous les ex æquo
   s.minigame.phase = "result";
 }
 /* Place la ville : distance de chaque marqueur posé ; le plus loin perd. */

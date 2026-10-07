@@ -127,8 +127,8 @@ html, body, #root { margin: 0; height: 100%; }
 .card .ic { font-size:30px; align-self:flex-end; }
 .card .badge { position:absolute; top:6px; right:6px; background:#fff; color:#1a1430; border-radius:999px; min-width:20px; height:20px; padding:0 5px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; }
 
-.overlay { position:fixed; inset:0; background:rgba(6,4,16,.82); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:22px; z-index:40; }
-.sheet { width:100%; max-width:404px; max-height:88dvh; overflow-y:auto; background:linear-gradient(180deg,#1b1338,#140e2c); border:1px solid rgba(255,255,255,.14); border-radius:24px; padding:22px; box-shadow:0 30px 80px rgba(0,0,0,.6); }
+.overlay { position:fixed; inset:0; overscroll-behavior:contain; background:rgba(6,4,16,.82); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:22px; z-index:40; }
+.sheet { width:100%; max-width:404px; max-height:88dvh; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; background:linear-gradient(180deg,#1b1338,#140e2c); border:1px solid rgba(255,255,255,.14); border-radius:24px; padding:22px; box-shadow:0 30px 80px rgba(0,0,0,.6); }
 .cardhead { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
 .mini-card { width:46px; height:64px; border-radius:10px; flex:0 0 auto; display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px; font-size:22px; }
 

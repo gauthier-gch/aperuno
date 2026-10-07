@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export function Shell({ children, timers }) {
   const active = (timers || []).filter((t) => t.endsAt > Date.now());
@@ -37,7 +37,27 @@ export function Ava({ p, size = 40, online }) {
   );
 }
 
+/* Tant qu'au moins une fenêtre est ouverte, la page derrière ne défile plus :
+   un glissé (ex. sur la carte de « Place la ville ») fait défiler la fenêtre
+   elle-même, pas la table de jeu en arrière-plan (surtout sur iOS). */
+let openOverlays = 0;
+function lockPageScroll() {
+  openOverlays += 1;
+  if (openOverlays === 1) {
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+  }
+  return () => {
+    openOverlays -= 1;
+    if (openOverlays === 0) {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    }
+  };
+}
+
 export function Overlay({ children }) {
+  useEffect(lockPageScroll, []);
   return (
     <div className="overlay">
       <div className="sheet pop">{children}</div>
@@ -61,18 +81,21 @@ export function ManualEscape({ players, onPick, onClose }) {
   );
 }
 
-/* Poire / ville : au lieu de désigner un perdant à l'aveugle, on arrête la
-   manche et on affiche les résultats de ceux qui ont déjà joué. */
+/* Poire / ville / vote : au lieu de désigner un perdant à l'aveugle, on arrête
+   la manche et on affiche les résultats de ceux qui ont déjà joué. */
 export function PartialEscape({ mg, room, onStop }) {
   const [open, setOpen] = useState(false);
   if (!open)
     return <button className="btn btn-ghost btn-sm mt" onClick={() => setOpen(true)}>⚠️ Un joueur absent bloque le jeu ?</button>;
-  const done = Object.keys((mg.kind === "inapp_pear" ? mg.cuts : mg.marks) || {}).length;
+  const vote = mg.kind === "inapp_vote";
+  const done = Object.keys((mg.kind === "inapp_pear" ? mg.cuts : vote ? mg.votes : mg.marks) || {}).length;
   return (
     <div className="mt center-col">
-      <p className="muted mb">{done}/{room.players.length} joueurs ont joué. Le perdant sera désigné parmi eux.</p>
+      <p className="muted mb">
+        {done}/{room.players.length} joueurs ont {vote ? "voté. Le résultat sera calculé avec leurs votes." : "joué. Le perdant sera désigné parmi eux."}
+      </p>
       <button className="btn btn-gold btn-sm" disabled={!done} onClick={() => { setOpen(false); onStop(); }}>
-        Arrêter avec les joueurs qui ont joué ⏭️
+        {vote ? "Arrêter avec les votes déjà faits ⏭️" : "Arrêter avec les joueurs qui ont joué ⏭️"}
       </button>
       <button className="btn btn-ghost btn-sm mt" onClick={() => setOpen(false)}>Annuler</button>
     </div>

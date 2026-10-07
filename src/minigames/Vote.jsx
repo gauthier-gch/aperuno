@@ -47,6 +47,7 @@ export function VoteGame({ room, mg, isLauncher, launcher, act, busy, waiting })
   return (
     <div className="pop center">
       {mg.word && <Question text={mg.word} />}
+      {mg.partial && <p className="dim mb">Arrêt anticipé : seuls {Object.keys(mg.votes).length}/{room.players.length} joueurs ont voté.</p>}
       <p className="b mb">🏆 {many ? "Égalité ! " : ""}{names} {many ? "boivent" : "boit"} !</p>
       {isLauncher
         ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", loserIds: mg.loserIds })}>Terminer le tour</button>
