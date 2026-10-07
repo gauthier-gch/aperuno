@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MYID } from "../me.js";
 import { TYPE_META, CARD_INFO, GAMES, actionDrink } from "../game/constants.js";
-import { Overlay, Ava } from "./common.jsx";
+import { Overlay, Ava, RichText } from "./common.jsx";
 import { Minigame } from "../minigames/index.jsx";
 import { RuleDiagram } from "./RuleDiagram.jsx";
 
@@ -38,7 +38,7 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
           <h3 className="h-title" style={{ margin: "6px 0 0" }}>{card.label}</h3>
         </div>
       </div>
-      <p className="muted mb">{rule}</p>
+      <RichText className="muted mb" text={rule} />
       {g && <RuleDiagram id={g.id} />}
       {!canPlay && <p className="muted dim mb">Ce n'est pas ton tour (ou tu dois d'abord piocher) — tu peux seulement consulter la règle.</p>}
 

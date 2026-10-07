@@ -4,6 +4,7 @@ import {
   SITE_NAME, LEGAL_EDITOR, LEGAL_PUBLISHER, LEGAL_HOST, INSTAGRAM_URL, TIKTOK_URL,
 } from "../game/constants.js";
 import { RuleDiagram, hasRuleDiagram } from "./RuleDiagram.jsx";
+import { RichText } from "./common.jsx";
 
 const LOGO = `${import.meta.env.BASE_URL}logo_aperuno.png`;
 
@@ -359,7 +360,7 @@ export function Rules({ back }) {
                   {g.harrOnly && <span className="chip harr-chip">🔥 Harr</span>}
                 </div>
               </div>
-              <p className="muted mt">{g.rule}</p>
+              <RichText className="muted mt" text={g.rule} />
               {hasRuleDiagram(g.id) && <div className="mt"><RuleDiagram id={g.id} /></div>}
             </div>
           );

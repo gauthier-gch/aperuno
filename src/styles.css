@@ -45,6 +45,13 @@ html, body, #root { margin: 0; height: 100%; }
 .muted { color:#b9aee0; font-size:13px; line-height:1.55; }
 .dim { opacity:.7; font-size:11px; }
 .w { color:#fff; }
+/* texte de règle mis en forme (RichText) */
+.rich p { margin:0; }
+.rich p + p, .rich ul + p, .rich p + ul, .rich ul + ul { margin-top:8px; }
+.rich ul { margin:0; padding-left:18px; }
+.rich li { margin:2px 0; }
+.rich li::marker { color:#ff6f86; }
+.rich u { text-decoration-color:#ff6f86; text-underline-offset:2px; }
 .b { font-weight:700; }
 .center { text-align:center; }
 .center-col { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:6px; }
