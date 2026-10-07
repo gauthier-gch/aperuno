@@ -57,8 +57,10 @@ export function RouletteGame({ room, mg, isLauncher, launcher, act, busy, waitin
 
       {mg.phase === "result" && revealed && (
         <>
-          <p className="b mb">🎯 {seg.label}</p>
-          {seg.detail && <p className="muted mb">{seg.detail}</p>}
+          {isLauncher
+            ? <p className="b mb">🎯 {seg.label}</p>
+            : <p className="b mb">🎯 {launcher.name} {seg.needsTarget ? seg.them : seg.self}</p>}
+          {isLauncher && seg.detail && <p className="muted mb">{seg.detail}</p>}
           {!isLauncher ? waiting : seg.needsTarget ? (
             <DesignateLoser players={room.players} label="Pour qui ?"
               onPick={(id) => {
