@@ -1,7 +1,7 @@
 import React from "react";
 import { MYID } from "../me.js";
 import { game } from "../game/constants.js";
-import { Overlay, DesignateLoser, ManualEscape, RichText } from "../components/common.jsx";
+import { Overlay, DesignateLoser, ManualEscape, PartialEscape, RichText } from "../components/common.jsx";
 import { RuleDiagram } from "../components/RuleDiagram.jsx";
 import { DiceGame } from "./Dice.jsx";
 import { VoteGame } from "./Vote.jsx";
@@ -18,6 +18,7 @@ import { ImposteurGame } from "./Imposteur.jsx";
 import { ConnexionGame } from "./Connexion.jsx";
 import { PatateGame } from "./Patate.jsx";
 import { PiraterieGame } from "./Piraterie.jsx";
+import { CategorieGame } from "./Categorie.jsx";
 
 export function Minigame({ room, act, busy, leave }) {
   const mg = room.minigame;
@@ -44,6 +45,7 @@ export function Minigame({ room, act, busy, leave }) {
     case "inapp_connexion": body = <ConnexionGame {...shared} />; break;
     case "inapp_patate": body = <PatateGame {...shared} />; break;
     case "inapp_piraterie": body = <PiraterieGame {...shared} />; break;
+    case "inapp_categorie": body = <CategorieGame {...shared} />; break;
     default:
       if (g.duel) {
         // duels : choisir l'adversaire PUIS désigner le perdant.
@@ -74,7 +76,9 @@ export function Minigame({ room, act, busy, leave }) {
       {/* Débloquer un mini-jeu quand quelqu'un (y compris le lanceur) est absent :
           accessible à TOUS, car seul le lanceur a les boutons de fin.
           Inutile pour la patate chaude (un seul téléphone, piloté par le lanceur). */}
-      {mg.kind !== "inapp_patate" && (
+      {(mg.kind === "inapp_pear" || mg.kind === "inapp_city") && mg.phase !== "result" ? (
+        <PartialEscape mg={mg} room={room} onStop={() => act({ type: "mgPartialResult" })} />
+      ) : mg.kind !== "inapp_patate" && (
         <ManualEscape
           players={room.players}
           onPick={(id) => act({ type: "mgAbort", loserId: id })}

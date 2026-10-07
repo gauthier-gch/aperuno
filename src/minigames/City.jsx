@@ -19,6 +19,7 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
   const panning = useRef(null);
   const placing = useRef(false);
   const downPt = useRef(null);
+  const tapCandidate = useRef(false);
   const city = CITIES[mg.cityIdx];
   const submitted = mg.marks && mg.marks[MYID] != null;
 
@@ -32,22 +33,34 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
       y: Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)),
     });
   }
+  /* Une fois le pin posé :
+     - glisser en partant du pin (zone .pin-hit, touch-action:none) le déplace ;
+     - glisser ailleurs fait défiler la page (touch-action:pan-y → le navigateur
+       scrolle et envoie pointercancel) : on peut descendre valider ;
+     - un simple tap ailleurs (sans glisser) replace le pin. */
   function pickDown(e) {
     if (submitted || mg.phase === "result") return;
-    placing.current = true;
     downPt.current = { x: e.clientX, y: e.clientY };
+    const onPin = e.target.closest && e.target.closest(".pin-hit");
+    if (mark && !onPin) { tapCandidate.current = true; return; }
+    placing.current = true;
     stageRef.current.setPointerCapture?.(e.pointerId);
-    place(e);
+    if (!mark) place(e);
   }
   function pickMove(e) {
-    if (!placing.current) return;
+    if (!downPt.current) return;
     // Seuil anti-tremblement : un appui long immobile ne déplace plus le pin,
     // seul un vrai glissement volontaire le repositionne.
     const d = Math.hypot(e.clientX - downPt.current.x, e.clientY - downPt.current.y);
-    if (d < 6) return;
+    if (tapCandidate.current) { if (d >= 8) tapCandidate.current = false; return; }
+    if (!placing.current || d < 6) return;
     place(e);
   }
-  function pickUp() { placing.current = false; }
+  function pickUp(e) {
+    if (tapCandidate.current) place(e);
+    tapCandidate.current = false; placing.current = false; downPt.current = null;
+  }
+  function pickCancel() { tapCandidate.current = false; placing.current = false; downPt.current = null; }
 
   /* --------- résultats : zoom + liste triée --------- */
   if (mg.phase === "result") {
@@ -70,6 +83,7 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
     return (
       <div className="center-col">
         <p className="muted mb">📍 {city.name} était ici :</p>
+        {mg.partial && <p className="dim mb">Arrêt anticipé : seuls {ranked.length}/{room.players.length} joueurs ont placé leur marqueur.</p>}
         <div className="map-viewport"
           onPointerDown={panStart} onPointerMove={panMove} onPointerUp={panEnd} onPointerLeave={panEnd}
           onTouchStart={panStart} onTouchMove={panMove} onTouchEnd={panEnd}>
@@ -109,13 +123,15 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
   return (
     <div className="center-col">
       <p className="muted mb">Place <b className="w">{city.name}</b> sur la carte :</p>
-      <div className="map-stage" ref={stageRef}
-        onPointerDown={pickDown} onPointerMove={pickMove} onPointerUp={pickUp} onPointerCancel={pickUp}>
+      <div className="map-stage" ref={stageRef} style={{ touchAction: mark || submitted ? "pan-y" : "none" }}
+        onPointerDown={pickDown} onPointerMove={pickMove} onPointerUp={pickUp} onPointerCancel={pickCancel}>
         <FranceMap />
         {(submitted ? mg.marks[MYID] : mark) && (
           <div className="marker" style={{ left: `${(submitted ? mg.marks[MYID].x : mark.x) * 100}%`, top: `${(submitted ? mg.marks[MYID].y : mark.y) * 100}%` }}>📍</div>
         )}
+        {mark && !submitted && <div className="pin-hit" style={{ left: `${mark.x * 100}%`, top: `${mark.y * 100}%` }} />}
       </div>
+      {mark && !submitted && <p className="dim mb">Glisse le 📍 pour l'ajuster, ou touche ailleurs pour le replacer.</p>}
       {submitted
         ? <p className="muted">✅ Marqueur posé. En attente des autres… ({Object.keys(mg.marks).length}/{room.players.length})</p>
         : <button className="btn btn-blue" disabled={busy || !mark} onClick={() => act({ type: "mgCityMark", x: mark.x, y: mark.y })}>Valider ma position</button>}

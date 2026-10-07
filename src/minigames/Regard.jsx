@@ -23,9 +23,12 @@ export function RegardGame({ mg, isLauncher, act, busy, waiting }) {
     <div className="pop center">
       <div className="apr-logo"><span className="a" style={{ fontSize: 60 }}>👀</span></div>
       <p className="b mb">Les joueurs qui se sont regardés boivent une gorgée !</p>
-      {isLauncher
-        ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: "👀 Les regards croisés boivent 🍻" })}>Terminer le tour</button>
-        : waiting}
+      {isLauncher ? (
+        <div className="center-col">
+          <button className="btn btn-ghost btn-sm mb" disabled={busy} onClick={() => act({ type: "mgRegardCount" })}>🔁 Relancer le décompte</button>
+          <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: "👀 Les regards croisés boivent 🍻" })}>Terminer le tour</button>
+        </div>
+      ) : waiting}
     </div>
   );
 }

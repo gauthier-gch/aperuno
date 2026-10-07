@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { MYID } from "../me.js";
 
 function PlayCard({ value, suit, red }) {
@@ -12,8 +12,24 @@ function PlayCard({ value, suit, red }) {
   );
 }
 
+/* Ligne graduée de 1 à 9 : on fait glisser le curseur pour placer sa note. */
+function GradedLine({ value, onChange }) {
+  return (
+    <div className="dix-scale">
+      <input type="range" min="1" max="9" step="1" value={value}
+        onChange={(e) => onChange(Number(e.target.value))} />
+      <div className="dix-ticks">
+        {Array.from({ length: 9 }).map((_, i) => (
+          <span key={i} className={i + 1 === value ? "on" : ""} onClick={() => onChange(i + 1)}>{i + 1}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DixGame({ room, mg, isLauncher, launcher, act, busy, waiting }) {
   const myGuess = mg.guesses ? mg.guesses[MYID] : undefined;
+  const [note, setNote] = useState(5);
   const guessers = room.players.filter((p) => p.id !== launcher.id);
 
   if (mg.phase === "reveal") {
@@ -51,6 +67,10 @@ export function DixGame({ room, mg, isLauncher, launcher, act, busy, waiting }) 
       <div className="center-col">
         <p className="muted mb">Ta carte (garde-la secrète !) — lance ton « c'est un 10 mais… » 🎤</p>
         <PlayCard value={mg.value} suit={mg.suit} red={mg.red} />
+        {/* changement discret : seul le lanceur voit ce bouton, aucune annonce */}
+        {!Object.keys(mg.guesses || {}).length && (
+          <button className="btn btn-ghost btn-sm auto dim mt" disabled={busy} onClick={() => act({ type: "mgDixReroll" })}>🔁 Autre carte</button>
+        )}
         <p className="muted mt">{Object.keys(mg.guesses || {}).length}/{guessers.length} joueurs ont noté</p>
         <button className="btn btn-primary mt" disabled={busy} onClick={() => act({ type: "mgDixReveal" })}>Montrer la carte 👀</button>
       </div>
@@ -61,12 +81,10 @@ export function DixGame({ room, mg, isLauncher, launcher, act, busy, waiting }) 
   }
   return (
     <div className="center-col">
-      <p className="muted mb">Écoute le « c'est un 10 mais… » puis donne ta note de 1 à 10 :</p>
-      <div className="wrap" style={{ justifyContent: "center" }}>
-        {Array.from({ length: 10 }).map((_, i) => (
-          <button key={i} className="btn btn-blue btn-sm auto" disabled={busy} onClick={() => act({ type: "mgDixGuess", value: i + 1 })}>{i + 1}</button>
-        ))}
-      </div>
+      <p className="muted mb">Écoute le « c'est un 10 mais… » puis place ta note de 1 à 9 :</p>
+      <div className="big-num">{note}</div>
+      <GradedLine value={note} onChange={setNote} />
+      <button className="btn btn-blue mt" disabled={busy} onClick={() => act({ type: "mgDixGuess", value: note })}>Valider ma note</button>
     </div>
   );
 }

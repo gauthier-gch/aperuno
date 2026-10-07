@@ -33,21 +33,26 @@ function makeAudio() {
   // Palier AUDIBLE dès la première seconde : la tension vient de la nappe qui
   // monte en fréquence, du filtre qui s'ouvre et des tics qui s'accélèrent —
   // pas d'un fondu depuis le silence (qui rendait le début inaudible).
-  master.gain.value = 0.55;
+  master.gain.value = 0.8;
   // Compresseur + gain de sortie : on peut pousser le volume fort sans que ça
   // sature/craque quand tous les éléments (riser + tics + drop) se cumulent.
   const comp = ctx.createDynamicsCompressor();
-  comp.threshold.value = -18; comp.knee.value = 24; comp.ratio.value = 4;
+  comp.threshold.value = -28; comp.knee.value = 18; comp.ratio.value = 10;
   comp.attack.value = 0.003; comp.release.value = 0.25;
   const outGain = ctx.createGain();
-  outGain.gain.value = 1.6; // gain de rattrapage après compression
-  master.connect(comp); comp.connect(outGain); outGain.connect(ctx.destination);
+  outGain.gain.value = 3.2; // gain de rattrapage après compression
+  // Compression plus forte + gros gain de rattrapage = volume perçu nettement
+  // plus élevé ; le limiteur final empêche toute saturation (craquements).
+  const limiter = ctx.createDynamicsCompressor();
+  limiter.threshold.value = -1.5; limiter.knee.value = 0; limiter.ratio.value = 20;
+  limiter.attack.value = 0.001; limiter.release.value = 0.1;
+  master.connect(comp); comp.connect(outGain); outGain.connect(limiter); limiter.connect(ctx.destination);
 
   // Riser : nappe qui monte en fréquence pendant tout le build-up.
   const riser = ctx.createOscillator();
   riser.type = "sawtooth";
   const riserGain = ctx.createGain();
-  riserGain.gain.value = 0.14;
+  riserGain.gain.value = 0.22;
   const lp = ctx.createBiquadFilter();
   lp.type = "lowpass";
   lp.frequency.value = 500;
@@ -62,7 +67,7 @@ function makeAudio() {
     o.connect(g); g.connect(master);
     const t = ctx.currentTime;
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.42, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.65, t + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
     o.start(t); o.stop(t + 0.14);
   };
@@ -73,8 +78,8 @@ function makeAudio() {
     // Volume : audible tout de suite, monte légèrement (ramp LINÉAIRE depuis un
     // palier audible, et non exponentielle depuis ~0 qui restait muette longtemps).
     master.gain.cancelScheduledValues(t);
-    master.gain.setValueAtTime(0.55, t);
-    master.gain.linearRampToValueAtTime(0.95, t + d);
+    master.gain.setValueAtTime(0.8, t);
+    master.gain.linearRampToValueAtTime(1.2, t + d);
     // Tension : la nappe monte en fréquence et le filtre s'ouvre progressivement.
     riser.frequency.setValueAtTime(120, t);
     riser.frequency.exponentialRampToValueAtTime(900, t + d);
@@ -87,7 +92,7 @@ function makeAudio() {
     try { riserGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.05); } catch {}
     const t = ctx.currentTime;
     master.gain.cancelScheduledValues(t);
-    master.gain.setValueAtTime(1.0, t);
+    master.gain.setValueAtTime(1.3, t);
 
     const boom = ctx.createOscillator();
     const bg = ctx.createGain();

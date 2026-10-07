@@ -23,6 +23,10 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
   const stageRef = useRef(null);
   const [pts, setPts] = useState([]);
   const drawing = useRef(false);
+  const count = useRef(0);
+  // Une fois le trait tracé, la poire est « verrouillée » : on peut faire défiler
+  // la page en la touchant (pour aller valider). Pour refaire un trait → Effacer.
+  const [locked, setLocked] = useState(false);
   const submitted = mg.cuts && mg.cuts[MYID] != null;
   const target = mg.targetAngle;
 
@@ -31,9 +35,17 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
     const t = e.touches ? e.touches[0] : e;
     return { x: Math.max(0, Math.min(1, (t.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (t.clientY - r.top) / r.height)) };
   }
-  const start = (e) => { if (submitted || mg.phase === "result") return; drawing.current = true; setPts([norm(e)]); };
-  const move = (e) => { if (!drawing.current) return; e.preventDefault?.(); setPts((p) => [...p, norm(e)]); };
-  const end = () => { drawing.current = false; };
+  const start = (e) => {
+    if (submitted || locked || mg.phase === "result" || drawing.current) return;
+    drawing.current = true; count.current = 1; setPts([norm(e)]);
+  };
+  const move = (e) => { if (!drawing.current) return; e.preventDefault?.(); count.current += 1; setPts((p) => [...p, norm(e)]); };
+  const end = () => {
+    if (!drawing.current) return;
+    drawing.current = false;
+    if (count.current > 1) setLocked(true); else setPts([]);
+  };
+  const clear = () => { setPts([]); setLocked(false); count.current = 0; };
 
   function submit() {
     const p1 = pts[0], p2 = pts[pts.length - 1];
@@ -65,7 +77,18 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
           </svg>
         </div>
         <p className="muted mb"><span style={{ color: "#fff" }}>┈ cible</span> · reproduis la direction. Le plus éloigné perd.</p>
-        <p className="b mb">🍐 {loser.name} s'est le plus écarté → il/elle boit !</p>
+        {mg.partial && <p className="dim mb">Arrêt anticipé : seuls {Object.keys(mg.cuts).length}/{room.players.length} joueurs ont coupé.</p>}
+        {loser && <p className="b mb">🍐 {loser.name} s'est le plus écarté → il/elle boit !</p>}
+        <div className="pb-table" style={{ width: "100%" }}>
+          {room.players.filter((p) => mg.cuts[p.id])
+            .sort((a, b) => (mg.cuts[a.id].score ?? 0) - (mg.cuts[b.id].score ?? 0))
+            .map((p, i) => (
+              <div className="pb-row space" key={p.id}>
+                <b>{i === 0 ? "🏆 " : p.id === mg.loserId ? "❌ " : `${i + 1}. `}{p.name}</b>
+                <span className="muted">écart {mg.cuts[p.id].score ?? "?"}</span>
+              </div>
+            ))}
+        </div>
         {isLauncher
           ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", loserId: mg.loserId })}>Terminer le tour</button>
           : waiting}
@@ -77,8 +100,8 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
   return (
     <div className="center-col">
       <p className="muted mb">Reproduis la coupe <b className="w">cible</b> (pointillés) en la traçant au doigt :</p>
-      <div className="pear-stage" ref={stageRef}
-        onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerLeave={end}
+      <div className="pear-stage" ref={stageRef} style={{ touchAction: locked || submitted ? "pan-y" : "none" }}
+        onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerLeave={end} onPointerCancel={end}
         onTouchStart={start} onTouchMove={move} onTouchEnd={end}>
         <Pear />
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
@@ -92,9 +115,12 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
       {submitted
         ? <p className="muted">✅ Coupe validée. En attente des autres… ({Object.keys(mg.cuts).length}/{room.players.length})</p>
         : (
+          <div className="center-col">
+          {locked && <p className="dim mb">Trait tracé — touche « Effacer » pour en refaire un.</p>}
           <div className="row">
-            <button className="btn btn-ghost btn-sm auto" disabled={busy || !pts.length} onClick={() => setPts([])}>Effacer</button>
+            <button className="btn btn-ghost btn-sm auto" disabled={busy || !pts.length} onClick={clear}>Effacer</button>
             <button className="btn btn-blue btn-sm auto" disabled={busy || pts.length < 2} onClick={submit}>Valider ma coupe 🔪</button>
+          </div>
           </div>
         )}
     </div>

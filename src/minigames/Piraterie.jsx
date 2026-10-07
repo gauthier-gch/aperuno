@@ -10,13 +10,18 @@ function makeAudio() {
   if (!AC) return null;
   const ctx = new AC();
   const master = ctx.createGain();
-  master.gain.value = 0.9;
+  master.gain.value = 1.2;
   const comp = ctx.createDynamicsCompressor();
-  comp.threshold.value = -18; comp.knee.value = 24; comp.ratio.value = 4;
+  comp.threshold.value = -28; comp.knee.value = 18; comp.ratio.value = 10;
   comp.attack.value = 0.003; comp.release.value = 0.25;
   const outGain = ctx.createGain();
-  outGain.gain.value = 1.4;
-  master.connect(comp); comp.connect(outGain); outGain.connect(ctx.destination);
+  outGain.gain.value = 3.2;
+  // Compression plus forte + gros gain de rattrapage = volume perçu nettement
+  // plus élevé ; le limiteur final empêche toute saturation (craquements).
+  const limiter = ctx.createDynamicsCompressor();
+  limiter.threshold.value = -1.5; limiter.knee.value = 0; limiter.ratio.value = 20;
+  limiter.attack.value = 0.001; limiter.release.value = 0.1;
+  master.connect(comp); comp.connect(outGain); outGain.connect(limiter); limiter.connect(ctx.destination);
 
   // Petit « clac » de couvercle qui s'ouvre (coffre vide).
   const click = () => {
@@ -27,7 +32,7 @@ function makeAudio() {
     o.frequency.setValueAtTime(420, t);
     o.frequency.exponentialRampToValueAtTime(160, t + 0.09);
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.4, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.7, t + 0.008);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
     o.connect(g); g.connect(master);
     o.start(t); o.stop(t + 0.16);

@@ -4,7 +4,7 @@ import { DesignateLoser } from "../components/common.jsx";
 
 const N = ROULETTE.length;
 const SEG = 360 / N;
-const SHORT = ["3 gorgées", "Distrib. 3", "+ alcool (toi)", "Cul-sec 🥃", "5 gorgées", "Distrib. 5", "+ alcool (choix)", "Un sec 🥃"];
+const SHORT = ["8 gorgées", "Offre un shot", "+ alcool (toi)", "Cul-sec 🥃", "5 gorgées", "Distrib. 5", "+ alcool (choix)", "Un sec 🥃"];
 
 function polar(angleDeg, r) {
   const a = (angleDeg * Math.PI) / 180;
@@ -58,11 +58,12 @@ export function RouletteGame({ room, mg, isLauncher, launcher, act, busy, waitin
       {mg.phase === "result" && revealed && (
         <>
           <p className="b mb">🎯 {seg.label}</p>
+          {seg.detail && <p className="muted mb">{seg.detail}</p>}
           {!isLauncher ? waiting : seg.needsTarget ? (
             <DesignateLoser players={room.players} label="Pour qui ?"
               onPick={(id) => {
                 const target = room.players.find((p) => p.id === id);
-                act({ type: "mgFinish", text: `🎡 ${target.name} ${seg.give}` });
+                act({ type: "mgFinish", text: seg.offer ? `🎡 ${launcher.name} ${seg.offer} ${target.name} 🥃` : `🎡 ${target.name} ${seg.give}` });
               }} />
           ) : (
             <button className="btn btn-primary" disabled={busy}

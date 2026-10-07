@@ -140,7 +140,8 @@ export function sanitizePremium(p) {
 
 /* kind : inapp_dice | inapp_vote | inapp_timer | inapp_letter | regard |
           inapp_mime | inapp_pear | inapp_city | inapp_roulette |
-          inapp_connexion | inapp_patate | inapp_piraterie | facilitator | offapp
+          inapp_connexion | inapp_patate | inapp_piraterie | inapp_categorie |
+          facilitator | offapp
    harrOnly : carte présente uniquement dans le deck du mode Harr. */
 export const GAMES = [
   { id: "21", name: "Le 21", chill: 3, harr: 1, kind: "offapp",
@@ -149,8 +150,8 @@ export const GAMES = [
     rule: "Le premier joueur dit : « Dans ma valise, il y a… » et un objet.\nChacun **répète toute la liste** puis ajoute son objet.\n\nCelui qui se trompe ou oublie un objet perd et boit." },
   { id: "de", name: "Défi de dé", chill: 3, harr: 2, kind: "inapp_dice",
     rule: "Choisis un adversaire. Vous lancez **chacun votre dé**.\n\nLe plus bas boit **l'écart** en gorgées." },
-  { id: "categorie", name: "Catégorie", chill: 2, harr: 2, kind: "offapp",
-    rule: "Choisis une catégorie *(marques de bière, pays, Pokémon…)*.\nChacun donne un item à tour de rôle, **sans répéter**.\n\nLe premier qui sèche perd et boit." },
+  { id: "categorie", name: "Catégorie", chill: 2, harr: 2, kind: "inapp_categorie",
+    rule: "Le lanceur choisit une catégorie *(une suggestion de l'app ou la sienne)*.\nChacun donne un item à tour de rôle, **sans répéter**.\n\nLe premier qui sèche perd et boit." },
   { id: "chanteur", name: "Le chanteur", chill: 2, harr: 2, kind: "offapp",
     rule: "Le lanceur propose un **chanteur ou un groupe** connu.\nÀ tour de rôle, chacun cite une chanson de cet artiste, *sans répéter*.\n\nLe premier qui sèche perd et boit." },
   { id: "connexion", name: "Connexion", chill: 2, harr: 2, kind: "inapp_connexion",
@@ -164,7 +165,7 @@ export const GAMES = [
   { id: "regard", name: "Le regard", chill: 3, harr: 2, kind: "regard",
     rule: "Tout le monde fixe la table.\nAu **top**, chacun lève les yeux vers quelqu'un.\n\nSi deux personnes **se regardent** : elles boivent une gorgée." },
   { id: "vote", name: "Vote secret", chill: 4, harr: 2, kind: "inapp_vote",
-    rule: "Le joueur pose une question *(ex : qui mourrait en premier dans un film d'horreur ?)*.\nChacun vote **en secret**.\n\nLe (ou les) plus voté perd et boit." },
+    rule: "Le lanceur choisit une question *(une suggestion de l'app ou la sienne)*.\nChacun vote **en secret**.\n\nLe (ou les) plus voté perd et boit." },
   { id: "mime", name: "Mime", chill: 2, harr: 2, kind: "inapp_mime",
     rule: "Le lanceur choisit un mot ou une situation. **Tout le monde mime** en même temps.\n\nLe lanceur désigne le **pire mime**, qui boit." },
   { id: "doigt", name: "Jeu du doigt", chill: 2, harr: 2, kind: "facilitator",
@@ -174,9 +175,9 @@ export const GAMES = [
   { id: "ville", name: "Place la ville", chill: 2, harr: 2, kind: "inapp_city",
     rule: "Une **ville française** est tirée.\nChacun place un marqueur sur la carte.\n\nLe plus éloigné de la vraie position perd et boit." },
   { id: "imposteur", name: "Undercover", chill: 2, harr: 2, kind: "inapp_imposteur",
-    rule: "Chacun reçoit un **mot secret**, sauf :\n- l'**undercover**, qui a un mot différent mais proche ;\n- **Mister White**, qui n'a *aucun mot*.\n\nÀ tour de rôle, décrivez votre mot **sans le dire**. À chaque manche, votez pour éliminer un joueur *(l'hôte désigne l'éliminé)*.\n\nLes civils gagnent si l'undercover et Mister White sont éliminés. **Les éliminés boivent.**" },
+    rule: "Chacun reçoit un **mot secret**, sauf :\n- l'**undercover**, qui a un mot différent mais proche ;\n- **Mister White**, qui n'a *aucun mot*.\n\nÀ tour de rôle *(dans l'ordre affiché)*, décrivez votre mot **sans le dire**. Puis vient l'**heure de l'élimination** : votez pour éliminer un joueur *(le lanceur désigne l'éliminé)*.\n\nLes civils gagnent si l'undercover et Mister White sont éliminés. **Les éliminés boivent.**" },
   { id: "dix", name: "C'est un 10 mais", chill: 2, harr: 2, kind: "inapp_dix",
-    rule: "Le lanceur voit une carte *(1 à 10)* et lance un « **c'est un 10 mais…** » à l'oral.\nChacun note de 1 à 10.\n\nAu dévoilement de la carte :\n- chacun boit **l'écart** entre sa note et la carte ;\n- le lanceur boit **la moyenne** des écarts." },
+    rule: "Le lanceur voit une carte *(1 à 9)* et lance un « **c'est un 10 mais…** » à l'oral.\nChacun note de 1 à 9.\n\nAu dévoilement de la carte :\n- chacun boit **l'écart** entre sa note et la carte ;\n- le lanceur boit **la moyenne** des écarts." },
   { id: "cascade", name: "Cascade", chill: 0, harr: 2, kind: "facilitator", noLoser: true, harrOnly: true,
     rule: "Tout le monde **commence à boire** en même temps.\n- Le lanceur pose son verre quand il veut.\n- Un joueur ne peut reposer son verre qu'**après** le joueur précédent.\n\nSi un joueur finit son verre avant que le précédent n'ait reposé le sien, ce dernier doit finir son verre **cul sec** 🥃." },
   { id: "russe", name: "Shot russe", chill: 0, harr: 3, kind: "facilitator", noLoser: true, harrOnly: true,
@@ -224,23 +225,69 @@ export const CARD_INFO = {
   echangecarte: "**Carte échange de carte.** À ton tour : choisis une carte de ta main à **défausser**, elle est remplacée par une carte piochée.\n\n*Idéal pour te débarrasser d'une carte qui ne t'arrange pas.*",
 };
 
-/* Mots / situations proposés pour le mime. */
+/* Mots / situations proposés pour le mime (mélange décalé + piquant). */
 export const MIME_WORDS = [
-  "Un poulet", "Faire du ski", "Un robot", "Se laver les dents", "Un singe",
-  "Jouer de la guitare", "Un zombie", "Pêcher un poisson", "Conduire une voiture",
-  "Un funambule", "Faire un selfie", "Un boxeur", "Manger des spaghettis",
-  "Un super-héros", "Repasser une chemise", "Un chat qui dort", "Faire la cuisine",
-  "Un magicien", "Nager le crawl", "Un bébé qui pleure", "Tondre la pelouse",
-  "Un cow-boy", "Prendre l'avion", "Un fantôme", "Jouer au tennis",
-  "Un serveur débordé", "Faire du yoga", "Un dinosaure", "Se faire piquer par une abeille",
-  "Un mannequin sur un podium", "Ouvrir une bouteille de champagne", "Un sumo",
+  "Un pingouin qui a trop bu", "Un chat qui fait tomber un verre exprès", "Rater une marche en public",
+  "Un vigile de boîte de nuit", "Un influenceur qui déballe un colis", "Un T-Rex qui fait son lit",
+  "Faire semblant d'être au téléphone pour éviter quelqu'un", "Un chien qui voit un aspirateur",
+  "Ta mère qui découvre TikTok", "Un pigeon qui drague", "Danser un slow avec un balai",
+  "Un serveur qui fait tomber un plateau au ralenti", "Retenir un pet pendant un rendez-vous",
+  "Un mannequin qui défile en tongs mouillées", "Une poule qui pond un œuf trop gros",
+  "Un ninja dans une boutique de porcelaine", "Rentrer de soirée sans réveiller les parents",
+  "Un DJ qui n'a pas branché ses platines", "Se réveiller à côté d'un inconnu",
+  "Un gorille au karaoké", "Marcher sur un Lego pieds nus", "Se faire larguer par SMS",
+  "Une star du porno qui fait ses courses", "Un strip-teaseur maladroit", "Un twerk de mamie",
+  "Le premier rendez-vous Tinder qui tourne mal", "Le lendemain de cuite au réveil",
+  "Un barman qui fait un cocktail flambé et rate", "Draguer quelqu'un en boîte avec la musique trop forte",
+  "Un mec qui fait semblant de savoir danser", "Un poisson rouge qui a oublié ce qu'il faisait",
+  "Une méduse en colère", "Un zombie qui cherche ses clés", "Un catcheur qui pleure devant un film",
+  "Se faire surprendre en train de se gratter les fesses", "Un flamant rose qui fait du yoga",
+  "Payer l'addition et réaliser que ta carte est refusée", "Un astronaute qui a envie de pisser",
+];
+
+/* « Catégorie » : catégories proposées au lanceur (décalées + piquantes). */
+export const CATEGORIE_CATS = [
+  "Des marques de bière", "Des excuses pour ne pas aller au boulot", "Des choses qu'on trouve dans un sac à main",
+  "Des cocktails", "Des surnoms qu'on donne à son crush", "Des personnages Disney",
+  "Des trucs qu'on dit au lit", "Des positions du Kama-sutra", "Des endroits insolites pour faire l'amour",
+  "Des choses qui puent", "Des Pokémon", "Des tubes de l'été", "Des choses qu'on ne dit pas à sa belle-mère",
+  "Des insultes du capitaine Haddock (ou presque)", "Des fromages", "Des raisons de rompre",
+  "Des choses qu'on fait bourré et qu'on regrette", "Des émissions de télé-réalité", "Des candidats de télé-réalité",
+  "Des mots qui contiennent « cul »", "Des célébrités chauves", "Des trucs qu'on trouve sous un lit",
+  "Des applis de rencontre", "Des jeux à boire", "Des choses qui vibrent", "Des chanteurs français",
+  "Des marques de fast-food", "Des choses qu'on lèche", "Des objets qu'on emporte sur une île déserte",
+  "Des noms de chiens ridicules", "Des sports bizarres", "Des expressions avec « gueule »",
+  "Des choses qu'on cache à ses parents", "Des métiers qui font fantasmer", "Des sauces",
+  "Des séries Netflix", "Des choses qui se mangent avec les doigts", "Des pays où tu n'iras jamais en vacances",
+];
+
+/* « Vote secret » : questions proposées au lanceur (drôles, piquantes). */
+export const VOTE_QUESTIONS = [
+  "Qui mourrait en premier dans un film d'horreur ?", "Qui finira la soirée en premier ?",
+  "Qui a le pire historique Tinder ?", "Qui serait le pire colocataire ?",
+  "Qui enverrait un message à son ex ce soir ?", "Qui a le plus de nudes dans son téléphone ?",
+  "Qui se ferait arrêter par la police en premier ?", "Qui finirait candidat de télé-réalité ?",
+  "Qui a déjà vomi dans un taxi (ou le fera) ?", "Qui ment le plus sur son nombre de partenaires ?",
+  "Qui survivrait le moins longtemps sur une île déserte ?", "Qui oublierait ton anniversaire ?",
+  "Qui serait le plus gros radin au resto ?", "Qui a le plus de chance de finir en couple avec quelqu'un de cette table ?",
+  "Qui dirait oui à un plan à trois ?", "Qui pleure devant les dessins animés ?",
+  "Qui est le pire danseur ?", "Qui a la pire playlist ?", "Qui se ferait virer en premier ?",
+  "Qui rentre le plus souvent bredouille de soirée ?", "Qui serait le pire parent ?",
+  "Qui a déjà fait un walk of shame ?", "Qui stalke le plus ses ex sur Insta ?",
+  "Qui perdrait tout son argent au casino ?", "Qui serait le premier à trahir le groupe pour 1 million ?",
+  "Qui a la pire gueule de bois ?", "Qui ferait la meilleure star du porno ?",
+  "Qui est le plus susceptible de se marier à Las Vegas sur un coup de tête ?",
+  "Qui a les messages vocaux les plus longs ?", "Qui serait le pire prof ?",
+  "Qui a le plus de chance de finir dans un fait divers ?", "Qui ronfle le plus fort ?",
 ];
 
 /* Roulette Harr : segments dans l'ordre d'affichage sur la roue.
-   needsTarget → le lanceur choisit une cible avant de valider. */
+   needsTarget → le lanceur choisit une cible avant de valider.
+   give → « <cible> give » ; offer → « <lanceur> offer <cible> ». */
 export const ROULETTE = [
-  { label: "Bois 3 gorgées", color: "#ff3b5c", self: "boit 3 gorgées" },
-  { label: "Distribue 3 gorgées", color: "#37a6ff", needsTarget: true, give: "boit 3 gorgées" },
+  { label: "Bois 8 gorgées", color: "#ff3b5c", self: "boit 8 gorgées" },
+  { label: "Offre un shot", color: "#37a6ff", needsTarget: true,
+    detail: "Commande ou sers un shot à la personne de ton choix.", offer: "offre un shot à" },
   { label: "Ajoute de l'alcool dans ton verre", color: "#b15bff", self: "ajoute de l'alcool dans son verre" },
   { label: "Finis ton verre", color: "#ff9b2f", self: "finit son verre 🥃" },
   { label: "Bois 5 gorgées", color: "#e8401e", self: "boit 5 gorgées" },
