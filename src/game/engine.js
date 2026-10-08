@@ -62,6 +62,38 @@ export function joinInProgress(s0, player) {
   return s;
 }
 
+/* ----------------------------- stats de partie --------------------------- */
+
+/* Au-delà de 10 min sans aucun coup, la partie est considérée terminée pour
+   les stats : la dernière activité avant ce trou en marque la fin, et plus
+   rien n'est compté ensuite (même si quelqu'un rejoue plus tard). */
+export const STATS_GAP_MS = 10 * 60 * 1000;
+
+/* Met à jour `s.stats` après un coup (prev → s). Relu par le script Apps
+   Script qui logge la partie dans le Google Sheet avant la suppression du
+   salon (voir apps-script/Code.gs). Rien n'est compté tant que la partie
+   n'a pas été lancée (lobby). */
+export function trackStats(prev, s, moveType, now = Date.now()) {
+  if (s.status === "lobby") return s;
+  const st = { draws: 0, games: 0, wins: 0, players: {}, ...(prev.stats || {}) };
+  st.players = { ...st.players };
+  if (!st.endedAt && st.lastAt && now - st.lastAt >= STATS_GAP_MS) st.endedAt = st.lastAt;
+  if (!st.endedAt) {
+    if (!st.startedAt) st.startedAt = now;
+    st.lastAt = now;
+    s.players.forEach((p) => { st.players[p.id] = true; });
+    if (prev.status !== "playing" && s.status === "playing") st.games += 1;
+    if (moveType === "drawTurn") st.draws += 1;
+    if (prev.status !== "finished" && s.status === "finished") {
+      st.wins += 1;
+      const w = s.players.find((p) => p.id === s.winnerId);
+      st.winner = w ? w.name : null;
+    }
+  }
+  s.stats = st;
+  return s;
+}
+
 /* ------------------------------- helpers état ---------------------------- */
 
 function clone(s) { return JSON.parse(JSON.stringify(s)); }
