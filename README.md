@@ -87,7 +87,7 @@ In-app (jouables directement dans l'appli) :
   réponses en tableau.
 - 🎭 **Mime** — le mot est visible par tous sauf le mimeur.
 - 🍐 **Coupe la poire** — direction cible à reproduire au doigt.
-- 🗺️ **Place la ville** — carte de France + 50 villes, zoom + classement.
+- 🗺️ **Place la ville** — carte de France + 50 villes, zoom (pincer / ＋) + classement.
 - 🕵️ **Undercover** — avec un Mister White qui peut deviner le mot.
 - 🔟 **C'est un 10 mais…** — le lanceur boit la moyenne des écarts.
 - 🔗 **Connexion** — un mot commun au décompte : les « connectés » boivent.
@@ -128,6 +128,7 @@ src/
   minigames/                   → Dice, Vote, PetitBac, Timer, Regard, Mime, Pear, City,
                                  Roulette, Patate, Piraterie, Imposteur, Duel, Dix,
                                  Connexion, Pear… + dispatcher (index.jsx)
+apps-script/                   → script Google Apps Script du Sheet de suivi (Salons + Parties)
 .github/workflows/deploy.yml   → build Vite + déploiement GitHub Pages
 ```
 
@@ -166,46 +167,57 @@ Firestore**. Pour repartir d'un projet Firebase neuf :
 6. **Firestore Database → TTL** → crée une règle sur le champ **`expireAt`**
    (supprime automatiquement les salons inactifs depuis ~12 h).
 
-### 📊 Suivi des salons (Google Sheet, optionnel)
+### 📊 Suivi des salons et des parties (Google Sheet, optionnel)
 
-L'appli peut ajouter **une ligne dans un Google Sheet à chaque partie lancée**
-(date/heure, mode, nombre de joueurs, pseudos). **RGPD : seuls les pseudos sont
-envoyés — jamais les photos.** L'écriture se fait côté **hôte uniquement**, une
-seule fois par salon. Désactivé par défaut (aucun envoi tant que l'URL n'est pas
-renseignée).
+Deux onglets dans le même Google Sheet :
+
+- **`Salons`** — une ligne **à chaque partie lancée** (date/heure, code, mode,
+  nombre de joueurs, pseudos), envoyée par l'appli côté **hôte uniquement**,
+  une seule fois par salon. **RGPD : seuls les pseudos sont envoyés — jamais
+  les photos.** Désactivé tant que `SHEET_WEBHOOK_URL` est vide.
+- **`Parties`** (créé automatiquement) — une ligne **par salon, juste avant sa
+  suppression** (12 h après la dernière activité) : code, date de création,
+  mode, nombre total de joueurs (y compris arrivés en cours / virés), nombre
+  de cartes piochées (= nombre de tours), partie finie (au moins un gagnant)
+  + gagnant, manches lancées, début, fin et durée (du lancement à la fin).
+
+> **Fin de partie (stats)** : dès qu'il s'écoule **10 min sans aucun coup**, la
+> dernière activité avant ce trou marque la fin de la partie ; plus rien n'est
+> compté ensuite, même si quelqu'un rejoue plus tard. Les stats sont calculées
+> dans la transaction de chaque coup (`trackStats` dans `src/game/engine.js`)
+> et stockées dans le champ `stats` du salon.
+
+Comme le salon est supprimé par Firestore sans qu'aucun téléphone ne soit
+connecté, l'onglet `Parties` est rempli par un **déclencheur horaire Apps
+Script** qui lit les salons dans Firestore (avec ton compte Google) et logge
+ceux qui expirent dans l'heure.
 
 Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
 
-1. Crée un Google Sheet (par ex. un onglet `Salons`) avec les en-têtes :
+1. Crée un Google Sheet avec un onglet `Salons` et les en-têtes :
    `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs`.
-2. Dans le Sheet : **Extensions → Apps Script**, colle ce code :
+2. Dans le Sheet : **Extensions → Apps Script**, colle le contenu de
+   [`apps-script/Code.gs`](apps-script/Code.gs) à la place du code existant.
+3. **Paramètres du projet** (⚙️) → coche « Afficher le fichier manifeste
+   appsscript.json » → dans `appsscript.json`, ajoute le bloc `oauthScopes`
+   de [`apps-script/appsscript.json`](apps-script/appsscript.json).
+4. Dans l'éditeur, sélectionne la fonction **`logEndedRooms`** → **Exécuter**
+   → accepte les autorisations (le compte doit avoir accès au projet Firebase
+   `aperuno-spahd`, par ex. en être propriétaire).
+5. **Déclencheurs** (⏰) → **Ajouter un déclencheur** → fonction
+   `logEndedRooms`, source « Déclencheur horaire », type « Minuteur
+   (heures) », « Toutes les heures ».
+6. Pour l'onglet `Salons` uniquement (si pas déjà fait) : **Déployer →
+   Nouveau déploiement → Application Web** (« Exécuter en tant que : moi »,
+   « Accès : tout le monde »), copie l'URL `…/exec` dans `SHEET_WEBHOOK_URL`
+   (fichier `src/analytics.js`), puis redéploie l'appli.
 
-   ```js
-   function doPost(e) {
-     var ss = SpreadsheetApp.getActiveSpreadsheet();
-     var sheet = ss.getSheetByName('Salons') || ss.getSheets()[0];
-     var d = JSON.parse(e.postData.contents);
-     sheet.appendRow([
-       new Date(d.at),                 // Date + heure
-       d.code,                          // Code du salon
-       d.mode,                          // chill / harr / premium
-       d.playerCount,                   // Nombre de joueurs
-       (d.players || []).join(', ')     // Pseudos (pas de photo — RGPD)
-     ]);
-     return ContentService.createTextOutput('ok');
-   }
-   ```
-
-3. **Déployer → Nouveau déploiement → Application Web** :
-   « Exécuter en tant que : moi », « Accès : tout le monde ». Copie l'URL
-   `…/exec`.
-4. Colle cette URL dans `SHEET_WEBHOOK_URL` (fichier `src/analytics.js`), puis
-   redéploie l'appli.
-
-> L'envoi est « fire-and-forget » (`fetch` en `no-cors`) : il n'affiche jamais
-> d'erreur au joueur et ne peut pas bloquer la partie. L'URL du web app est
-> publique (visible dans le bundle) — n'y mets aucune donnée sensible ; au pire
-> quelqu'un pourrait y insérer des lignes, sans lire le Sheet.
+> L'envoi `Salons` est « fire-and-forget » (`fetch` en `no-cors`) : il
+> n'affiche jamais d'erreur au joueur et ne peut pas bloquer la partie. L'URL
+> du web app est publique (visible dans le bundle) — n'y mets aucune donnée
+> sensible ; au pire quelqu'un pourrait y insérer des lignes, sans lire le
+> Sheet. Le déclencheur `Parties`, lui, tourne côté Google avec ton compte et
+> ne lit que les champs utiles des salons (jamais les mains ni les photos).
 
 ## 🚀 Déploiement
 

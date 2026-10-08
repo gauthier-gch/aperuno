@@ -98,6 +98,17 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
 
   const requestLeave = () => setConfirmLeave(true);
 
+  // Début de mon tour (je dois piocher) → le téléphone vibre. Initialisé à
+  // false pour vibrer aussi quand je commence la partie. Pas d'API de
+  // vibration sur iPhone (Safari) : la pioche mise en évidence prend le relais.
+  const wasMustDraw = useRef(false);
+  useEffect(() => {
+    if (mustDraw && !wasMustDraw.current) {
+      try { if (navigator.vibrate) navigator.vibrate([250, 120, 250]); } catch (e) {}
+    }
+    wasMustDraw.current = mustDraw;
+  }, [mustDraw]);
+
   // Détecte ma carte piochée pour l'animer avant qu'elle rejoigne la main.
   const handKey = me.hand.map((c) => c.id).join(",");
   useEffect(() => {
@@ -138,7 +149,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
         </div>
       </div>
 
-      <div className={"turnbar " + (isMyTurn ? "mine" : "")}>
+      <div className={"turnbar " + (isMyTurn ? "mine" : "") + (mustDraw ? " draw" : "")}>
         {mustDraw ? "🃏 À toi — pioche d'abord une carte !"
           : canPlay ? "🎯 À toi — joue une carte !"
           : `Au tour de ${turnName}`}
@@ -168,7 +179,9 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
         <div className="pile">
           <div className={"pile-card pile-back" + (mustDraw && !busy ? " draw-now" : "")}
             onClick={() => { if (mustDraw && !busy) { pendingDraw.current = true; act({ type: "drawTurn" }); } }}>{room.deck.length}</div>
-          <div className="pile-lbl">{mustDraw ? "Pioche 👆" : "Pioche"}</div>
+          {mustDraw && !busy
+            ? <div className="pile-lbl draw-lbl"><span className="draw-hand">👆</span>Touche pour piocher</div>
+            : <div className="pile-lbl">Pioche</div>}
         </div>
         <div className="pile">
           {top

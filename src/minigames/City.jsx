@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MYID } from "../me.js";
 import { CITIES, project, FRANCE_PATH, CORSICA_PATH } from "../game/cities.js";
 
@@ -16,12 +16,78 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
   const [mark, setMark] = useState(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const viewRef = useRef(null);
+  const zoomRef = useRef(1);
+  const panRef = useRef({ x: 0, y: 0 });
   const panning = useRef(null);
   const placing = useRef(false);
   const downPt = useRef(null);
   const tapCandidate = useRef(false);
   const city = CITIES[mg.cityIdx];
   const submitted = mg.marks && mg.marks[MYID] != null;
+
+  /* Zoom + déplacement de la carte des résultats. Le déplacement est borné
+     pour que la carte ne sorte jamais complètement du cadre. */
+  function setView(z, p) {
+    const el = viewRef.current;
+    const mx = el ? ((z - 1) * el.clientWidth) / 2 : 0;
+    const my = el ? ((z - 1) * el.clientHeight) / 2 : 0;
+    const c = { x: Math.max(-mx, Math.min(mx, p.x)), y: Math.max(-my, Math.min(my, p.y)) };
+    zoomRef.current = z; panRef.current = c;
+    setZoom(z); setPan(c);
+  }
+
+  /* Gestes tactiles en écouteurs NATIFS non passifs : les handlers React
+     (onTouchMove) sont passifs, leur preventDefault est ignoré → le geste
+     faisait défiler l'arrière-plan au lieu de la carte.
+     - carte zoomée : un doigt déplace la carte (rien d'autre ne bouge) ;
+     - deux doigts : pincer pour zoomer ;
+     - carte non zoomée : un doigt fait défiler la fenêtre (touch-action:pan-y). */
+  useEffect(() => {
+    const el = viewRef.current;
+    if (!el || mg.phase !== "result") return;
+    let g = null;
+    const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const start = (e) => {
+      const t = e.touches;
+      if (t.length >= 2) {
+        g = { pinch: dist(t) || 1, z: zoomRef.current, p: panRef.current };
+        e.preventDefault();
+      } else if (zoomRef.current > 1) {
+        g = { x: t[0].clientX, y: t[0].clientY, p: panRef.current };
+      } else g = null;
+    };
+    const move = (e) => {
+      if (!g) return;
+      e.preventDefault();
+      const t = e.touches;
+      if (g.pinch) {
+        if (t.length < 2) return;
+        const z = Math.max(1, Math.min(4, (g.z * dist(t)) / g.pinch));
+        setView(z, g.p);
+      } else {
+        setView(zoomRef.current, { x: g.p.x + t[0].clientX - g.x, y: g.p.y + t[0].clientY - g.y });
+      }
+    };
+    const end = (e) => {
+      if (!g) return;
+      if (e.touches.length === 0) g = null;
+      else if (g.pinch && e.touches.length === 1 && zoomRef.current > 1) {
+        const t = e.touches[0];
+        g = { x: t.clientX, y: t.clientY, p: panRef.current };
+      } else if (g.pinch) g = null;
+    };
+    el.addEventListener("touchstart", start, { passive: false });
+    el.addEventListener("touchmove", move, { passive: false });
+    el.addEventListener("touchend", end);
+    el.addEventListener("touchcancel", end);
+    return () => {
+      el.removeEventListener("touchstart", start);
+      el.removeEventListener("touchmove", move);
+      el.removeEventListener("touchend", end);
+      el.removeEventListener("touchcancel", end);
+    };
+  }, [mg.phase]);
 
   /* Placement en Pointer Events (unifie souris/tactile). On évite ainsi le
      `click` fantôme émis après un appui long, qui repositionnait le marqueur
@@ -69,12 +135,16 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
       .filter((p) => mg.marks[p.id])
       .sort((a, b) => (mg.marks[a.id].km ?? 1e9) - (mg.marks[b.id].km ?? 1e9));
 
-    const panStart = (e) => { const t = e.touches ? e.touches[0] : e; panning.current = { x: t.clientX, y: t.clientY, px: pan.x, py: pan.y }; };
+    // Souris (ordinateur) : glisser pour déplacer la carte zoomée. Le tactile
+    // passe par les écouteurs natifs ci-dessus.
+    const panStart = (e) => {
+      if (e.pointerType !== "mouse") return;
+      panning.current = { x: e.clientX, y: e.clientY, p: panRef.current };
+    };
     const panMove = (e) => {
-      if (!panning.current || zoom <= 1) return;
-      e.preventDefault?.();
-      const t = e.touches ? e.touches[0] : e;
-      setPan({ x: panning.current.px + (t.clientX - panning.current.x), y: panning.current.py + (t.clientY - panning.current.y) });
+      if (!panning.current || zoomRef.current <= 1) return;
+      const g = panning.current;
+      setView(zoomRef.current, { x: g.p.x + e.clientX - g.x, y: g.p.y + e.clientY - g.y });
     };
     const panEnd = () => { panning.current = null; };
     // quand on zoome, on réduit l'écriture des noms pour éviter qu'ils prennent tout l'écran
@@ -84,9 +154,8 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
       <div className="center-col">
         <p className="muted mb">📍 {city.name} était ici :</p>
         {mg.partial && <p className="dim mb">Arrêt anticipé : seuls {ranked.length}/{room.players.length} joueurs ont placé leur marqueur.</p>}
-        <div className="map-viewport"
-          onPointerDown={panStart} onPointerMove={panMove} onPointerUp={panEnd} onPointerLeave={panEnd}
-          onTouchStart={panStart} onTouchMove={panMove} onTouchEnd={panEnd}>
+        <div className="map-viewport" ref={viewRef} style={{ touchAction: zoom > 1 ? "none" : "pan-y" }}
+          onPointerDown={panStart} onPointerMove={panMove} onPointerUp={panEnd} onPointerLeave={panEnd}>
           <div className="map-zoom" style={{ transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})` }}>
             <div className="map-stage">
               <FranceMap />
@@ -99,11 +168,12 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
             </div>
           </div>
           <div className="map-zoom-ctrl">
-            <button onClick={() => setZoom((z) => Math.min(4, +(z + 0.5).toFixed(1)))}>＋</button>
-            <button onClick={() => { setZoom(1); setPan({ x: 0, y: 0 }); }}>⟲</button>
-            <button onClick={() => setZoom((z) => Math.max(1, +(z - 0.5).toFixed(1)))}>－</button>
+            <button onClick={() => setView(Math.min(4, +(zoom + 0.5).toFixed(1)), pan)}>＋</button>
+            <button onClick={() => setView(1, { x: 0, y: 0 })}>⟲</button>
+            <button onClick={() => setView(Math.max(1, +(zoom - 0.5).toFixed(1)), pan)}>－</button>
           </div>
         </div>
+        <p className="dim mb">Pince la carte ou utilise ＋ pour zoomer, puis glisse pour la déplacer.</p>
         <div className="pb-table" style={{ width: "100%" }}>
           {ranked.map((p, i) => (
             <div className="pb-row space" key={p.id}>

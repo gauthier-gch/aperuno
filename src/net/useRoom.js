@@ -10,7 +10,7 @@ import {
   collection, setDoc as setDocRaw, Timestamp,
 } from "firebase/firestore";
 import { db, myUid } from "../firebase.js";
-import { newLobby, dealNewGame, applyMove, joinInProgress } from "../game/engine.js";
+import { newLobby, dealNewGame, applyMove, joinInProgress, trackStats } from "../game/engine.js";
 import { genCode } from "../game/deck.js";
 
 function roomRef(code) { return doc(db, "rooms", code); }
@@ -120,17 +120,20 @@ export async function joinRoom(code, player) {
 }
 
 export async function startGame(code, starterIdx) {
-  await mutate(code, (s) => dealNewGame(s, starterIdx));
+  await mutate(code, (s) => dealNewGame(s, starterIdx), "start");
 }
 export async function doMove(code, move, myId) {
-  await mutate(code, (s) => applyMove(s, move, myId));
+  await mutate(code, (s) => applyMove(s, move, myId), move.type);
 }
 
-async function mutate(code, fn) {
+/* Toute mutation de jeu passe ici : on y met aussi à jour les stats de
+   partie (pioches, joueurs, gagnant, activité) dans la même transaction. */
+async function mutate(code, fn, moveType) {
   const ref = roomRef(code);
   await runTransaction(db, async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists()) throw new Error("Salon introuvable.");
-    tx.set(ref, stamp(fn(snap.data())));
+    const prev = snap.data();
+    tx.set(ref, stamp(trackStats(prev, fn(prev), moveType)));
   });
 }
