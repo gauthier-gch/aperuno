@@ -31,7 +31,8 @@ function doPost(e) {
     d.code,                          // Code du salon
     d.mode,                          // chill / harr / premium
     d.playerCount,                   // Nombre de joueurs
-    (d.players || []).join(', ')     // Pseudos (pas de photo — RGPD)
+    (d.players || []).join(', '),    // Pseudos (pas de photo — RGPD)
+    d.id || ''                       // ID du salon (= colonne ID de « Parties »)
   ]);
   return ContentService.createTextOutput('ok');
 }

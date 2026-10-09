@@ -172,7 +172,7 @@ Firestore**. Pour repartir d'un projet Firebase neuf :
 Deux onglets dans le même Google Sheet :
 
 - **`Salons`** — une ligne **à chaque partie lancée** (date/heure, code, mode,
-  nombre de joueurs, pseudos), envoyée par l'appli côté **hôte uniquement**,
+  nombre de joueurs, pseudos, ID du salon — le même que dans `Parties`), envoyée par l'appli côté **hôte uniquement**,
   une seule fois par salon. **RGPD : seuls les pseudos sont envoyés — jamais
   les photos.** Désactivé tant que `SHEET_WEBHOOK_URL` est vide.
 - **`Parties`** (créé automatiquement) — une ligne **par salon, juste avant sa
@@ -195,7 +195,7 @@ ceux qui expirent dans l'heure.
 Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
 
 1. Crée un Google Sheet avec un onglet `Salons` et les en-têtes :
-   `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs`.
+   `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs` · `ID`.
 2. Dans le Sheet : **Extensions → Apps Script**, colle le contenu de
    [`apps-script/Code.gs`](apps-script/Code.gs) à la place du code existant.
 3. **Paramètres du projet** (⚙️) → coche « Afficher le fichier manifeste
@@ -211,6 +211,8 @@ Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
    Nouveau déploiement → Application Web** (« Exécuter en tant que : moi »,
    « Accès : tout le monde »), copie l'URL `…/exec` dans `SHEET_WEBHOOK_URL`
    (fichier `src/analytics.js`), puis redéploie l'appli.
+   Après toute modification de `doPost` : **Déployer → Gérer les déploiements
+   → ✏️ → Version : Nouvelle version → Déployer** (l'URL ne change pas).
 
 > L'envoi `Salons` est « fire-and-forget » (`fetch` en `no-cors`) : il
 > n'affiche jamais d'erreur au joueur et ne peut pas bloquer la partie. L'URL
