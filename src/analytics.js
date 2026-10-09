@@ -17,6 +17,7 @@ export function logGameStart(room) {
     const payload = {
       event: "start",
       code: room.code,
+      id: `${room.code}-${room.createdAt}`,  // même ID que l'onglet « Parties »
       at: new Date().toISOString(),          // date + heure (ISO 8601)
       mode: room.mode,                        // chill / harr / premium
       playerCount: room.players.length,       // nombre de joueurs
