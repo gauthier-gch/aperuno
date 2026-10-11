@@ -4,7 +4,7 @@
    ========================================================================= */
 
 import { initializeApp } from "firebase/app";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaV3Provider, getToken as getAppCheckToken } from "firebase/app-check";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
@@ -31,12 +31,13 @@ const app = initializeApp(firebaseConfig);
    ------------------------------------------------------------------------- */
 const APPCHECK_SITE_KEY = "6Lf2jowtAAAAAOmpTshgP3u6EyP-BVPrIMxOpH5o";
 
+let appCheck = null;
 if (APPCHECK_SITE_KEY) {
   // En développement local, on autorise un « jeton de debug » (à enregistrer
   // dans la console App Check) pour que localhost passe sans vrai reCAPTCHA.
   // Ne s'active jamais dans le build de production.
   if (import.meta.env.DEV) self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-  initializeAppCheck(app, {
+  appCheck = initializeAppCheck(app, {
     provider: new ReCaptchaV3Provider(APPCHECK_SITE_KEY),
     isTokenAutoRefreshEnabled: true,
   });
@@ -51,8 +52,34 @@ export function ensureAuth() {
   authReady = new Promise((resolve, reject) => {
     onAuthStateChanged(auth, (user) => { if (user) resolve(user); });
     signInAnonymously(auth).catch(reject);
+  }).then(async (user) => {
+    // Lors d'une toute première visite, le jeton App Check (reCAPTCHA) peut ne
+    // pas encore être prêt : la 1re requête Firestore part alors sans jeton
+    // valide et se fait refuser (« Missing or insufficient permissions »).
+    // On le préchauffe pendant l'écran « Connexion… ».
+    if (appCheck) await getAppCheckToken(appCheck).catch(() => {});
+    return user;
   });
   return authReady;
+}
+
+/* Filet de sécurité pour une requête refusée faute de jetons encore valides
+   (1re visite, jeton expiré au réveil du téléphone…) : on force le
+   rafraîchissement des jetons Auth + App Check puis on réessaie. */
+export async function refreshTokens() {
+  await ensureAuth();
+  if (auth.currentUser) await auth.currentUser.getIdToken(true).catch(() => {});
+  if (appCheck) await getAppCheckToken(appCheck, true).catch(() => {});
+}
+export async function withTokenRetry(fn, tries = 3) {
+  for (let i = 0; ; i++) {
+    try { return await fn(); }
+    catch (e) {
+      if (e?.code !== "permission-denied" || i >= tries - 1) throw e;
+      await refreshTokens();
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+  }
 }
 
 /* uid d'authentification (anonyme) Firebase — sert à sécuriser les règles
