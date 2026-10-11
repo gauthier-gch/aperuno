@@ -9,7 +9,7 @@ import {
   doc, onSnapshot, runTransaction, setDoc, getDoc,
   collection, setDoc as setDocRaw, Timestamp,
 } from "firebase/firestore";
-import { db, myUid } from "../firebase.js";
+import { db, myUid, ensureAuth, withTokenRetry } from "../firebase.js";
 import { newLobby, dealNewGame, applyMove, joinInProgress, trackStats } from "../game/engine.js";
 import { genCode } from "../game/deck.js";
 
@@ -82,6 +82,10 @@ export function usePresence(code, myId, active) {
 }
 
 export async function createRoom(mode, host, premium) {
+  await ensureAuth();
+  return withTokenRetry(() => createRoomOnce(mode, host, premium));
+}
+async function createRoomOnce(mode, host, premium) {
   for (let attempt = 0; attempt < 6; attempt++) {
     const code = genCode();
     const ref = roomRef(code);
@@ -95,6 +99,10 @@ export async function createRoom(mode, host, premium) {
 }
 
 export async function joinRoom(code, player) {
+  await ensureAuth();
+  await withTokenRetry(() => joinRoomOnce(code, player));
+}
+async function joinRoomOnce(code, player) {
   await runTransaction(db, async (tx) => {
     const ref = roomRef(code);
     const snap = await tx.get(ref);
