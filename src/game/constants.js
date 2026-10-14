@@ -289,7 +289,7 @@ export const VOTE_QUESTIONS = [
 export const ROULETTE = [
   { label: "Bois 8 gorgées", color: "#ff3b5c", self: "boit 8 gorgées", drink: { sips: 8 } },
   { label: "Offre un shot", color: "#37a6ff", needsTarget: true,
-    detail: "Commande ou sers un shot à la personne de ton choix.", them: "offre un shot", offer: "offre un shot à", giveDrink: { secs: 1 } },
+    detail: "Commande ou sers un shot à la personne de ton choix.", them: "offre un shot", offer: "offre un shot à", giveDrink: { shots: 1 } },
   { label: "Ajoute de l'alcool dans ton verre", color: "#b15bff", self: "ajoute de l'alcool dans son verre" },
   { label: "Finis ton verre", color: "#ff9b2f", self: "finit son verre 🥃", drink: { secs: 1 } },
   { label: "Bois 5 gorgées", color: "#e8401e", self: "boit 5 gorgées", drink: { sips: 5 } },

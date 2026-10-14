@@ -2,25 +2,36 @@ import React from "react";
 import { MYID } from "../me.js";
 import { Ava, DesignateLoser } from "./common.jsx";
 
-/* Récap de la manche : gorgées et culs secs bus par joueur (non loggé),
-   du plus assoiffé au plus sobre (culs secs d'abord, puis gorgées). */
+/* Récap de la manche : gorgées, shots et culs secs bus par joueur (non loggé),
+   du plus assoiffé au plus sobre. Équivalences pour le classement :
+   1 cul sec = 15 gorgées, 1 shot = 5 gorgées. */
+const SEC_SIPS = 15, SHOT_SIPS = 5;
 function DrinksBoard({ room }) {
   const drinks = room.drinks || {};
   const rows = room.players
-    .map((p) => ({ p, sips: (drinks[p.id] && drinks[p.id].sips) || 0, secs: (drinks[p.id] && drinks[p.id].secs) || 0 }))
-    .sort((a, b) => b.secs - a.secs || b.sips - a.sips);
-  const plural = (n, w) => `${n} ${w}${n > 1 ? "s" : ""}`;
+    .map((p) => {
+      const d = { sips: 0, secs: 0, shots: 0, ...drinks[p.id] };
+      return { p, ...d, score: d.sips + d.secs * SEC_SIPS + d.shots * SHOT_SIPS };
+    })
+    .sort((a, b) => b.score - a.score);
+  const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
   return (
     <div className="panel mb" style={{ width: "100%", maxWidth: 340 }}>
-      <p className="b mb" style={{ textAlign: "center" }}>🍻 Qui a le plus bu ?</p>
-      <div className="pb-table" style={{ marginBottom: 0 }}>
-        {rows.map(({ p, sips, secs }, i) => (
+      <p className="b mb" style={{ textAlign: "center" }}>🍻 Qui a le plus bu ?*</p>
+      <div className="pb-table" style={{ marginBottom: 8 }}>
+        {rows.map(({ p, sips, secs, shots, score }, i) => (
           <div className="pb-row space" key={p.id}>
-            <b style={{ margin: 0 }}>{i === 0 && (sips || secs) ? "🥇 " : `${i + 1}. `}{p.name}</b>
-            <span className="muted">{plural(sips, "gorgée")} · {secs} {secs > 1 ? "culs secs" : "cul sec"}</span>
+            <b style={{ margin: 0 }}>{i === 0 && score ? "🥇 " : `${i + 1}. `}{p.name}</b>
+            <span className="muted" style={{ textAlign: "right" }}>
+              {plural(sips, "gorgée", "gorgées")} · {plural(shots, "shot", "shots")} · {plural(secs, "cul sec", "culs secs")}
+            </span>
           </div>
         ))}
       </div>
+      <p className="dim" style={{ fontSize: 12, textAlign: "center" }}>
+        Classement : 1 cul sec = {SEC_SIPS} gorgées, 1 shot = {SHOT_SIPS} gorgées.<br />
+        * Certains mini-jeux se terminent hors app : ils ne permettent donc pas d'attribuer les gorgées aux joueurs qui les ont bues.
+      </p>
     </div>
   );
 }

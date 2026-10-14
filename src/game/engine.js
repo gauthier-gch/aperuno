@@ -106,15 +106,16 @@ function idx(s, id) { return s.players.findIndex((p) => p.id === id); }
 function isTurn(s, id) { return s.players[s.current] && s.players[s.current].id === id; }
 
 /* Compteur de la manche (affiché à la fin, non loggé) :
-   s.drinks = { <id joueur> : { sips, secs } }. Les shots comptent en cul sec. */
-function addDrink(s, id, sips = 0, secs = 0) {
+   s.drinks = { <id joueur> : { sips, secs, shots } }. */
+function addDrink(s, id, sips = 0, secs = 0, shots = 0) {
   if (!id || idx(s, id) < 0) return;
   s.drinks = s.drinks || {};
-  const d = s.drinks[id] || { sips: 0, secs: 0 };
-  s.drinks[id] = { sips: d.sips + Math.max(0, sips | 0), secs: d.secs + Math.max(0, secs | 0) };
+  const d = { sips: 0, secs: 0, shots: 0, ...s.drinks[id] };
+  const n = (v) => Math.max(0, v | 0);
+  s.drinks[id] = { sips: d.sips + n(sips), secs: d.secs + n(secs), shots: d.shots + n(shots) };
 }
 function addActionDrink(s, id, total, unit, bonus = 0) {
-  if (unit === "shot") addDrink(s, id, bonus, total);
+  if (unit === "shot") addDrink(s, id, bonus, 0, total);
   else addDrink(s, id, total + bonus, 0);
 }
 
@@ -814,8 +815,8 @@ function countFinishDrinks(s, move) {
   if (mg.kind === "inapp_dix") addDrink(s, launcherId, mg.launcherSips || 0);
   if (mg.kind === "inapp_roulette" && mg.segment != null) {
     const seg = ROULETTE[mg.segment];
-    if (seg.drink) addDrink(s, launcherId, seg.drink.sips, seg.drink.secs);
-    if (seg.giveDrink && move.targetId) addDrink(s, move.targetId, seg.giveDrink.sips, seg.giveDrink.secs);
+    if (seg.drink) addDrink(s, launcherId, seg.drink.sips, seg.drink.secs, seg.drink.shots);
+    if (seg.giveDrink && move.targetId) addDrink(s, move.targetId, seg.giveDrink.sips, seg.giveDrink.secs, seg.giveDrink.shots);
   }
 }
 function handCard(player, cardId, type) {
