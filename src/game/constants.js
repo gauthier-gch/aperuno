@@ -287,15 +287,15 @@ export const VOTE_QUESTIONS = [
    self / them → texte à la 3e personne affiché sur le téléphone des autres
    (« Paul finit son verre », et non « Finis ton verre »). */
 export const ROULETTE = [
-  { label: "Bois 8 gorgées", color: "#ff3b5c", self: "boit 8 gorgées" },
+  { label: "Bois 8 gorgées", color: "#ff3b5c", self: "boit 8 gorgées", drink: { sips: 8 } },
   { label: "Offre un shot", color: "#37a6ff", needsTarget: true,
-    detail: "Commande ou sers un shot à la personne de ton choix.", them: "offre un shot", offer: "offre un shot à" },
+    detail: "Commande ou sers un shot à la personne de ton choix.", them: "offre un shot", offer: "offre un shot à", giveDrink: { secs: 1 } },
   { label: "Ajoute de l'alcool dans ton verre", color: "#b15bff", self: "ajoute de l'alcool dans son verre" },
-  { label: "Finis ton verre", color: "#ff9b2f", self: "finit son verre 🥃" },
-  { label: "Bois 5 gorgées", color: "#e8401e", self: "boit 5 gorgées" },
-  { label: "Distribue 5 gorgées", color: "#27d17c", needsTarget: true, them: "distribue 5 gorgées", give: "boit 5 gorgées" },
+  { label: "Finis ton verre", color: "#ff9b2f", self: "finit son verre 🥃", drink: { secs: 1 } },
+  { label: "Bois 5 gorgées", color: "#e8401e", self: "boit 5 gorgées", drink: { sips: 5 } },
+  { label: "Distribue 5 gorgées", color: "#27d17c", needsTarget: true, them: "distribue 5 gorgées", give: "boit 5 gorgées", giveDrink: { sips: 5 } },
   { label: "Alcool dans le verre de ton choix", color: "#7d3bff", needsTarget: true, them: "met de l'alcool dans le verre de son choix", give: "se prend un peu d'alcool en plus dans son verre" },
-  { label: "Distribue un sec", color: "#f4c95d", needsTarget: true, them: "distribue un sec", give: "se prend un sec 🥃" },
+  { label: "Distribue un sec", color: "#f4c95d", needsTarget: true, them: "distribue un sec", give: "se prend un sec 🥃", giveDrink: { secs: 1 } },
 ];
 
 /* « L'imposteur » : paires (mot des civils / mot de l'imposteur), proches. */

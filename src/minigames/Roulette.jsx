@@ -65,7 +65,7 @@ export function RouletteGame({ room, mg, isLauncher, launcher, act, busy, waitin
             <DesignateLoser players={room.players} label="Pour qui ?"
               onPick={(id) => {
                 const target = room.players.find((p) => p.id === id);
-                act({ type: "mgFinish", text: seg.offer ? `🎡 ${launcher.name} ${seg.offer} ${target.name} 🥃` : `🎡 ${target.name} ${seg.give}` });
+                act({ type: "mgFinish", targetId: id, text: seg.offer ? `🎡 ${launcher.name} ${seg.offer} ${target.name} 🥃` : `🎡 ${target.name} ${seg.give}` });
               }} />
           ) : (
             <button className="btn btn-primary" disabled={busy}

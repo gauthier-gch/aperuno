@@ -172,7 +172,16 @@ html, body, #root { margin: 0; height: 100%; }
 .wheel-pin { position:absolute; top:-6px; left:50%; transform:translateX(-50%); font-size:30px; filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)); z-index:2; }
 .wheel-cap { position:absolute; top:50%; left:50%; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:50%; background:linear-gradient(150deg,#fff,#cbbcff); box-shadow:0 4px 12px rgba(0,0,0,.4); }
 
+/* ---- mini-jeux : boutons de validation / fin toujours visibles ----
+   Collés en bas de la fenêtre du mini-jeu tant qu'on fait défiler au-dessus. */
+.mg-sheet .btn-primary, .mg-sheet .btn-blue:not(.btn-sm), .mg-sheet .sticky-cta { position:sticky; bottom:0; z-index:3; }
+.mg-sheet .btn-primary, .mg-sheet .btn-blue:not(.btn-sm) { box-shadow:0 -10px 24px rgba(20,14,44,.9), 0 12px 30px rgba(177,91,255,.4); }
+.mg-sheet .btn-primary:disabled, .mg-sheet .btn-blue:disabled { opacity:1; filter:grayscale(.7) brightness(.6); }
+.mg-sheet .sticky-cta { justify-content:center; width:100%; padding:10px 0 2px; background:linear-gradient(180deg,rgba(20,14,44,0),#140e2c 30%); }
+
 /* ---- poire ---- */
+/* zone de coupe pleine largeur : on peut commencer/finir le trait hors de la poire */
+.pear-zone { width:100%; padding:16px 0; touch-action:none; cursor:crosshair; }
 .pear-stage { position:relative; width:240px; height:300px; margin:6px auto 14px; touch-action:none; }
 .cut-line { position:absolute; top:0; bottom:0; width:3px; background:linear-gradient(#fff,rgba(255,255,255,.3)); box-shadow:0 0 10px #fff; }
 .cut-line.you { background:linear-gradient(#f4c95d,#ff9b2f); box-shadow:0 0 10px var(--gold); }

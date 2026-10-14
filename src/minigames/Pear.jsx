@@ -30,13 +30,18 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
   const submitted = mg.cuts && mg.cuts[MYID] != null;
   const target = mg.targetAngle;
 
+  // Coordonnées relatives à la poire (0..1), mais on peut tracer au-delà :
+  // toute la zone de coupe (pleine largeur) capte le trait, et le doigt peut
+  // déborder de la poire (borné pour rester raisonnable).
+  const clampN = (v) => Math.max(-1, Math.min(2, v));
   function norm(e) {
     const r = stageRef.current.getBoundingClientRect();
     const t = e.touches ? e.touches[0] : e;
-    return { x: Math.max(0, Math.min(1, (t.clientX - r.left) / r.width)), y: Math.max(0, Math.min(1, (t.clientY - r.top) / r.height)) };
+    return { x: clampN((t.clientX - r.left) / r.width), y: clampN((t.clientY - r.top) / r.height) };
   }
   const start = (e) => {
     if (submitted || locked || mg.phase === "result" || drawing.current) return;
+    if (e.pointerId != null) e.currentTarget.setPointerCapture?.(e.pointerId);
     drawing.current = true; count.current = 1; setPts([norm(e)]);
   };
   const move = (e) => { if (!drawing.current) return; e.preventDefault?.(); count.current += 1; setPts((p) => [...p, norm(e)]); };
@@ -65,7 +70,7 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
       <div className="center-col">
         <div className="pear-stage">
           <Pear />
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}>
             <line x1={tl.x1} y1={tl.y1} x2={tl.x2} y2={tl.y2} stroke="#fff" strokeWidth="1.4" strokeDasharray="4 3" />
             {room.players.map((p) => {
               const c = mg.cuts[p.id];
@@ -99,12 +104,13 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
   const tl = angleLine(target);
   return (
     <div className="center-col">
-      <p className="muted mb">Reproduis la coupe <b className="w">cible</b> (pointillés) en la traçant au doigt :</p>
-      <div className="pear-stage" ref={stageRef} style={{ touchAction: locked || submitted ? "pan-y" : "none" }}
-        onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerLeave={end} onPointerCancel={end}
+      <p className="muted mb">Reproduis la coupe <b className="w">cible</b> (pointillés) en la traçant au doigt — tu peux déborder de la poire :</p>
+      <div className="pear-zone" style={{ touchAction: locked || submitted ? "pan-y" : "none" }}
+        onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerCancel={end}
         onTouchStart={start} onTouchMove={move} onTouchEnd={end}>
+      <div className="pear-stage" ref={stageRef}>
         <Pear />
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}>
           <line x1={tl.x1} y1={tl.y1} x2={tl.x2} y2={tl.y2} stroke="#fff" strokeWidth="1.4" strokeDasharray="4 3" opacity="0.8" />
           {!submitted && pts.length > 1 && (
             <polyline points={pts.map((p) => `${p.x * 100},${p.y * 100}`).join(" ")}
@@ -112,12 +118,13 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
           )}
         </svg>
       </div>
+      </div>
       {submitted
         ? <p className="muted">✅ Coupe validée. En attente des autres… ({Object.keys(mg.cuts).length}/{room.players.length})</p>
         : (
           <div className="center-col">
           {locked && <p className="dim mb">Trait tracé — touche « Effacer » pour en refaire un.</p>}
-          <div className="row">
+          <div className="row sticky-cta">
             <button className="btn btn-ghost btn-sm auto" disabled={busy || !pts.length} onClick={clear}>Effacer</button>
             <button className="btn btn-blue btn-sm auto" disabled={busy || pts.length < 2} onClick={submit}>Valider ma coupe 🔪</button>
           </div>

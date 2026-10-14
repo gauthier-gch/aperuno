@@ -2,6 +2,29 @@ import React from "react";
 import { MYID } from "../me.js";
 import { Ava, DesignateLoser } from "./common.jsx";
 
+/* Récap de la manche : gorgées et culs secs bus par joueur (non loggé),
+   du plus assoiffé au plus sobre (culs secs d'abord, puis gorgées). */
+function DrinksBoard({ room }) {
+  const drinks = room.drinks || {};
+  const rows = room.players
+    .map((p) => ({ p, sips: (drinks[p.id] && drinks[p.id].sips) || 0, secs: (drinks[p.id] && drinks[p.id].secs) || 0 }))
+    .sort((a, b) => b.secs - a.secs || b.sips - a.sips);
+  const plural = (n, w) => `${n} ${w}${n > 1 ? "s" : ""}`;
+  return (
+    <div className="panel mb" style={{ width: "100%", maxWidth: 340 }}>
+      <p className="b mb" style={{ textAlign: "center" }}>🍻 Qui a le plus bu ?</p>
+      <div className="pb-table" style={{ marginBottom: 0 }}>
+        {rows.map(({ p, sips, secs }, i) => (
+          <div className="pb-row space" key={p.id}>
+            <b style={{ margin: 0 }}>{i === 0 && (sips || secs) ? "🥇 " : `${i + 1}. `}{p.name}</b>
+            <span className="muted">{plural(sips, "gorgée")} · {secs} {secs > 1 ? "culs secs" : "cul sec"}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Win({ room, onReplay, leave, act, busy }) {
   const w = room.players.find((p) => p.id === room.winnerId) || room.players[0];
   const isHost = room.hostId === MYID;
@@ -33,6 +56,8 @@ export function Win({ room, onReplay, leave, act, busy }) {
       ) : (
         <p className="muted mb">🥃 {w.name} choisit à qui offrir un cul sec…</p>
       )}
+
+      <DrinksBoard room={room} />
 
       {isHost
         ? <button className="btn btn-primary" style={{ maxWidth: 260 }} disabled={busy} onClick={() => onReplay(Math.max(0, winnerIdx))}>Nouvelle manche</button>

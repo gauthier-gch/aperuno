@@ -66,7 +66,7 @@ export function Minigame({ room, act, busy, leave }) {
   }
 
   return (
-    <Overlay>
+    <Overlay className="mg-sheet">
       <div className="space mb">
         <span className="chip">🎲 Carte jeu</span>
         <button className="btn btn-ghost auto quit-btn" onClick={leave}>Quitter la partie</button>

@@ -56,11 +56,11 @@ function lockPageScroll() {
   };
 }
 
-export function Overlay({ children }) {
+export function Overlay({ children, className = "" }) {
   useEffect(lockPageScroll, []);
   return (
     <div className="overlay">
-      <div className="sheet pop">{children}</div>
+      <div className={`sheet pop ${className}`}>{children}</div>
     </div>
   );
 }

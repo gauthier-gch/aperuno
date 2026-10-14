@@ -28,6 +28,7 @@ export function newLobby(code, mode, host, premium) {
     deck: [], discard: [], current: 0, winnerId: null,
     turn: { drawn: false },
     announce: null, reaction: null, minigame: null, timers: [], secTarget: null,
+    drinks: {},
     createdAt: Date.now(),
   };
 }
@@ -44,6 +45,7 @@ export function dealNewGame(s0, starterIdx) {
   s.turn = { drawn: false };
   s.announce = note(`C'est parti ! ${s.players[s.current].name} commence — pioche puis joue 🥃`);
   s.reaction = null; s.minigame = null; s.timers = []; s.secTarget = null;
+  s.drinks = {};
   return s;
 }
 
@@ -103,6 +105,19 @@ function note(text, long = false) { return { text, ts: Date.now() + Math.random(
 function idx(s, id) { return s.players.findIndex((p) => p.id === id); }
 function isTurn(s, id) { return s.players[s.current] && s.players[s.current].id === id; }
 
+/* Compteur de la manche (affiché à la fin, non loggé) :
+   s.drinks = { <id joueur> : { sips, secs } }. Les shots comptent en cul sec. */
+function addDrink(s, id, sips = 0, secs = 0) {
+  if (!id || idx(s, id) < 0) return;
+  s.drinks = s.drinks || {};
+  const d = s.drinks[id] || { sips: 0, secs: 0 };
+  s.drinks[id] = { sips: d.sips + Math.max(0, sips | 0), secs: d.secs + Math.max(0, secs | 0) };
+}
+function addActionDrink(s, id, total, unit, bonus = 0) {
+  if (unit === "shot") addDrink(s, id, bonus, total);
+  else addDrink(s, id, total + bonus, 0);
+}
+
 function draw(s, playerIdx, n = 1) {
   for (let k = 0; k < n; k++) {
     if (s.deck.length === 0) { s.deck = shuffle(s.discard); s.discard = []; }
@@ -146,6 +161,7 @@ function resolveDrink(s) {
   const ti = idx(s, r.targetId);
   const extra = r.bonus > 0 ? ` + ${r.bonus} gorgée${r.bonus > 1 ? "s" : ""}` : "";
   s.announce = note(`${s.players[ti].name} boit ${r.baseLabel}${extra} 🍻`, true);
+  if (r.total != null) addActionDrink(s, r.targetId, r.total, r.unit, r.bonus);
   s.reaction = null;
   endTurn(s);
   return s;
@@ -258,6 +274,7 @@ export function applyMove(s0, move, myId) {
       const total = cards.reduce((n, c) => n + c.sips, 0);
       const unit = cards[0].unit;
       s.announce = note(`${mine.name} ${actionDrink(total, unit)} 🍻`, true);
+      addActionDrink(s, myId, total, unit);
       endTurn(s);
       return s;
     }
@@ -273,6 +290,7 @@ export function applyMove(s0, move, myId) {
       s.reaction = {
         byId: myId, targetId: move.targetId,
         baseLabel: actionDrink(total, unit).replace("boit ", ""), bonus: 0,
+        total, unit,
       };
       return offerOrResolve(s);
     }
@@ -359,6 +377,7 @@ export function applyMove(s0, move, myId) {
       const t = idx(s, move.targetId);
       if (t < 0 || move.targetId === myId) throw new Error("Choisis un autre joueur.");
       s.secTarget = move.targetId;
+      addDrink(s, move.targetId, 0, 1);
       s.announce = note(`${mine.name} offre un cul sec à ${s.players[t].name} 🥃`, true);
       return s;
     }
@@ -622,6 +641,7 @@ export function applyMove(s0, move, myId) {
       s.minigame.eliminated.push(move.targetId);
       s.minigame.lastElim = { id: move.targetId, role };
       s.announce = note(`${s.players[t].name} est éliminé — ${roleLabel(role)} — et boit 1 gorgée 🍻`, true);
+      addDrink(s, move.targetId, 1);
       if (role === "white") s.minigame.phase = "whiteguess"; // Mister White tente de deviner
       else imposteurCheckOver(s);
       return s;
@@ -664,6 +684,7 @@ export function applyMove(s0, move, myId) {
         const names = ids.map((id) => { const i = idx(s, id); if (i < 0) throw new Error("Perdant invalide."); return s.players[i].name; }).join(", ");
         const many = ids.length > 1;
         s.announce = note(`${names} ${many ? "perdent et boivent" : "perd et boit"} ${n} gorgée${n > 1 ? "s" : ""} 🍻`, true);
+        ids.forEach((id) => addDrink(s, id, n));
       } else {
         s.announce = note(`« ${game(s.minigame.gameId).name} » terminé (débloqué) ⏭️`);
       }
@@ -679,6 +700,7 @@ export function applyMove(s0, move, myId) {
       if (move.text) {
         // long par défaut (messages de gorgées) sauf si l'appelant précise long:false.
         s.announce = note(move.text, move.long !== false);
+        countFinishDrinks(s, move);
       } else if (g.drawLoser && ids.length) {
         // ex. duel de sec : le perdant pioche une carte (rien à boire).
         const names = ids.map((id) => { const i = idx(s, id); if (i < 0) throw new Error("Perdant invalide."); draw(s, i, 1); return s.players[i].name; }).join(", ");
@@ -688,6 +710,7 @@ export function applyMove(s0, move, myId) {
         const names = ids.map((id) => { const i = idx(s, id); if (i < 0) throw new Error("Perdant invalide."); return s.players[i].name; }).join(", ");
         const many = ids.length > 1;
         s.announce = note(`${names} ${many ? "perdent et boivent" : "perd et boit"} ${n} gorgée${n > 1 ? "s" : ""} 🍻`, true);
+        ids.forEach((id) => addDrink(s, id, n));
       } else {
         s.announce = note("Le perdant boit ! 🍻", true);
       }
@@ -782,6 +805,18 @@ function dixReveal(s) {
   s.minigame.launcherSips = ecarts.length
     ? Math.round(ecarts.reduce((a, b) => a + b, 0) / ecarts.length) : 0;
   s.minigame.phase = "reveal";
+}
+/* Mini-jeux terminés avec un texte libre : on déduit qui boit quoi de l'état
+   du mini-jeu (jamais du texte), quand c'est connu. */
+function countFinishDrinks(s, move) {
+  const mg = s.minigame;
+  const launcherId = s.players[mg.launcherIdx] && s.players[mg.launcherIdx].id;
+  if (mg.kind === "inapp_dix") addDrink(s, launcherId, mg.launcherSips || 0);
+  if (mg.kind === "inapp_roulette" && mg.segment != null) {
+    const seg = ROULETTE[mg.segment];
+    if (seg.drink) addDrink(s, launcherId, seg.drink.sips, seg.drink.secs);
+    if (seg.giveDrink && move.targetId) addDrink(s, move.targetId, seg.giveDrink.sips, seg.giveDrink.secs);
+  }
 }
 function handCard(player, cardId, type) {
   const c = player.hand.find((x) => x.id === cardId);
