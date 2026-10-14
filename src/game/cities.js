@@ -1,12 +1,12 @@
 /* =========================================================================
-   « Place la ville » — 50 villes les plus peuplées de France métropolitaine
+   « Place la ville » — villes les plus peuplées de France métropolitaine
+   (Paris exclue : trop facile)
    avec coordonnées réelles (lat/lng). On projette en équirectangulaire sur
    une boîte englobant la France ; un tracé SVG décoratif sert de fond.
    Les distances sont calculées en km réels (haversine) → fiable et hors-ligne.
    ========================================================================= */
 
 export const CITIES = [
-  { name: "Paris", lat: 48.8566, lng: 2.3522 },
   { name: "Marseille", lat: 43.2965, lng: 5.3698 },
   { name: "Lyon", lat: 45.764, lng: 4.8357 },
   { name: "Toulouse", lat: 43.6047, lng: 1.4442 },
