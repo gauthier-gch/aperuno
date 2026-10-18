@@ -44,14 +44,21 @@ if (APPCHECK_SITE_KEY) {
 }
 
 export const db = getFirestore(app);
-const auth = getAuth(app);
+export const auth = getAuth(app);
+auth.languageCode = "fr"; // e-mails (mot de passe oublié…) et fenêtre Google en français
 
 let authReady = null;
 export function ensureAuth() {
   if (authReady) return authReady;
+  // On attend que Firebase ait relu la session mémorisée : un joueur déjà
+  // connecté (Google / e-mail) le reste ; sinon on ouvre une session invité
+  // anonyme. (signInAnonymously écraserait un compte connecté.)
   authReady = new Promise((resolve, reject) => {
-    onAuthStateChanged(auth, (user) => { if (user) resolve(user); });
-    signInAnonymously(auth).catch(reject);
+    const unsub = onAuthStateChanged(auth, (user) => {
+      unsub();
+      if (user) resolve(user);
+      else signInAnonymously(auth).then((c) => resolve(c.user), reject);
+    });
   }).then(async (user) => {
     // Lors d'une toute première visite, le jeton App Check (reCAPTCHA) peut ne
     // pas encore être prêt : la 1re requête Firestore part alors sans jeton
@@ -86,6 +93,8 @@ export async function withTokenRetry(fn, tries = 3) {
    Firestore : c'est la seule identité que les règles peuvent vérifier
    (distincte de MYID, l'identifiant d'appareil côté jeu). */
 export function myUid() { return auth.currentUser ? auth.currentUser.uid : null; }
+/* true si le joueur est connecté à un vrai compte (Google / e-mail). */
+export function hasAccount() { return !!(auth.currentUser && !auth.currentUser.isAnonymous); }
 
 /* Identifiant stable de l'appareil/joueur (persiste entre rechargements). */
 export function clientId() {

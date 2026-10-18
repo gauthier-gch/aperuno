@@ -32,7 +32,9 @@ function doPost(e) {
     d.mode,                          // chill / harr / premium
     d.playerCount,                   // Nombre de joueurs
     (d.players || []).join(', '),    // Pseudos (pas de photo — RGPD)
-    d.id || ''                       // ID du salon (= colonne ID de « Parties »)
+    d.id || '',                      // ID du salon (= colonne ID de « Parties »)
+    (d.uids || []).join(', '),       // uid Firebase des joueurs (= users/{uid})
+    d.accounts == null ? '' : d.accounts // nb de joueurs connectés à un compte
   ]);
   return ContentService.createTextOutput('ok');
 }

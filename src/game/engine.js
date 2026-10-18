@@ -21,7 +21,7 @@ export function newLobby(code, mode, host, premium) {
     code, mode, status: "lobby", hostId: host.id,
     // Config du mode premium (composition du paquet) — null pour chill/harr.
     premium: mode === "premium" ? sanitizePremium(premium) : null,
-    players: [{ id: host.id, name: host.name, photo: host.photo || null, hand: [] }],
+    players: [{ ...ident(host), hand: [] }],
     // members : { <uid Firebase> : true } — utilisé par les règles Firestore
     // pour n'autoriser l'écriture qu'aux membres du salon (voir firestore.rules).
     members: host.uid ? { [host.uid]: true } : {},
@@ -46,6 +46,7 @@ export function dealNewGame(s0, starterIdx) {
   s.announce = note(`C'est parti ! ${s.players[s.current].name} commence — pioche puis joue 🥃`);
   s.reaction = null; s.minigame = null; s.timers = []; s.secTarget = null;
   s.drinks = {};
+  s.dealtAt = Date.now(); // identifie la manche (historique des joueurs)
   return s;
 }
 
@@ -59,7 +60,7 @@ export function joinInProgress(s0, player) {
     if (s.deck.length === 0) break;
     hand.push(s.deck.shift());
   }
-  s.players.push({ id: player.id, name: player.name, photo: player.photo || null, hand });
+  s.players.push({ ...ident(player), hand });
   s.announce = note(`${player.name} rejoint la partie en cours 👋`);
   return s;
 }
@@ -97,6 +98,12 @@ export function trackStats(prev, s, moveType, now = Date.now()) {
 }
 
 /* ------------------------------- helpers état ---------------------------- */
+
+/* Profil public d'un joueur dans le salon. uid (Firebase) + account servent
+   au suivi des joueurs d'une partie à l'autre (voir analytics.js). */
+export function ident(p) {
+  return { id: p.id, name: p.name, photo: p.photo || null, uid: p.uid || null, account: !!p.account };
+}
 
 function clone(s) { return JSON.parse(JSON.stringify(s)); }
 /* long = true → l'annonce reste affichée longtemps (messages « X boit … »).

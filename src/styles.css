@@ -360,3 +360,22 @@ p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px a
 .dix-ticks { display:flex; justify-content:space-between; padding:0 6px; }
 .dix-ticks span { width:22px; text-align:center; font-size:13px; color:#cdbff2; border-top:2px solid rgba(255,255,255,.35); padding-top:4px; cursor:pointer; }
 .dix-ticks span.on { color:#fff; font-weight:800; border-top-color:var(--gold); }
+
+/* ---------------------------- comptes & profil ---------------------------- */
+/* Avatar du profil, en haut à droite de tous les écrans (sauf la table de jeu,
+   où il est intégré à l'en-tête). */
+.profile-chip { position:absolute; top:calc(18px + env(safe-area-inset-top)); right:18px; z-index:5; appearance:none; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.08); border-radius:50%; padding:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; min-width:40px; min-height:40px; }
+.profile-chip.inline { position:static; min-width:32px; min-height:32px; }
+.profile-ic { font-size:18px; line-height:1; }
+.photo-btn { position:relative; appearance:none; border:none; background:none; padding:0; cursor:pointer; border-radius:50%; }
+.photo-edit { position:absolute; right:-4px; bottom:-4px; width:22px; height:22px; border-radius:50%; background:var(--gold); font-size:11px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.4); }
+.btn-google { background:#fff; color:#1f1f1f; }
+.acct-box { padding:14px; margin-bottom:12px; }
+.acct-line { margin:0 0 10px; }
+.or-sep { display:flex; align-items:center; gap:10px; margin-top:14px; color:#8d83b5; font-size:12px; }
+.or-sep::before, .or-sep::after { content:""; flex:1; height:1px; background:rgba(255,255,255,.14); }
+.stat-tiles { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.stat-tile { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:14px 10px; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.stat-tile .v { font-family:'Marcellus',serif; font-size:34px; color:var(--gold); line-height:1.1; }
+.stat-tile .l { font-size:12px; color:#b9aee0; text-align:center; }
+.seg.plain button.on { background:rgba(255,255,255,.16); }

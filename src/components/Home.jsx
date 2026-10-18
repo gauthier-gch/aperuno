@@ -24,7 +24,7 @@ export function Home({ go }) {
     <div className="fade">
       <div style={{ position: "relative", marginTop: 24, marginBottom: 30 }}>
         <span className="apr-deco" style={{ left: 6, top: -6 }}>🍸</span>
-        <span className="apr-deco" style={{ right: 8, top: 10 }}>😈</span>
+        <span className="apr-deco" style={{ right: 10, top: 64 }}>😈</span>
         <span className="apr-deco" style={{ left: 30, top: 86 }}>🍻</span>
         <img className="apr-logo-img" src={LOGO} alt="apéruno" />
         <h1 className="apr-logo">
@@ -168,6 +168,11 @@ export function Terms({ back }) {
       </div>
 
       <div className="panel mb">
+        <p className="b w mb-sm">👤 Compte joueur</p>
+        <p className="muted">Tu peux jouer en <b>invité</b>, sans compte. Le compte (Google ou e-mail + mot de passe) est <b>facultatif et gratuit</b> : il sert à retrouver ton profil et tes statistiques. Tu es responsable de la confidentialité de ton mot de passe. Tu peux supprimer ton compte à tout moment depuis ton profil ; l'éditeur peut supprimer un compte en cas d'usage abusif (prénom ou photo illicites, notamment).</p>
+      </div>
+
+      <div className="panel mb">
         <p className="b w mb-sm">⚖️ Responsabilité</p>
         <p className="muted">L'éditeur décline toute responsabilité quant aux conséquences directes ou indirectes liées à l'utilisation du jeu et à la consommation d'alcool. L'utilisation se fait sous ta seule responsabilité.</p>
       </div>
@@ -242,31 +247,48 @@ export function Privacy({ back }) {
       <div className="panel mb">
         <p className="b w mb-sm">🗂️ Données collectées</p>
         <p className="muted">
+          <b className="w">Pour tous les joueurs</b><br />
           • le <b>prénom</b> que tu saisis ;<br />
-          • une <b>photo de profil</b>, <b>facultative</b> (elle n'est demandée que si tu l'ajoutes) ;<br />
-          • un <b>identifiant d'appareil</b> (stocké dans ton navigateur) et un <b>identifiant anonyme</b> Firebase, pour te reconnecter à ta partie ;<br />
-          • des <b>données techniques</b> gérées par notre hébergeur (adresse IP, journaux) nécessaires au fonctionnement.
+          • une <b>photo de profil</b>, <b>facultative</b> ;<br />
+          • un <b>identifiant d'appareil</b> (stocké dans ton navigateur) et un <b>identifiant Firebase</b> (anonyme pour un invité) ;<br />
+          • l'<b>historique de tes parties</b> : date, mode de jeu, nombre de joueurs, partie terminée ou non, victoire ;<br />
+          • des <b>données techniques</b> gérées par notre hébergeur (adresse IP, journaux) nécessaires au fonctionnement.<br />
+          <b className="w">Si tu crées un compte</b> (facultatif)<br />
+          • ton <b>adresse e-mail</b> (ou ton compte <b>Google</b> : nom, e-mail, photo) ;<br />
+          • ton <b>mot de passe</b>, géré par Firebase Authentication : il n'est jamais stocké en clair et nous n'y avons pas accès ;<br />
+          • ton <b>prénom</b> et ta <b>photo de profil</b> par défaut.<br />
+          Nous n'enregistrons <b>pas</b> ce que tu bois pendant les parties : le récap des gorgées s'efface avec le salon.
         </p>
       </div>
 
       <div className="panel mb">
         <p className="b w mb-sm">🎯 Finalités & base légale</p>
-        <p className="muted">Ces données servent uniquement à faire fonctionner le jeu multijoueur en temps réel (exécution du service). L'ajout d'une <b>photo</b> repose sur ton <b>consentement</b> : tu peux jouer sans photo, et ne pas en ajouter n'empêche rien.</p>
+        <p className="muted">
+          • <b>Faire fonctionner le jeu</b> multijoueur en temps réel (exécution du service).<br />
+          • <b>Ton compte</b> : te reconnecter automatiquement, pré-remplir ton prénom et ta photo, t'afficher ton profil et tes statistiques (exécution du service que tu demandes en créant un compte).<br />
+          • <b>Mesure d'audience</b> : compter les parties et les joueurs, d'une soirée à l'autre, pour améliorer le jeu (intérêt légitime). Tu peux t'y opposer en effaçant tes données depuis ton profil.<br />
+          • L'ajout d'une <b>photo</b> repose sur ton <b>consentement</b> : tu peux jouer sans photo, et ne pas en ajouter n'empêche rien.
+        </p>
       </div>
 
       <div className="panel mb">
         <p className="b w mb-sm">☁️ Hébergement & partage</p>
-        <p className="muted">Les données de partie sont hébergées via <b>Google Firebase</b> (Firestore / Authentification). Le prénom et la photo que tu choisis sont visibles par les autres joueurs du <b>même salon</b>. Nous ne vendons ni ne louons tes données, et ne les utilisons pas à des fins publicitaires.</p>
+        <p className="muted">Les données sont hébergées via <b>Google Firebase</b> (Firestore / Authentification). Un suivi des parties (date, mode, prénoms et identifiants des joueurs) est aussi tenu dans un tableur privé <b>Google Sheets</b>, accessible au seul éditeur. Le prénom et la photo que tu choisis sont visibles par les autres joueurs du <b>même salon</b>. Ton profil et ton historique ne sont visibles que par toi. Nous ne vendons ni ne louons tes données, et ne les utilisons pas à des fins publicitaires.</p>
       </div>
 
       <div className="panel mb">
         <p className="b w mb-sm">⏳ Conservation</p>
-        <p className="muted">Les salons (prénoms, photos, état de partie) sont <b>supprimés automatiquement</b> après environ <b>12 h d'inactivité</b>. Les identifiants stockés dans ton navigateur restent tant que tu ne les effaces pas (vider les données du site les supprime).</p>
+        <p className="muted">
+          • Les <b>salons</b> (prénoms, photos, état de partie) sont <b>supprimés automatiquement</b> après environ <b>12 h d'inactivité</b>.<br />
+          • <b>Invité</b> : ta photo n'est <b>jamais conservée</b> au-delà du salon. Ton identifiant anonyme, ton prénom et ton historique de parties sont effacés <b>13 mois après ta dernière visite</b>.<br />
+          • <b>Compte</b> : ton profil et ton historique sont conservés tant que ton compte existe, et effacés après <b>3 ans sans visite</b>.<br />
+          • Les identifiants stockés dans ton navigateur restent tant que tu ne les effaces pas (vider les données du site les supprime).
+        </p>
       </div>
 
       <div className="panel">
         <p className="b w mb-sm">🔐 Tes droits</p>
-        <p className="muted">Tu disposes d'un droit d'accès, de rectification, d'effacement et d'opposition. Comme les salons s'effacent seuls sous 12 h, la plupart des données disparaissent d'elles-mêmes ; pour toute demande, écris à <a href={`mailto:${CONTACT_EMAIL}`} className="foot-link">{CONTACT_EMAIL}</a>. Nous n'utilisons pas de cookies publicitaires, seulement du stockage local technique.</p>
+        <p className="muted">Tu disposes d'un droit d'accès, de rectification, d'effacement, de portabilité et d'opposition. Depuis <b>ton profil</b> (icône en haut à droite), tu peux à tout moment modifier ton prénom et ta photo, te déconnecter, et <b>supprimer ton compte</b> (ou effacer tes données d'invité) : tout est effacé immédiatement. Pour toute autre demande, écris à <a href={`mailto:${CONTACT_EMAIL}`} className="foot-link">{CONTACT_EMAIL}</a>. Tu peux aussi saisir la <b>CNIL</b> (cnil.fr). Nous n'utilisons pas de cookies publicitaires, seulement du stockage local technique (session de connexion, préférences).</p>
       </div>
     </div>
   );

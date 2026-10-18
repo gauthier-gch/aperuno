@@ -9,8 +9,8 @@ import {
   doc, onSnapshot, runTransaction, setDoc, getDoc,
   collection, setDoc as setDocRaw, Timestamp,
 } from "firebase/firestore";
-import { db, myUid, ensureAuth, withTokenRetry } from "../firebase.js";
-import { newLobby, dealNewGame, applyMove, joinInProgress, trackStats } from "../game/engine.js";
+import { db, myUid, hasAccount, ensureAuth, withTokenRetry } from "../firebase.js";
+import { newLobby, dealNewGame, applyMove, joinInProgress, trackStats, ident } from "../game/engine.js";
 import { genCode } from "../game/deck.js";
 
 function roomRef(code) { return doc(db, "rooms", code); }
@@ -91,7 +91,7 @@ async function createRoomOnce(mode, host, premium) {
     const ref = roomRef(code);
     const exists = (await getDoc(ref)).exists();
     if (!exists) {
-      await setDoc(ref, stamp(newLobby(code, mode, { ...host, uid: myUid() }, premium)));
+      await setDoc(ref, stamp(newLobby(code, mode, { ...host, uid: myUid(), account: hasAccount() }, premium)));
       return code;
     }
   }
@@ -102,7 +102,8 @@ export async function joinRoom(code, player) {
   await ensureAuth();
   await withTokenRetry(() => joinRoomOnce(code, player));
 }
-async function joinRoomOnce(code, player) {
+async function joinRoomOnce(code, p) {
+  const player = ident({ ...p, uid: myUid(), account: hasAccount() });
   await runTransaction(db, async (tx) => {
     const ref = roomRef(code);
     const snap = await tx.get(ref);
@@ -113,12 +114,13 @@ async function joinRoomOnce(code, player) {
     if (existing) {
       // déjà dans le salon (reconnexion) : on met juste à jour le profil.
       existing.name = player.name; existing.photo = player.photo || existing.photo;
+      existing.uid = player.uid; existing.account = player.account;
       tx.set(ref, stamp(s));
       return;
     }
     if (s.players.length >= 15) throw new Error("Salon plein (15 joueurs max).");
     if (s.status === "lobby") {
-      s.players.push({ id: player.id, name: player.name, photo: player.photo || null, hand: [] });
+      s.players.push({ ...player, hand: [] });
       tx.set(ref, stamp(s));
     } else {
       // partie en cours : on distribue 7 cartes au nouveau venu.

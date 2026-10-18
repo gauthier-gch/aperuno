@@ -1,8 +1,9 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { MYID } from "../me.js";
-import { compressPhoto } from "../util.js";
 import { createRoom, joinRoom } from "../net/useRoom.js";
+import { useAccount, defaultIdentity, rememberName } from "../account.js";
 import { Overlay } from "./common.jsx";
+import { PhotoPicker, AccountBox } from "./Account.jsx";
 import {
   GAMES, defaultPremium, PREMIUM_CARD_SCALES, PREMIUM_GAME_MAX,
   PREMIUM_MAX_MULT, PREMIUM_SIPS_MAX, MODE_INFO, premiumRecos,
@@ -65,29 +66,53 @@ function PremiumConfig({ cfg, setCfg }) {
   );
 }
 
-function PhotoName({ name, setName, photo, setPhoto }) {
-  const fileRef = useRef();
+/* Prénom + photo du joueur pour CETTE partie : pré-remplis avec le profil
+   (compte) ou le dernier prénom saisi (invité), modifiables à chaque partie. */
+function useIdentity() {
+  const acc = useAccount();
+  const def = defaultIdentity(acc);
+  const [name, setNameRaw] = useState(def.name);
+  const [photo, setPhotoRaw] = useState(def.photo);
+  const edited = useRef(false);
+  // Changement de compte (connexion depuis le formulaire…) → on reprend le profil.
+  const who = acc.user ? acc.user.uid + (acc.user.guest ? ":guest" : "") : "";
+  const lastWho = useRef(who);
+  useEffect(() => {
+    if (lastWho.current !== who) { lastWho.current = who; edited.current = false; }
+    if (!edited.current) { setNameRaw(def.name); setPhotoRaw(def.photo); }
+  }, [who, def.name, def.photo]);
+  return {
+    acc, name, photo,
+    setName: (v) => { edited.current = true; setNameRaw(v); },
+    setPhoto: (v) => { edited.current = true; setPhotoRaw(v); },
+  };
+}
+
+function PhotoName({ id, flash, onProfile, onPrivacy }) {
+  const { acc, name, setName, photo, setPhoto } = id;
+  const guest = !acc.user || acc.user.guest;
   return (
     <>
+      <AccountBox hint={{ name: name.trim(), photo }} flash={flash} onProfile={onProfile} onPrivacy={onPrivacy} />
       <div className="row" style={{ alignItems: "center" }}>
-        <label style={{ flex: "0 0 auto" }}>
-          <input ref={fileRef} type="file" accept="image/*" capture="user" style={{ display: "none" }}
-            onChange={(e) => e.target.files[0] && compressPhoto(e.target.files[0], setPhoto)} />
-          {photo
-            ? <img className="avatar" style={{ width: 52, height: 52 }} src={photo} alt="" />
-            : <div className="avatar" style={{ width: 52, height: 52, fontSize: 22 }}>📷</div>}
-        </label>
+        <div style={{ flex: "0 0 auto" }}>
+          <PhotoPicker photo={photo} name={name} onChange={setPhoto} />
+        </div>
         <input className="input" placeholder="Ton prénom" value={name} maxLength={14}
           onChange={(e) => setName(e.target.value)} />
       </div>
-      <p className="muted dim" style={{ marginTop: 6 }}>📷 Photo facultative — ton prénom suffit. En l'ajoutant, tu acceptes qu'elle soit visible par les joueurs de ton salon et stockée temporairement (supprimée sous ~12 h).</p>
+      <p className="muted dim" style={{ marginTop: 6 }}>
+        {guest
+          ? "📷 Photo facultative — ton prénom suffit. En l'ajoutant, tu acceptes qu'elle soit visible par les joueurs de ton salon et stockée temporairement (supprimée sous ~12 h). Elle n'est jamais conservée sur ton profil invité."
+          : "✏️ Prénom et photo modifiables pour cette partie seulement — ton profil par défaut se change dans « Mon profil »."}
+      </p>
     </>
   );
 }
 
-export function CreateForm({ back, onDone, flash }) {
-  const [name, setName] = useState("");
-  const [photo, setPhoto] = useState(null);
+export function CreateForm({ back, onDone, flash, onProfile, onPrivacy }) {
+  const id = useIdentity();
+  const { name, photo } = id;
   const [mode, setMode] = useState("chill");
   const [premium, setPremium] = useState(defaultPremium);
   const [busy, setBusy] = useState(false);
@@ -104,6 +129,7 @@ export function CreateForm({ back, onDone, flash }) {
   }
   async function go() {
     setBusy(true);
+    rememberName(name.trim());
     try {
       const code = await createRoom(mode, { id: MYID, name: name.trim(), photo },
         mode === "premium" ? premium : undefined);
@@ -122,7 +148,7 @@ export function CreateForm({ back, onDone, flash }) {
       </div>
       {mode === "premium" && <PremiumConfig cfg={premium} setCfg={setPremium} />}
       <p className="muted mt mb">Ton profil</p>
-      <PhotoName name={name} setName={setName} photo={photo} setPhoto={setPhoto} />
+      <PhotoName id={id} flash={flash} onProfile={onProfile} onPrivacy={onPrivacy} />
       <button className="btn btn-primary" style={{ marginTop: 22 }} disabled={busy} onClick={review}>
         {busy ? "Création…" : "Créer le salon 🎴"}
       </button>
@@ -160,15 +186,16 @@ export function CreateForm({ back, onDone, flash }) {
   );
 }
 
-export function JoinForm({ back, onDone, flash }) {
-  const [name, setName] = useState("");
-  const [photo, setPhoto] = useState(null);
+export function JoinForm({ back, onDone, flash, onProfile, onPrivacy }) {
+  const id = useIdentity();
+  const { name, photo } = id;
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   async function go() {
     if (!name.trim()) return flash("Indique ton prénom 🙂");
     if (code.trim().length !== 4) return flash("Le code fait 4 lettres");
     setBusy(true);
+    rememberName(name.trim());
     const C = code.trim().toUpperCase();
     try {
       await joinRoom(C, { id: MYID, name: name.trim(), photo });
@@ -183,7 +210,7 @@ export function JoinForm({ back, onDone, flash }) {
       <input className="input code-input" placeholder="ABCD" value={code} maxLength={4}
         onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, ""))} />
       <p className="muted mt mb">Ton profil</p>
-      <PhotoName name={name} setName={setName} photo={photo} setPhoto={setPhoto} />
+      <PhotoName id={id} flash={flash} onProfile={onProfile} onPrivacy={onPrivacy} />
       <button className="btn btn-blue" style={{ marginTop: 22 }} disabled={busy} onClick={go}>
         {busy ? "Connexion…" : "Rejoindre 🔗"}
       </button>

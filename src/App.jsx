@@ -11,6 +11,8 @@ import { CreateForm, JoinForm } from "./components/Forms.jsx";
 import { Lobby } from "./components/Lobby.jsx";
 import { GameTable } from "./components/GameTable.jsx";
 import { Win } from "./components/Win.jsx";
+import { Profile, ProfileChip } from "./components/Account.jsx";
+import { useGameLog } from "./account.js";
 
 /* Coups DÉTERMINISTES (résultat identique en local et côté serveur) → on peut
    les afficher en optimiste. On EXCLUT tout ce qui tire de l'aléatoire (lancer
@@ -29,6 +31,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [announce, setAnnounce] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   // Confirmation de majorité (déclaration sur l'honneur), mémorisée une fois donnée.
   const [adult, setAdult] = useState(() => {
     try { return localStorage.getItem("aperuno_adult") === "1"; } catch (e) { return false; }
@@ -51,6 +54,8 @@ export default function App() {
   const [optimistic, setOptimistic] = useState(null);
   const room = optimistic ? optimistic.room : serverRoom;
   const online = usePresence(code, MYID, !!(room && room.players));
+  // Historique du joueur (users/{uid}/games) : logué dès le lancement.
+  useGameLog(serverRoom, MYID);
   const toastTimer = useRef();
   const annTimer = useRef();
   const busyRef = useRef(false);
@@ -144,6 +149,12 @@ export default function App() {
   // recherche qui ne passent pas reCAPTCHA). Seuls un salon et les écrans
   // Créer / Rejoindre attendent la connexion.
   const needsAuth = !!code || screen === "create" || screen === "join";
+  // Profil accessible depuis tous les écrans (fenêtre par-dessus, sans quitter
+  // le salon). Le lien « Confidentialité » n'existe que hors salon.
+  const openProfile = () => setProfileOpen(true);
+  const goPrivacy = code ? undefined : () => { setProfileOpen(false); setScreen("privacy"); };
+  const profile = profileOpen &&
+    <Profile onClose={() => setProfileOpen(false)} flash={flash} onPrivacy={goPrivacy} />;
   if (needsAuth && authErr) return <Shell><p className="muted">Connexion impossible : {authErr}. Vérifie la config Firebase.</p></Shell>;
   if (needsAuth && !authed) return <Shell><div className="center-col"><div className="apr-logo"><span className="a">apéruno</span></div><p className="muted">Connexion…</p></div></Shell>;
 
@@ -158,10 +169,12 @@ export default function App() {
     if (!room) return <Shell><div className="center-col"><p className="muted">Chargement du salon…</p></div>{!adult && <AgeGate onConfirm={confirmAdult} />}</Shell>;
     return (
       <Shell timers={room.timers}>
+        {room.status !== "playing" && <ProfileChip onClick={openProfile} />}
         {room.status === "lobby" && <Lobby room={room} onStart={beginGame} leave={leave} online={online} />}
-        {room.status === "playing" && <GameTable room={room} act={act} flash={flash} leave={leave} busy={busy} online={online} />}
+        {room.status === "playing" && <GameTable room={room} act={act} flash={flash} leave={leave} busy={busy} online={online} onProfile={openProfile} />}
         {room.status === "finished" && <Win room={room} onReplay={(i) => startGame(code, i)} leave={leave} act={act} busy={busy} />}
         {announce && <div className="announce-banner pop" onClick={() => setAnnounce(null)}>{announce}</div>}
+        {profile}
         {toast && <div className="toast pop">{toast}</div>}
         {!adult && <AgeGate onConfirm={confirmAdult} />}
       </Shell>
@@ -170,14 +183,16 @@ export default function App() {
 
   return (
     <Shell>
+      <ProfileChip onClick={openProfile} />
       {screen === "home" && <Home go={setScreen} />}
       {screen === "rules" && <Rules back={() => setScreen("home")} />}
       {screen === "install" && <Install back={() => setScreen("home")} />}
       {screen === "terms" && <Terms back={() => setScreen("home")} />}
       {screen === "privacy" && <Privacy back={() => setScreen("home")} />}
       {screen === "legal" && <Legal back={() => setScreen("home")} />}
-      {screen === "create" && <CreateForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} />}
-      {screen === "join" && <JoinForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} />}
+      {screen === "create" && <CreateForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} onProfile={openProfile} onPrivacy={goPrivacy} />}
+      {screen === "join" && <JoinForm back={() => setScreen("home")} onDone={(c) => setCode(c)} flash={flash} onProfile={openProfile} onPrivacy={goPrivacy} />}
+      {profile}
       {toast && <div className="toast pop">{toast}</div>}
       {!adult && <AgeGate onConfirm={confirmAdult} />}
       {installPopup}

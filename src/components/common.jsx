@@ -29,7 +29,7 @@ export function Shell({ children, timers }) {
 export function Ava({ p, size = 40, online }) {
   const st = { width: size, height: size, fontSize: size * 0.42 };
   const off = online === false;
-  if (p && p.photo) return <img className={"avatar" + (off ? " off" : "")} style={st} src={p.photo} alt="" />;
+  if (p && p.photo) return <img className={"avatar" + (off ? " off" : "")} style={st} src={p.photo} alt="" referrerPolicy="no-referrer" />;
   return (
     <div className={"avatar" + (off ? " off" : "")} style={st}>
       {(p && p.name && p.name[0] && p.name[0].toUpperCase()) || "?"}

@@ -62,5 +62,36 @@ service cloud.firestore {
         allow delete: if false;
       }
     }
+
+    // Profil joueur : chacun ne lit / n'écrit que SA fiche (uid Firebase).
+    // Un invité (compte anonyme) ne peut jamais y stocker de photo (RGPD).
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function isAccount() {
+      return request.auth.token.firebase.sign_in_provider != 'anonymous'
+        || ('email' in request.auth.token);
+    }
+    function validUser(d) {
+      return d.keys().hasOnly(['name', 'photo', 'provider', 'createdAt', 'lastSeenAt',
+                               'lastGameAt', 'gamesPlayed', 'gamesWon', 'expireAt'])
+        && (!('name' in d) || (d.name is string && d.name.size() <= 30))
+        && (!('photo' in d) || d.photo == null
+            || (isAccount() && d.photo is string && d.photo.size() <= 200000))
+        && (!('gamesPlayed' in d) || d.gamesPlayed is int)
+        && (!('gamesWon' in d) || d.gamesWon is int);
+    }
+
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validUser(request.resource.data);
+
+      // Historique : une ligne par partie lancée. Effacé automatiquement via
+      // la règle TTL sur `expireAt` (13 mois invité / 3 ans compte).
+      match /games/{gid} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['code', 'mode', 'name', 'players', 'host',
+               'startedAt', 'endedAt', 'finished', 'won', 'expireAt']);
+      }
+    }
   }
 }
