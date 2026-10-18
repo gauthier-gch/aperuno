@@ -139,8 +139,13 @@ export default function App() {
     startGame(code, starterIdx);
   };
 
-  if (authErr) return <Shell><p className="muted">Connexion impossible : {authErr}. Vérifie la config Firebase.</p></Shell>;
-  if (!authed) return <Shell><div className="center-col"><div className="apr-logo"><span className="a">apéruno</span></div><p className="muted">Connexion…</p></div></Shell>;
+  // Accueil, règles, pages légales… s'affichent sans attendre la connexion
+  // Firebase (affichage plus rapide, et lisible par les robots des moteurs de
+  // recherche qui ne passent pas reCAPTCHA). Seuls un salon et les écrans
+  // Créer / Rejoindre attendent la connexion.
+  const needsAuth = !!code || screen === "create" || screen === "join";
+  if (needsAuth && authErr) return <Shell><p className="muted">Connexion impossible : {authErr}. Vérifie la config Firebase.</p></Shell>;
+  if (needsAuth && !authed) return <Shell><div className="center-col"><div className="apr-logo"><span className="a">apéruno</span></div><p className="muted">Connexion…</p></div></Shell>;
 
   if (code) {
     if (room === false) return (

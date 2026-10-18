@@ -20,6 +20,8 @@ html, body, #root { margin: 0; height: 100%; }
   padding:calc(22px + env(safe-area-inset-top)) 18px calc(34px + env(safe-area-inset-bottom)); }
 .apr-serif { font-family:'Marcellus',serif; }
 .apr-logo { font-family:'Marcellus',serif; text-align:center; letter-spacing:.5px; }
+h1.apr-logo { margin:0; font-size:inherit; font-weight:400; }
+p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px auto 0; }
 .apr-logo .a { font-size:54px; line-height:1; background:linear-gradient(180deg,#fff,var(--gold)); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 4px 18px rgba(244,201,93,.45)); }
 .apr-logo .sub { display:block; margin-top:6px; font-size:12px; letter-spacing:5px; text-transform:uppercase; color:#c9b8ff; opacity:.8; font-family:'Montserrat'; }
 .apr-logo-img { width:96px; height:96px; border-radius:24px; display:block; margin:0 auto 4px; box-shadow:0 12px 30px rgba(177,91,255,.4); }
