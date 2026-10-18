@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MYID } from "../me.js";
+import { ProfileChip } from "./Account.jsx";
 import { TYPE_META, CARD_INFO, GAMES, actionDrink } from "../game/constants.js";
 import { Overlay, Ava, RichText } from "./common.jsx";
 import { Minigame } from "../minigames/index.jsx";
@@ -73,7 +74,7 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
   );
 }
 
-export function GameTable({ room, act, flash, leave, busy, online = {} }) {
+export function GameTable({ room, act, flash, leave, busy, online = {}, onProfile }) {
   const me = room.players.find((p) => p.id === MYID) || { hand: [] };
   const meIdx = room.players.findIndex((p) => p.id === MYID);
   const turnId = room.players[room.current] && room.players[room.current].id;
@@ -146,6 +147,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {} }) {
         <div className="row" style={{ alignItems: "center", gap: 8 }}>
           <button className="chip code-chip auto" onClick={copyCode} title="Copier le code">🔑 {room.code}</button>
           <button className="btn btn-ghost auto quit-btn" onClick={requestLeave}>Quitter la partie</button>
+          {onProfile && <ProfileChip inline onClick={onProfile} />}
         </div>
       </div>
 

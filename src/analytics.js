@@ -1,7 +1,7 @@
 /* =========================================================================
    Suivi d'usage optionnel : ajoute une ligne dans un Google Sheet au
    LANCEMENT d'une partie, via un web app Google Apps Script (aucun backend
-   à héberger). RGPD : on n'envoie QUE les pseudos, jamais les photos.
+   à héberger). RGPD : on n'envoie QUE les pseudos et identifiants, jamais les photos.
    No-op tant que SHEET_WEBHOOK_URL n'est pas renseignée → aucun envoi.
    Voir le README (« 📊 Suivi des salons ») pour le script + le déploiement.
    ========================================================================= */
@@ -22,6 +22,8 @@ export function logGameStart(room) {
       mode: room.mode,                        // chill / harr / premium
       playerCount: room.players.length,       // nombre de joueurs
       players: room.players.map((p) => p.name), // pseudos uniquement — PAS de photo (RGPD)
+      uids: room.players.map((p) => p.uid || ""), // identifiants Firebase : suivi des joueurs
+      accounts: room.players.filter((p) => p.account).length, // joueurs connectés à un compte
     };
     // Envoi « fire and forget » : on ne lit pas la réponse (mode no-cors avec
     // un Content-Type simple, ce qu'Apps Script accepte sans pré-vol CORS).

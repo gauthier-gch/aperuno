@@ -370,7 +370,7 @@ export const TIKTOK_URL = "https://www.tiktok.com/@aperuno.app";
 /* Informations légales (CGU / confidentialité). */
 export const APP_NAME = "APERUNO";
 export const CONTACT_EMAIL = "gauthier.gache@gmail.com";
-export const LEGAL_UPDATED = "août 2026";
+export const LEGAL_UPDATED = "octobre 2026";
 
 /* ------------------------------------------------------------------------
    Mentions légales (obligatoires en France — LCEN, art. 6-III).

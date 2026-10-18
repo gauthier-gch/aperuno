@@ -5,8 +5,9 @@
 apéruno est un jeu de soirée multijoueur qui se joue **depuis le téléphone de
 chaque joueur**. Un joueur crée un **salon**, les autres le rejoignent avec un
 **code à 4 lettres**, et tout le monde partage la même partie **synchronisée en
-temps réel** via Firebase Firestore. Pas d'installation, pas de compte : on
-ouvre le lien, on entre son prénom et sa photo, et c'est parti.
+temps réel** via Firebase Firestore. Pas d'installation, compte facultatif :
+on ouvre le lien, on entre son prénom et sa photo (ou on se connecte), et
+c'est parti.
 
 🔞 **Réservé aux 18 ans et plus.** Le jeu met en scène la consommation d'alcool.
 L'abus d'alcool est dangereux pour la santé — à consommer avec modération. Toutes
@@ -112,7 +113,8 @@ public/
 src/
   main.jsx                     → montage React
   App.jsx                      → routing des écrans + toasts + garde anti-double-tap
-  firebase.js                  → config Firebase + auth anonyme + identifiant appareil
+  firebase.js                  → config Firebase + auth (session mémorisée) + identifiant appareil
+  account.js                   → comptes (invité / Google / e-mail), profil, historique des parties
   me.js                        → identifiant stable de l'appareil (MYID)
   util.js                      → compression des photos de profil
   ErrorBoundary.jsx            → écran de secours en cas d'erreur React
@@ -124,7 +126,7 @@ src/
     deck.js                    → construction/mélange du paquet + génération du code de salon
     engine.js                  → reducer pur applyMove (toutes les règles + aléatoire)
     cities.js                  → 50 villes + projection + tracé de la France
-  components/                  → Home, Rules, Forms, Lobby, GameTable, Win, common
+  components/                  → Home, Rules, Forms, Account (profil, connexion), Lobby, GameTable, Win, common
   minigames/                   → Dice, Vote, PetitBac, Timer, Regard, Mime, Pear, City,
                                  Roulette, Patate, Piraterie, Imposteur, Duel, Dix,
                                  Connexion, Pear… + dispatcher (index.jsx)
@@ -160,19 +162,47 @@ Firestore**. Pour repartir d'un projet Firebase neuf :
 1. [Console Firebase](https://console.firebase.google.com) → **Ajouter un projet**.
 2. **Build → Firestore Database → Créer une base** (mode production, région
    `europe-west`).
-3. **Build → Authentication → Sign-in method** → active **Anonyme**.
+3. **Build → Authentication → Sign-in method** → active **Anonyme**,
+   **Google** et **Adresse e-mail/Mot de passe** (comptes joueurs, voir
+   plus bas). Dans **Authentication → Paramètres → Domaines autorisés**,
+   vérifie que `aperuno.fr` est présent.
 4. **Paramètres du projet → Tes applications → Web `</>`** → copie l'objet
    `firebaseConfig` dans `src/firebase.js`.
 5. **Firestore Database → Règles** → colle le contenu de `firestore.rules`.
 6. **Firestore Database → TTL** → crée une règle sur le champ **`expireAt`**
-   (supprime automatiquement les salons inactifs depuis ~12 h).
+   pour chacun de ces groupes de collections : **`rooms`** et **`presence`**
+   (salons inactifs depuis ~12 h), **`users`** et **`games`** (profils et
+   historiques : 13 mois après la dernière visite pour un invité, 3 ans pour
+   un compte).
+
+### 👤 Comptes joueurs
+
+- Chaque visiteur a un **uid Firebase** : invité = compte **anonyme**. On peut
+  donc suivre les joueurs d'une soirée à l'autre, connectés ou non.
+- **Se connecter** (Google ou e-mail + mot de passe) se fait depuis les
+  formulaires Créer / Rejoindre ou depuis le profil (avatar en haut à droite,
+  sur tous les écrans). Un invité qui crée son compte **garde son uid**
+  (`linkWithPopup` / `linkWithCredential`) et donc son historique.
+- La session est **mémorisée** par Firebase : pas besoin de se reconnecter.
+  « Se déconnecter » repasse en invité.
+- Prénom et photo du profil **pré-remplissent** les formulaires de partie
+  (modifiables pour chaque partie). Un invité ne retrouve que son dernier
+  prénom : **sa photo n'est jamais conservée** (règles Firestore à l'appui).
+- **Historique** : `users/{uid}` (profil, `gamesPlayed`, `gamesWon`, dates) et
+  `users/{uid}/games/{partie}` (mode, date, nb joueurs, finie, victoire). Une
+  partie est enregistrée **dès son lancement**, pas à la fin. Rien n'est
+  stocké sur l'alcool bu (donnée assimilable à de la santé).
+- Depuis le profil : nombre de parties jouées, victoires, dernières parties,
+  déconnexion, **suppression du compte** (ou des données d'invité).
 
 ### 📊 Suivi des salons et des parties (Google Sheet, optionnel)
 
 Deux onglets dans le même Google Sheet :
 
 - **`Salons`** — une ligne **à chaque partie lancée** (date/heure, code, mode,
-  nombre de joueurs, pseudos, ID du salon — le même que dans `Parties`), envoyée par l'appli côté **hôte uniquement**,
+  nombre de joueurs, pseudos, ID du salon — le même que dans `Parties`, uid
+  Firebase des joueurs — à relier à `users/{uid}` —, nombre de joueurs
+  connectés à un compte), envoyée par l'appli côté **hôte uniquement**,
   une seule fois par salon. **RGPD : seuls les pseudos sont envoyés — jamais
   les photos.** Désactivé tant que `SHEET_WEBHOOK_URL` est vide.
 - **`Parties`** (créé automatiquement) — une ligne **par salon, juste avant sa
@@ -195,7 +225,8 @@ ceux qui expirent dans l'heure.
 Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
 
 1. Crée un Google Sheet avec un onglet `Salons` et les en-têtes :
-   `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs` · `ID`.
+   `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs` · `ID` · `UIDs` ·
+   `Nb comptes`.
 2. Dans le Sheet : **Extensions → Apps Script**, colle le contenu de
    [`apps-script/Code.gs`](apps-script/Code.gs) à la place du code existant.
 3. **Paramètres du projet** (⚙️) → coche « Afficher le fichier manifeste

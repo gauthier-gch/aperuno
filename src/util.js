@@ -1,6 +1,6 @@
-/* Compresse une photo de profil (selfie) en data-URL ~140px, retournée en
-   miroir (légère pour Firestore). */
-export function compressPhoto(file, cb) {
+/* Compresse une photo de profil en data-URL ~140px (légère pour Firestore).
+   mirror = true pour un selfie pris à la caméra frontale. */
+export function compressPhoto(file, cb, mirror = true) {
   const r = new FileReader();
   r.onload = () => {
     const img = new Image();
@@ -12,8 +12,7 @@ export function compressPhoto(file, cb) {
       const min = Math.min(img.width, img.height);
       // La caméra frontale enregistre la photo « non miroir » alors que
       // l'aperçu est en miroir : on la retourne pour retrouver ce qu'on a vu.
-      ctx.translate(s, 0);
-      ctx.scale(-1, 1);
+      if (mirror) { ctx.translate(s, 0); ctx.scale(-1, 1); }
       ctx.drawImage(img, (img.width - min) / 2, (img.height - min) / 2, min, min, 0, 0, s, s);
       cb(c.toDataURL("image/jpeg", 0.55));
     };
