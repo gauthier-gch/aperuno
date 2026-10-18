@@ -280,8 +280,8 @@ export function Privacy({ back }) {
         <p className="b w mb-sm">⏳ Conservation</p>
         <p className="muted">
           • Les <b>salons</b> (prénoms, photos, état de partie) sont <b>supprimés automatiquement</b> après environ <b>12 h d'inactivité</b>.<br />
-          • <b>Invité</b> : ta photo n'est <b>jamais conservée</b> au-delà du salon. Ton identifiant anonyme, ton prénom et ton historique de parties sont effacés <b>13 mois après ta dernière visite</b>.<br />
-          • <b>Compte</b> : ton profil et ton historique sont conservés tant que ton compte existe, et effacés après <b>3 ans sans visite</b>.<br />
+          • <b>Invité</b> : ta photo n'est <b>jamais conservée</b> au-delà du salon. Ton identifiant anonyme, ton prénom et ton historique de parties sont effacés <b>25 mois après ta dernière visite</b>.<br />
+          • <b>Compte</b> : ton profil et tout ton historique sont conservés tant que tu reviens jouer, et effacés après <b>3 ans sans visite</b>.<br />
           • Les identifiants stockés dans ton navigateur restent tant que tu ne les effaces pas (vider les données du site les supprime).
         </p>
       </div>
