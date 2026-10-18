@@ -172,8 +172,10 @@ Firestore**. Pour repartir d'un projet Firebase neuf :
 6. **Firestore Database → TTL** → crée une règle sur le champ **`expireAt`**
    pour chacun de ces groupes de collections : **`rooms`** et **`presence`**
    (salons inactifs depuis ~12 h), **`users`** et **`games`** (profils et
-   historiques : 13 mois après la dernière visite pour un invité, 3 ans pour
-   un compte).
+   historiques : 25 mois après la dernière visite pour un invité, 3 ans pour
+   un compte — chaque visite repousse l'échéance de tout l'historique).
+   Le nom du groupe se **tape à la main** : il n'apparaît dans la liste
+   qu'une fois qu'un document existe.
 
 ### 👤 Comptes joueurs
 

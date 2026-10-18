@@ -72,7 +72,8 @@ service cloud.firestore {
     }
     function validUser(d) {
       return d.keys().hasOnly(['name', 'photo', 'provider', 'createdAt', 'lastSeenAt',
-                               'lastGameAt', 'gamesPlayed', 'gamesWon', 'expireAt'])
+                               'lastGameAt', 'gamesPlayed', 'gamesWon', 'expireAt',
+                               'gamesRefreshedAt'])
         && (!('name' in d) || (d.name is string && d.name.size() <= 30))
         && (!('photo' in d) || d.photo == null
             || (isAccount() && d.photo is string && d.photo.size() <= 200000))
@@ -85,7 +86,8 @@ service cloud.firestore {
       allow create, update: if isOwner(uid) && validUser(request.resource.data);
 
       // Historique : une ligne par partie lancée. Effacé automatiquement via
-      // la règle TTL sur `expireAt` (13 mois invité / 3 ans compte).
+      // la règle TTL sur `expireAt` : 25 mois (invité) / 3 ans (compte) après la
+      // dernière visite.
       match /games/{gid} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid)

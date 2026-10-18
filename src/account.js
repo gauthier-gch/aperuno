@@ -11,7 +11,8 @@
      users/{uid}/games/{gid}  une ligne par partie lancée (même non finie)
    RGPD : jamais de photo pour un invité ; rien sur l'alcool bu (donnée
    assimilable à de la santé) ; `expireAt` (règle TTL Firestore) efface les
-   données d'un invité 13 mois après sa dernière visite, d'un compte 3 ans.
+   données d'un invité 25 mois après sa dernière visite, d'un compte 3 ans.
+   Chaque visite repousse l'échéance du profil ET de tout l'historique.
    ========================================================================= */
 
 import { useEffect, useRef, useState } from "react";
@@ -28,8 +29,9 @@ import {
 import { auth, db, ensureAuth } from "./firebase.js";
 
 const DAY = 24 * 60 * 60 * 1000;
-const GUEST_KEEP_MS = 395 * DAY;     // 13 mois
-const ACCOUNT_KEEP_MS = 3 * 365 * DAY; // 3 ans d'inactivité
+const GUEST_KEEP_MS = 760 * DAY;       // 25 mois sans visite
+const ACCOUNT_KEEP_MS = 3 * 365 * DAY; // 3 ans sans visite
+const GAMES_REFRESH_MS = 30 * DAY;     // l'historique est repoussé au plus 1×/mois
 function expiry(u) { return Timestamp.fromMillis(Date.now() + (u.isAnonymous ? GUEST_KEEP_MS : ACCOUNT_KEEP_MS)); }
 
 function userRef(uid) { return doc(db, "users", uid); }
@@ -78,21 +80,36 @@ function watch(u) {
     if (docUid !== uid) return;
     unsubDoc = onSnapshot(userRef(uid), (d) => {
       setState({ profile: d.exists() ? d.data() : null, ready: true });
-      if (!touched.has(uid)) { touched.add(uid); touch(d.exists()).catch(() => {}); }
+      if (!touched.has(uid)) { touched.add(uid); touch(d.exists() ? d.data() : null).catch(() => {}); }
     }, () => setState({ ready: true }));
   });
 }
 
-/* Une écriture par visite : dernière visite + repousse l'effacement auto. */
-async function touch(exists) {
+/* Une écriture par visite : dernière visite + repousse l'effacement auto
+   (et, au plus une fois par mois, celui de tout l'historique de parties). */
+async function touch(profile) {
   const u = auth.currentUser;
   if (!u) return;
   const data = { lastSeenAt: serverTimestamp(), provider: providerOf(u), expireAt: expiry(u) };
-  if (!exists) {
+  if (!profile) {
     Object.assign(data, { createdAt: serverTimestamp(), gamesPlayed: 0, gamesWon: 0 });
     if (!u.isAnonymous) Object.assign(data, { name: firstName(u.displayName), photo: u.photoURL || null });
   }
   await setDoc(userRef(u.uid), data, { merge: true });
+  const last = profile && profile.gamesRefreshedAt && profile.gamesRefreshedAt.toMillis
+    ? profile.gamesRefreshedAt.toMillis() : 0;
+  if (profile && profile.gamesPlayed > 0 && Date.now() - last > GAMES_REFRESH_MS) await refreshGames(u);
+}
+
+/* Repousse l'échéance de toutes les parties de l'historique. */
+async function refreshGames(u) {
+  const games = await getDocs(gamesCol(u.uid));
+  for (let i = 0; i < games.docs.length; i += 400) {
+    const b = writeBatch(db);
+    games.docs.slice(i, i + 400).forEach((d) => b.update(d.ref, { expireAt: expiry(u) }));
+    await b.commit();
+  }
+  await setDoc(userRef(u.uid), { gamesRefreshedAt: serverTimestamp() }, { merge: true });
 }
 
 /* Hook : { user, profile, ready }. user.guest = true pour un invité. */
@@ -166,12 +183,7 @@ async function upgraded(hint = {}) {
   if (!p.name) data.name = (hint.name || firstName(u.displayName)).slice(0, 14);
   if (!p.photo) data.photo = hint.photo || u.photoURL || null;
   await setDoc(userRef(u.uid), data, { merge: true });
-  const games = await getDocs(gamesCol(u.uid));
-  for (let i = 0; i < games.docs.length; i += 400) {
-    const b = writeBatch(db);
-    games.docs.slice(i, i + 400).forEach((d) => b.update(d.ref, { expireAt: expiry(u) }));
-    await b.commit();
-  }
+  await refreshGames(u);
 }
 
 /* hint = { name, photo } saisis dans le formulaire, repris pour le profil. */
