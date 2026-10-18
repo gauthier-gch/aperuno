@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { seoPages } from "./seo/pages.js";
 
 // Le site est servi à la RACINE d'un domaine perso (https://aperuno.fr/) via
 // GitHub Pages + fichier CNAME. base "/" -> les assets sont référencés en
@@ -11,7 +12,8 @@ import react from "@vitejs/plugin-react";
 // toujours vers un fichier existant -> pas de page blanche après un déploiement.
 export default defineConfig({
   base: "/",
-  plugins: [react()],
+  // seoPages : pages de règles statiques + sitemap.xml (voir seo/pages.js).
+  plugins: [react(), seoPages()],
   build: {
     rollupOptions: {
       output: {

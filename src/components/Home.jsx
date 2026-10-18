@@ -27,10 +27,14 @@ export function Home({ go }) {
         <span className="apr-deco" style={{ right: 8, top: 10 }}>😈</span>
         <span className="apr-deco" style={{ left: 30, top: 86 }}>🍻</span>
         <img className="apr-logo-img" src={LOGO} alt="apéruno" />
-        <div className="apr-logo">
+        <h1 className="apr-logo">
           <span className="a">apéruno</span>
           <span className="sub">On se tue chill ou harr ?</span>
-        </div>
+        </h1>
+        <p className="muted home-pitch">
+          Le jeu à boire multijoueur en ligne et gratuit : crée un salon, invite tes potes
+          et jouez ensemble depuis vos téléphones.
+        </p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <button className="btn btn-primary" onClick={() => go("create")}><span className="ico">🎴</span> Créer une partie</button>
@@ -61,6 +65,13 @@ export function Home({ go }) {
           <a onClick={() => go("privacy")} className="foot-link">Confidentialité</a>
           <span> · </span>
           <a onClick={() => go("legal")} className="foot-link">Mentions légales</a>
+        </p>
+        {/* Vrais liens (crawlables) vers les pages de règles statiques, générées
+            au build par seo/pages.js. */}
+        <p className="muted dim">
+          <a href="/regles/" className="foot-link">Règles du jeu</a>
+          <span> · </span>
+          <a href="/mini-jeux/" className="foot-link">Les mini-jeux à boire</a>
         </p>
       </div>
     </div>
