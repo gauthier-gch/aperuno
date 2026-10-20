@@ -18,7 +18,6 @@ import { ConnexionGame } from "./Connexion.jsx";
 import { PatateGame } from "./Patate.jsx";
 import { PiraterieGame } from "./Piraterie.jsx";
 import { CategorieGame } from "./Categorie.jsx";
-import { CompteGame } from "./Compte.jsx";
 
 /* Mini-jeux qu'on peut arrêter avec les joueurs qui ont déjà joué. */
 const PARTIAL_KINDS = ["inapp_pear", "inapp_city", "inapp_vote"];
@@ -49,7 +48,6 @@ export function Minigame({ room, act, busy, leave }) {
     case "inapp_patate": body = <PatateGame {...shared} />; break;
     case "inapp_piraterie": body = <PiraterieGame {...shared} />; break;
     case "inapp_categorie": body = <CategorieGame {...shared} />; break;
-    case "inapp_compte": body = <CompteGame {...shared} />; break;
     default:
       if (g.duel) {
         // duels : choisir l'adversaire PUIS désigner le perdant.
