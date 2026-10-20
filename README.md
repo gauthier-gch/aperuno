@@ -92,6 +92,9 @@ In-app (jouables directement dans l'appli) :
 - 🕵️ **Undercover** — avec un Mister White qui peut deviner le mot.
 - 🔟 **C'est un 10 mais…** — le lanceur boit la moyenne des écarts.
 - 🔗 **Connexion** — un mot commun au décompte : les « connectés » boivent.
+- 🔢 **Comptez-vous** (à l'oral) — tout le monde compte jusqu'au nombre de
+  joueurs, un chiffre chacun, sans ordre : deux joueurs qui parlent en même
+  temps boivent et on recommence à 1.
 - 🎡 **Roulette Harr**, 🥔 **Patate chaude** (build-up sonore + drop, un seul
   téléphone qu'on se passe), 🏴‍☠️ **La Piraterie** (20 coffres, une bombe cachée :
   on ouvre les coffres à tour de rôle sur un seul téléphone, celui qui déterre la

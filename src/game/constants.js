@@ -162,6 +162,8 @@ export const GAMES = [
     rule: "Pendant **10 minutes**, interdit de dire « __oui__ » ou « __non__ ».\n\nChaque personne qui se fait avoir boit **une gorgée**." },
   { id: "motinterdit", name: "Mot interdit", chill: 2, harr: 2, kind: "inapp_timer",
     rule: "Le joueur choisit un **mot interdit** pour les **10 prochaines minutes**.\n\nChaque personne qui le prononce boit **une gorgée**." },
+  { id: "comptez", name: "Comptez-vous", chill: 2, harr: 2, kind: "facilitator", noLoser: true,
+    rule: "Tous ensemble, comptez **à voix haute de 1 jusqu'au nombre de joueurs** : chacun dit **un seul** chiffre, *dans n'importe quel ordre* et sans se concerter.\n- Exemple à 5 : Léa dit « 1 », puis Hugo dit « 2 », puis Sarah dit « 3 »… jusqu'à ce que chacun ait parlé.\n- Si **deux joueurs** disent un chiffre en même temps : ils boivent **une gorgée** et on **recommence à 1**.\n\nLe jeu est fini quand vous arrivez au bout sans collision 🎉" },
   { id: "regard", name: "Le regard", chill: 3, harr: 2, kind: "regard",
     rule: "Tout le monde fixe la table.\nAu **top**, chacun lève les yeux vers quelqu'un.\n\nSi deux personnes **se regardent** : elles boivent une gorgée." },
   { id: "vote", name: "Vote secret", chill: 4, harr: 2, kind: "inapp_vote",
