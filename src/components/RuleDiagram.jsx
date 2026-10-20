@@ -110,7 +110,25 @@ const RUSSE = [
   { ms: 3000, cap: "Raté ! C'était Le C : bien joué le pokerface 🥃", p: ps({ dim: true }, { [LEC]: { hl: true, mark: "😏", dim: false } }), shots: { taken: [JU, CHLOE, LEC, G_], drunk: [JU, CHLOE, LEC, G_], vodkaAt: LEC } },
 ];
 
-const DIAGRAMS = { cascade: CASCADE, connexion: CONNEXION, doigt: DOIGT, enchere: ENCHERE, "21": LE21, regard: REGARD, patate: PATATE, russe: RUSSE };
+/* ---------------- Comptez-vous ---------------- */
+const OK = { mark: "✅" };
+const CPT = (n) => ({ big: String(n), tag: "compteur" });
+const COMPTEZ = [
+  { ms: 2400, cap: "À 4 joueurs, on compte de 1 à 4 : un chiffre chacun", p: ps({}), center: { big: "1 → 4", tag: "objectif" } },
+  { ms: 1800, cap: "Personne ne se concerte… qui se lance ?", p: ps({ mark: "🤫" }), center: { big: "🤫" } },
+  { ms: 1600, cap: "Chloé se lance", p: ps({}, { [CHLOE]: { say: "1", hl: true } }), center: CPT(1) },
+  { ms: 1600, cap: "Puis G, sans ordre précis", p: ps({}, { [CHLOE]: OK, [G_]: { say: "2", hl: true } }), center: CPT(2) },
+  { ms: 1400, cap: "Ju et Le C se lancent…", p: ps({}, { [CHLOE]: OK, [G_]: OK, [JU]: { say: "3 !", hl: true }, [LEC]: { say: "3 !", hl: true } }), center: CPT(3) },
+  { ms: 2800, cap: "…en même temps : collision, Ju et Le C boivent une gorgée !", p: ps({ dim: true }, { [JU]: { say: "3 !", lose: true, mark: "🍺", dim: false }, [LEC]: { say: "3 !", lose: true, mark: "🍺", dim: false } }), links: [[JU, LEC, "both"]], center: { big: "💥" } },
+  { ms: 2000, cap: "Retour à zéro : tout le monde recommence à 1", p: ps({}), center: { big: "0", tag: "on recommence" } },
+  { ms: 1500, cap: "Le C prend le 1", p: ps({}, { [LEC]: { say: "1", hl: true } }), center: CPT(1) },
+  { ms: 1500, cap: "Ju enchaîne avec le 2", p: ps({}, { [LEC]: OK, [JU]: { say: "2", hl: true } }), center: CPT(2) },
+  { ms: 1700, cap: "Chloé ose le 3…", p: ps({}, { [LEC]: OK, [JU]: OK, [CHLOE]: { say: "3", hl: true } }), center: CPT(3) },
+  { ms: 1500, cap: "Il ne reste que G : le 4 est pour lui", p: ps({}, { [LEC]: OK, [JU]: OK, [CHLOE]: OK, [G_]: { say: "4 !", hl: true } }), center: CPT(4) },
+  { ms: 2800, cap: "Tout le monde a parlé sans collision : gagné ! 🎉", p: ps({ mark: "🎉" }), center: { big: "4 🎉", tag: "réussi" } },
+];
+
+const DIAGRAMS = { cascade: CASCADE, comptez: COMPTEZ, connexion: CONNEXION, doigt: DOIGT, enchere: ENCHERE, "21": LE21, regard: REGARD, patate: PATATE, russe: RUSSE };
 
 export function hasRuleDiagram(id) { return !!DIAGRAMS[id]; }
 
