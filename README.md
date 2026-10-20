@@ -92,6 +92,10 @@ In-app (jouables directement dans l'appli) :
 - 🕵️ **Undercover** — avec un Mister White qui peut deviner le mot.
 - 🔟 **C'est un 10 mais…** — le lanceur boit la moyenne des écarts.
 - 🔗 **Connexion** — un mot commun au décompte : les « connectés » boivent.
+- 🔢 **Comptez-vous** — tout le monde compte jusqu'au nombre de joueurs, un
+  chiffre chacun, sans ordre : deux joueurs sur le même chiffre boivent et on
+  recommence. Une **règle bonus** tirée au hasard (à rebours, alphabet, pas ton
+  voisin, double tour, le dernier trinque… et en Harr : collision ×2, ça monte).
 - 🎡 **Roulette Harr**, 🥔 **Patate chaude** (build-up sonore + drop, un seul
   téléphone qu'on se passe), 🏴‍☠️ **La Piraterie** (20 coffres, une bombe cachée :
   on ouvre les coffres à tour de rôle sur un seul téléphone, celui qui déterre la
@@ -129,7 +133,7 @@ src/
   components/                  → Home, Rules, Forms, Account (profil, connexion), Lobby, GameTable, Win, common
   minigames/                   → Dice, Vote, PetitBac, Timer, Regard, Mime, Pear, City,
                                  Roulette, Patate, Piraterie, Imposteur, Duel, Dix,
-                                 Connexion, Pear… + dispatcher (index.jsx)
+                                 Connexion, Compte, Pear… + dispatcher (index.jsx)
 apps-script/                   → script Google Apps Script du Sheet de suivi (Salons + Parties)
 .github/workflows/deploy.yml   → build Vite + déploiement GitHub Pages
 ```

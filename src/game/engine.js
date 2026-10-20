@@ -10,6 +10,7 @@ import {
   GAMES, game, PETITBAC_LETTERS, PETITBAC_DURATION, TEN_MIN, MIME_WORDS,
   ROULETTE, sipsFor, actionDrink, IMPOSTER_PAIRS, imposterSetup, CARD_SUITS,
   CONNEXION_CATS, CATEGORIE_CATS, VOTE_QUESTIONS, sanitizePremium,
+  COMPTE_TWISTS, compteTwist, compteTarget, compteLabel,
 } from "./constants.js";
 import { buildDeck, shuffle, makeUid } from "./deck.js";
 import { CITIES, project, unproject, distanceKm } from "./cities.js";
@@ -207,10 +208,20 @@ function initMinigame(s, gameId) {
     case "inapp_imposteur": return initImposteur(s, base);
     case "inapp_connexion":
       return { ...base, phase: "show", category: randCategory() };
+    case "inapp_compte":
+      return { ...base, phase: "intro", twist: randTwist(s), count: 0, taps: [], round: 1, fails: 0, last: null };
     default: return { ...base };
   }
 }
 function randLetter() { return PETITBAC_LETTERS[Math.floor(Math.random() * PETITBAC_LETTERS.length)]; }
+/* « Comptez-vous » : règle bonus compatible avec le mode et le nombre de joueurs. */
+function randTwist(s, avoid) {
+  const n = s.players.length;
+  const ok = COMPTE_TWISTS.filter((t) =>
+    (!t.harrOnly || s.mode !== "chill") && (!t.minPlayers || n >= t.minPlayers)
+    && !(t.id === "lettres" && n > 26));
+  return pickFrom(ok, ok.find((t) => t.id === avoid)).id;
+}
 function randCategory() { return CONNEXION_CATS[Math.floor(Math.random() * CONNEXION_CATS.length)]; }
 function pickFrom(list, avoid) {
   if (list.length < 2) return list[0];
@@ -617,6 +628,35 @@ export function applyMove(s0, move, myId) {
       return s;
     }
 
+    /* ---------- Comptez-vous ---------- */
+    case "mgCompteReroll": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "intro") throw new Error("Trop tard pour changer la règle.");
+      s.minigame.twist = randTwist(s, s.minigame.twist);
+      return s;
+    }
+    case "mgCompteStart": {
+      mgGuard(s, isLauncher);
+      if (s.minigame.phase !== "intro") throw new Error("Déjà lancé.");
+      s.minigame.phase = "count";
+      s.announce = note(`Comptez-vous ! Règle bonus : ${compteTwist(s.minigame.twist).name} ${compteTwist(s.minigame.twist).ic}`);
+      return s;
+    }
+    case "mgCompteFoul": {
+      // le lanceur siffle une faute (bavard, regard, signe…) : le compte repart.
+      mgGuard(s, isLauncher);
+      if (s.minigame.kind !== "inapp_compte" || s.minigame.phase !== "count") throw new Error("Pas de compte en cours.");
+      if (idx(s, move.targetId) < 0) throw new Error("Joueur invalide.");
+      compteFail(s, "faute", [move.targetId], 0, "a triché");
+      return s;
+    }
+    case "mgCompteTap": {
+      const mg = s.minigame;
+      if (!mg || mg.kind !== "inapp_compte" || mg.phase !== "count") throw new Error("Pas de compte en cours.");
+      compteTap(s, myId, move.n, move.round);
+      return s;
+    }
+
     /* ---------- L'imposteur ---------- */
     case "mgImpStart": {
       mgGuard(s, isLauncher);
@@ -826,6 +866,82 @@ function countFinishDrinks(s, move) {
     if (seg.giveDrink && move.targetId) addDrink(s, move.targetId, seg.giveDrink.sips, seg.giveDrink.secs, seg.giveDrink.shots);
   }
 }
+/* « Comptez-vous » : un joueur dit le chiffre n (tel qu'il le voyait à
+   l'écran, manche `round`). Les transactions Firestore étant sérialisées, deux
+   joueurs qui tapent « en même temps » réclament le même n : le second voit
+   que n est déjà pris → collision. Aucune horloge de téléphone n'est utilisée. */
+function compteTap(s, myId, n, round) {
+  const mg = s.minigame;
+  const target = compteTarget(mg.twist, s.players.length);
+  const lbl = (k) => compteLabel(mg.twist, k, target);
+  if (round !== mg.round) {
+    // Tap parti avant la remise à zéro : s'il visait le chiffre de la
+    // collision, il était lui aussi « en même temps » → il trinque aussi.
+    const L = mg.last;
+    if (L && L.kind === "collision" && round === L.round && n === L.n && !L.ids.includes(myId)) {
+      L.ids.push(myId);
+      addDrink(s, myId, L.sips);
+      s.announce = note(`💥 ${namesOf(s, L.ids)} ont dit « ${lbl(n)} » en même temps → ${sipsTxt(L.sips)} chacun ! On recommence 🔁`, true);
+      return;
+    }
+    throw new Error("Le compte a recommencé, regarde l'écran !");
+  }
+  if (n <= mg.count) {
+    const other = mg.taps.find((t) => t.n === n);
+    if (!other || other.id === myId) throw new Error("Déjà compté.");
+    compteFail(s, "collision", [other.id, myId], n);
+    return;
+  }
+  if (n !== mg.count + 1) throw new Error("Le compte a bougé, regarde l'écran !");
+  const per = mg.twist === "double" ? 2 : 1;
+  if (mg.taps.filter((t) => t.id === myId).length >= per) throw new Error("Tu as déjà dit ton chiffre.");
+  const prev = mg.taps[mg.taps.length - 1];
+  if (prev && mg.twist === "double" && prev.id === myId) { compteFail(s, "faute", [myId], n, "a parlé deux fois d'affilée"); return; }
+  if (prev && mg.twist === "voisins" && areNeighbors(s, prev.id, myId)) { compteFail(s, "faute", [myId], n, `a parlé juste après son voisin ${s.players[idx(s, prev.id)].name}`); return; }
+  mg.taps.push({ id: myId, n });
+  mg.count = n;
+  if (mg.count >= target) {
+    mg.phase = "done";
+    const tries = mg.round;
+    let text = `🎉 Comptez-vous réussi${tries > 1 ? ` en ${tries} essais` : " du premier coup"} !`;
+    if (mg.twist === "dernier") {
+      const sips = sipsFor(s.mode, s.premium);
+      mg.lastId = myId;
+      addDrink(s, myId, sips);
+      text += ` ${s.players[idx(s, myId)].name} a dit le dernier → ${sipsTxt(sips)} 🐢`;
+    }
+    s.announce = note(text, true);
+  }
+}
+/* Collision (plusieurs joueurs en même temps) ou faute (règle bonus) : les
+   fautifs boivent, le compte repart de zéro. */
+function compteFail(s, kind, ids, n, reason) {
+  const mg = s.minigame;
+  const base = sipsFor(s.mode, s.premium);
+  const sips = kind === "collision"
+    ? base * (mg.twist === "x2" ? 2 : 1) + (mg.twist === "escalade" ? mg.fails : 0)
+    : base;
+  ids.forEach((id) => addDrink(s, id, sips));
+  mg.fails += 1;
+  mg.last = { kind, ids, n, sips, round: mg.round, reason: reason || null };
+  mg.round += 1;
+  mg.count = 0;
+  mg.taps = [];
+  const lbl = compteLabel(mg.twist, n, compteTarget(mg.twist, s.players.length));
+  s.announce = note(kind === "collision"
+    ? `💥 ${namesOf(s, ids)} ont dit « ${lbl} » en même temps → ${sipsTxt(sips)} chacun ! On recommence 🔁`
+    : `🚫 ${namesOf(s, ids)} ${reason} → ${sipsTxt(sips)} ! On recommence 🔁`, true);
+}
+function areNeighbors(s, a, b) {
+  const n = s.players.length, i = idx(s, a), j = idx(s, b);
+  if (i < 0 || j < 0 || n < 3) return false;
+  return (i + 1) % n === j || (j + 1) % n === i;
+}
+function namesOf(s, ids) {
+  const names = ids.map((id) => { const i = idx(s, id); return i < 0 ? "?" : s.players[i].name; });
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} et ${names[names.length - 1]}` : names[0];
+}
+function sipsTxt(n) { return `${n} gorgée${n > 1 ? "s" : ""}`; }
 function handCard(player, cardId, type) {
   const c = player.hand.find((x) => x.id === cardId);
   if (!c || c.type !== type) throw new Error("Carte introuvable.");

@@ -141,6 +141,7 @@ export function sanitizePremium(p) {
 /* kind : inapp_dice | inapp_vote | inapp_timer | inapp_letter | regard |
           inapp_mime | inapp_pear | inapp_city | inapp_roulette |
           inapp_connexion | inapp_patate | inapp_piraterie | inapp_categorie |
+          inapp_compte |
           facilitator | offapp
    harrOnly : carte présente uniquement dans le deck du mode Harr. */
 export const GAMES = [
@@ -162,6 +163,8 @@ export const GAMES = [
     rule: "Pendant **10 minutes**, interdit de dire « __oui__ » ou « __non__ ».\n\nChaque personne qui se fait avoir boit **une gorgée**." },
   { id: "motinterdit", name: "Mot interdit", chill: 2, harr: 2, kind: "inapp_timer",
     rule: "Le joueur choisit un **mot interdit** pour les **10 prochaines minutes**.\n\nChaque personne qui le prononce boit **une gorgée**." },
+  { id: "comptez", name: "Comptez-vous", chill: 2, harr: 2, kind: "inapp_compte",
+    rule: "Tous ensemble, comptez **de 1 jusqu'au nombre de joueurs** : chacun dit **un seul** chiffre, *dans n'importe quel ordre* et sans se concerter.\n- Pour dire ton chiffre, touche le bouton *(et annonce-le à voix haute)*.\n- Si **deux joueurs** disent le même chiffre en même temps : ils boivent et **on recommence à zéro**.\n\nUne **règle bonus** est tirée à chaque partie *(à rebours, alphabet, pas ton voisin…)* !" },
   { id: "regard", name: "Le regard", chill: 3, harr: 2, kind: "regard",
     rule: "Tout le monde fixe la table.\nAu **top**, chacun lève les yeux vers quelqu'un.\n\nSi deux personnes **se regardent** : elles boivent une gorgée." },
   { id: "vote", name: "Vote secret", chill: 4, harr: 2, kind: "inapp_vote",
@@ -199,6 +202,31 @@ export const GAMES = [
 ];
 
 export function game(id) { return GAMES.find((g) => g.id === id); }
+
+/* « Comptez-vous » : règle bonus tirée au hasard à chaque partie.
+   harrOnly → seulement en Harr (et Premium) ; minPlayers → règle désactivée
+   en dessous (ex. « pas ton voisin » : à 3, tout le monde est voisin). */
+export const COMPTE_TWISTS = [
+  { id: "classique", ic: "🔢", name: "Classique", desc: "Aucune règle bonus : comptez de 1 jusqu'au nombre de joueurs." },
+  { id: "rebours", ic: "⏪", name: "À rebours", desc: "On compte **à l'envers**, du nombre de joueurs jusqu'à 1." },
+  { id: "lettres", ic: "🔤", name: "L'alphabet", desc: "On ne dit pas des chiffres mais des **lettres** : A, B, C…" },
+  { id: "silence", ic: "🤫", name: "Silence de mort", desc: "Interdit de parler ou de rire : on compte **uniquement avec le bouton**. Le lanceur fait boire les bavards." },
+  { id: "regard", ic: "🙈", name: "Les yeux dans l'écran", desc: "Interdit de **se regarder** ou de se faire un signe pendant le compte. Le lanceur fait boire les tricheurs." },
+  { id: "dernier", ic: "🐢", name: "Le dernier trinque", desc: "Même si vous réussissez, celui qui dit le **dernier chiffre** boit !" },
+  { id: "voisins", ic: "🚫", name: "Pas ton voisin", desc: "Interdit de parler **juste après ton voisin** de table *(ordre de jeu)* : sinon tu bois et on recommence.", minPlayers: 4 },
+  { id: "double", ic: "✌️", name: "Double tour", desc: "Chacun dit **deux** chiffres (on compte jusqu'au double), mais **jamais deux d'affilée** : sinon tu bois et on recommence." },
+  { id: "x2", ic: "💥", name: "Collision ×2", desc: "Les collisions coûtent **le double** de gorgées.", harrOnly: true },
+  { id: "escalade", ic: "📈", name: "Ça monte", desc: "Chaque nouvelle collision coûte **une gorgée de plus** que la précédente.", harrOnly: true },
+];
+export function compteTwist(id) { return COMPTE_TWISTS.find((t) => t.id === id) || COMPTE_TWISTS[0]; }
+/* Nombre de chiffres que chaque joueur doit dire. */
+export function compteTarget(twistId, nPlayers) { return nPlayers * (twistId === "double" ? 2 : 1); }
+/* Libellé du k-ième chiffre dit (1-indexé), selon la règle bonus. */
+export function compteLabel(twistId, k, target) {
+  if (twistId === "rebours") return String(target - k + 1);
+  if (twistId === "lettres") return k <= 26 ? String.fromCharCode(64 + k) : String(k);
+  return String(k);
+}
 
 export const TYPE_META = {
   action: { color: "#ff3b5c", glow: "rgba(255,59,92,.55)", tag: "ACTION", ic: "🍺" },
