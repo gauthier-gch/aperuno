@@ -248,14 +248,12 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
   // check-list (mode son + volume) ; le son ne part qu'au clic sur « Lancer »
   // (geste réel → autoplay garanti).
   if (phase === "intro") {
-    const ready = soundOn && volumeUp;
     return (
       <div className="center-col">
         <div style={{ fontSize: 56 }}>🥔🔥</div>
         <button className="btn btn-primary mt" disabled={busy} onClick={() => setChecklist(true)}>C'est parti 🥔🔥</button>
         {checklist && (
-          <Overlay>
-            <button className="sheet-close" aria-label="Fermer" onClick={() => setChecklist(false)}>✕</button>
+          <Overlay onClose={() => setChecklist(false)}>
             <h3 className="h-title">Avant de lancer 🔊</h3>
             <div className="col-gap mb">
               <label className="check-row">
@@ -267,7 +265,7 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
                 <span>Augmente le volume de ton tel</span>
               </label>
             </div>
-            <button className="btn btn-primary" disabled={busy || !ready} onClick={() => { setChecklist(false); startGame(); }}>Lancer la patate chaude 🥔🔥</button>
+            <button className="btn btn-primary" disabled={busy} onClick={() => { setChecklist(false); startGame(); }}>Lancer la patate chaude 🥔🔥</button>
           </Overlay>
         )}
       </div>

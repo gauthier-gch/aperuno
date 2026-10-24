@@ -56,11 +56,15 @@ function lockPageScroll() {
   };
 }
 
-export function Overlay({ children, className = "" }) {
+/* onClose → croix ✕ en haut à droite de la fenêtre. */
+export function Overlay({ children, className = "", onClose }) {
   useEffect(lockPageScroll, []);
   return (
     <div className="overlay">
-      <div className={`sheet pop ${className}`}>{children}</div>
+      <div className={`sheet pop ${className}`}>
+        {onClose && <button className="sheet-close" aria-label="Fermer" onClick={onClose}>✕</button>}
+        {children}
+      </div>
     </div>
   );
 }
