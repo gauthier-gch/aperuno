@@ -391,6 +391,14 @@ export function applyMove(s0, move, myId) {
       mine.hand = sortedHand(mine.hand);
       return s;
     }
+    /* ---------- réorganisation manuelle de ma main (glisser une carte) ---------- */
+    case "reorderHand": {
+      const byId = new Map(mine.hand.map((c) => [c.id, c]));
+      const ordered = [...new Set(move.ids || [])].map((id) => byId.get(id)).filter(Boolean);
+      const placed = new Set(ordered.map((c) => c.id));
+      mine.hand = [...ordered, ...mine.hand.filter((c) => !placed.has(c.id))];
+      return s;
+    }
 
     case "pass": {
       requireTurnPlay(s, myId);

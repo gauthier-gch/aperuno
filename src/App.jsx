@@ -20,7 +20,7 @@ import { useGameLog } from "./account.js";
    serveur pour être cohérent entre les téléphones. */
 const OPTIMISTIC_MOVES = new Set([
   "drawTurn", "action", "actionDiable", "reactDrink", "reactForce",
-  "echange", "echangeCarte", "pass", "skipCurrent", "removePlayer", "winnerSec", "sortHand",
+  "echange", "echangeCarte", "pass", "skipCurrent", "removePlayer", "winnerSec", "sortHand", "reorderHand",
 ]);
 
 export default function App() {
