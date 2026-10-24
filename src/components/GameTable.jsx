@@ -7,14 +7,127 @@ import { sortedHand } from "../game/engine.js";
 import { Minigame } from "../minigames/index.jsx";
 import { RuleDiagram } from "./RuleDiagram.jsx";
 
-function CardFace({ c, onClick, selected }) {
+function CardFace({ c, onClick, selected, className = "", style, ...rest }) {
   const m = TYPE_META[c.type];
   return (
-    <div className={"card" + (selected ? " sel" : "")} onClick={onClick}
-      style={{ background: `linear-gradient(160deg, ${m.color}, ${m.color}cc)`, boxShadow: `0 10px 26px ${m.glow}` }}>
+    <div className={"card" + (selected ? " sel" : "") + (className ? " " + className : "")} onClick={onClick} {...rest}
+      style={{ background: `linear-gradient(160deg, ${m.color}, ${m.color}cc)`, boxShadow: `0 10px 26px ${m.glow}`, ...style }}>
       <div className="tag">{m.tag} <span style={{ float: "right", opacity: 0.8 }}>ⓘ</span></div>
       <div className="big">{c.label}</div>
       <div className="ic">{m.ic}</div>
+    </div>
+  );
+}
+
+/* Main du joueur. Appui court → règles de la carte. Appui long → la carte
+   grossit et se « décolle » : on la fait glisser à gauche / à droite pour
+   changer sa place ; les autres cartes s'écartent. Au lâcher, le nouvel ordre
+   est enregistré (coup reorderHand). */
+const LONG_PRESS_MS = 380;
+const MOVE_SLOP = 10; // px : au-delà avant l'appui long → c'est un défilement
+
+function Hand({ hand, onOpen, onReorder, footer }) {
+  const handRef = useRef(null);
+  const g = useRef(null);            // geste en cours
+  const suppressClick = useRef(false);
+  const [drag, setDrag] = useState(null); // { id, from, to, dx }
+  const [settling, setSettling] = useState(false); // coupe l'animation au lâcher
+
+  // Pendant un glissé, on bloque le défilement natif de la main (et de la page).
+  useEffect(() => {
+    const el = handRef.current;
+    if (!el) return;
+    const onTouchMove = (e) => { if (g.current && g.current.active && e.cancelable) e.preventDefault(); };
+    const onMenu = (e) => e.preventDefault(); // pas de menu contextuel à l'appui long
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("contextmenu", onMenu);
+    return () => { el.removeEventListener("touchmove", onTouchMove); el.removeEventListener("contextmenu", onMenu); };
+  }, []);
+  useEffect(() => () => g.current && clearTimeout(g.current.timer), []);
+
+  const update = (x) => {
+    const st = g.current;
+    const el = handRef.current;
+    // Défilement auto quand on approche du bord de la main.
+    const r = el.getBoundingClientRect();
+    if (x < r.left + 36) el.scrollLeft -= 12;
+    else if (x > r.right - 36) el.scrollLeft += 12;
+    const dx = x - st.x + (el.scrollLeft - st.scroll);
+    const to = Math.max(0, Math.min(hand.length - 1, Math.round(st.from + dx / st.step)));
+    setDrag({ id: st.id, from: st.from, to, dx });
+  };
+
+  const onDown = (e, c, i) => {
+    if (e.button && e.button !== 0) return;
+    suppressClick.current = false; // le navigateur n'émet pas toujours de clic après un appui long
+    const target = e.currentTarget;
+    const pid = e.pointerId;
+    const st = { id: c.id, from: i, x: e.clientX, y: e.clientY, active: false, timer: null };
+    st.timer = setTimeout(() => {
+      const el = handRef.current;
+      const cards = el.querySelectorAll(".card");
+      const step = cards.length > 1
+        ? cards[1].getBoundingClientRect().left - cards[0].getBoundingClientRect().left : 104;
+      st.active = true; st.step = step; st.scroll = el.scrollLeft;
+      try { target.setPointerCapture(pid); } catch (err) {}
+      try { if (navigator.vibrate) navigator.vibrate(15); } catch (err) {}
+      setDrag({ id: c.id, from: i, to: i, dx: 0 });
+    }, LONG_PRESS_MS);
+    g.current = st;
+  };
+  const onMove = (e) => {
+    const st = g.current;
+    if (!st) return;
+    if (!st.active) {
+      if (Math.abs(e.clientX - st.x) > MOVE_SLOP || Math.abs(e.clientY - st.y) > MOVE_SLOP) {
+        clearTimeout(st.timer); g.current = null; // c'était un défilement
+      }
+      return;
+    }
+    update(e.clientX);
+  };
+  const end = (commit) => {
+    const st = g.current;
+    g.current = null;
+    if (!st) return;
+    clearTimeout(st.timer);
+    if (!st.active) return;
+    suppressClick.current = true; // l'appui long ne doit pas ouvrir la carte
+    if (commit && drag && drag.to !== drag.from) {
+      const ids = hand.map((c) => c.id);
+      const [moved] = ids.splice(drag.from, 1);
+      ids.splice(drag.to, 0, moved);
+      onReorder(ids);
+    }
+    setSettling(true);
+    setDrag(null);
+    requestAnimationFrame(() => requestAnimationFrame(() => setSettling(false)));
+  };
+
+  const styleFor = (i, c) => {
+    const id = c.id;
+    if (!drag) return settling ? { transition: "none" } : undefined;
+    // carte soulevée : fond opaque (le dégradé est translucide) pour masquer celles qu'elle survole
+    if (id === drag.id) return { transform: `translateX(${drag.dx}px) scale(1.12)`, transition: "none", zIndex: 5, backgroundColor: TYPE_META[c.type].color };
+    const { from, to } = drag;
+    const step = g.current ? g.current.step : 104;
+    if (from < to && i > from && i <= to) return { transform: `translateX(${-step}px)`, transition: "transform .18s" };
+    if (to < from && i >= to && i < from) return { transform: `translateX(${step}px)`, transition: "transform .18s" };
+    return { transition: "transform .18s" };
+  };
+
+  return (
+    <div className={"hand" + (drag ? " dragging" : "")} ref={handRef}>
+      {hand.map((c, i) => (
+        <CardFace key={c.id} c={c} className={drag && drag.id === c.id ? "lifted" : ""} style={styleFor(i, c)}
+          onPointerDown={(e) => onDown(e, c, i)} onPointerMove={onMove}
+          onPointerUp={() => end(true)} onPointerCancel={() => end(false)}
+          onClick={() => {
+            if (suppressClick.current) { suppressClick.current = false; return; }
+            onOpen(c);
+          }} />
+      ))}
+      {footer}
     </div>
   );
 }
@@ -196,16 +309,19 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
 
       <div className="space" style={{ alignItems: "baseline" }}>
         <b className="apr-serif" style={{ fontSize: 18 }}>Ta main</b>
-        <span className="muted dim">appuie pour les règles · {me.hand.length} cartes</span>
+        <span className="muted dim">{me.hand.length} cartes · maintiens pour déplacer</span>
       </div>
-      <div className="hand">
-        {me.hand.map((c) => <CardFace key={c.id} c={c} onClick={() => setSheet(c)} />)}
-        {me.hand.length > 1 && (
-          <button className="sort-btn" disabled={busy || isSorted} onClick={() => act({ type: "sortHand" })}>
-            <span className="ic">↕️</span>{isSorted ? "Main triée" : "Trier mes cartes"}
+      <Hand hand={me.hand} onOpen={setSheet} onReorder={(ids) => act({ type: "reorderHand", ids })}
+        footer={me.hand.length > 1 && !isSorted && (
+          <button className="sort-btn" disabled={busy} onClick={(e) => {
+            // on revient au début de la main pour voir le résultat du tri
+            const h = e.currentTarget.parentElement;
+            act({ type: "sortHand" });
+            requestAnimationFrame(() => h && h.scrollTo({ left: 0, behavior: "smooth" }));
+          }}>
+            <span className="ic">↕️</span>Trier mes cartes
           </button>
-        )}
-      </div>
+        )} />
 
       {canPlay && (
         <button className="btn btn-ghost mt" disabled={busy} onClick={() => act({ type: "pass" })}>
