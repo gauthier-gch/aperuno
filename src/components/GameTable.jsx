@@ -3,6 +3,7 @@ import { MYID } from "../me.js";
 import { ProfileChip } from "./Account.jsx";
 import { TYPE_META, CARD_INFO, GAMES, actionDrink } from "../game/constants.js";
 import { Overlay, Ava, RichText } from "./common.jsx";
+import { sortedHand } from "../game/engine.js";
 import { Minigame } from "../minigames/index.jsx";
 import { RuleDiagram } from "./RuleDiagram.jsx";
 
@@ -32,6 +33,7 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
 
   return (
     <Overlay>
+      <button className="sheet-close" aria-label="Fermer" onClick={close}>✕</button>
       <div className="cardhead">
         <div className="mini-card" style={{ background: `linear-gradient(160deg,${m.color},${m.color}cc)`, boxShadow: `0 8px 20px ${m.glow}` }}>{m.ic}</div>
         <div>
@@ -69,7 +71,6 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
       {canPlay && card.type === "diable" && <p className="muted" style={{ color: "#c78bff" }}>Ouvre plutôt une carte <b>action</b> puis « Jouer avec un Diable ».</p>}
       {canPlay && card.type === "joker" && <p className="muted" style={{ color: "#27d17c" }}>Garde-la : elle se déclenchera quand un diable te visera.</p>}
       {canPlay && card.type === "plus" && <p className="muted" style={{ color: "#ff9b2f" }}>Se joue en réaction quand un diable te vise : tu renvoies la peine +{card.value} à un autre joueur.</p>}
-      <button className="btn btn-ghost btn-sm mt" onClick={close}>Fermer</button>
     </Overlay>
   );
 }
@@ -95,6 +96,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
   const pendingDraw = useRef(false);
   const prevHandIds = useRef(me.hand.map((c) => c.id));
   const hasDiable = me.hand.some((c) => c.type === "diable");
+  const isSorted = sortedHand(me.hand).every((c, i) => c.id === me.hand[i].id);
   const turnName = room.players[room.current] ? room.players[room.current].name : "";
 
   const requestLeave = () => setConfirmLeave(true);
@@ -199,6 +201,11 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
       </div>
       <div className="hand">
         {me.hand.map((c) => <CardFace key={c.id} c={c} onClick={() => setSheet(c)} />)}
+        {me.hand.length > 1 && (
+          <button className="sort-btn" disabled={busy || isSorted} onClick={() => act({ type: "sortHand" })}>
+            <span className="ic">↕️</span>{isSorted ? "Main triée" : "Trier mes cartes"}
+          </button>
+        )}
       </div>
 
       {canPlay && (

@@ -139,6 +139,22 @@ p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px a
 
 .overlay { position:fixed; inset:0; overscroll-behavior:contain; background:rgba(6,4,16,.82); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:22px; z-index:40; }
 .sheet { width:100%; max-width:404px; max-height:88dvh; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; background:linear-gradient(180deg,#1b1338,#140e2c); border:1px solid rgba(255,255,255,.14); border-radius:24px; padding:22px; box-shadow:0 30px 80px rgba(0,0,0,.6); }
+.sheet { position:relative; }
+/* Croix de fermeture en haut à droite d'une fenêtre. */
+.sheet-close { position:absolute; top:12px; right:12px; z-index:5; width:36px; height:36px; border-radius:50%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.1); color:#fff; font-size:16px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.sheet-close:active { transform:scale(.92); }
+.sheet-close + * { padding-right:34px; }
+.check-row { display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); font-weight:600; cursor:pointer; text-align:left; }
+.check-row input { width:22px; height:22px; flex:0 0 auto; margin:0; accent-color:var(--gold); }
+.check-sub { display:block; font-size:12px; font-weight:400; margin-top:4px; }
+.sort-btn { flex:0 0 auto; align-self:center; width:74px; min-height:90px; border-radius:14px; border:1px dashed rgba(255,255,255,.25); background:rgba(255,255,255,.05); color:#fff; font-size:12px; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:8px; cursor:pointer; }
+.sort-btn .ic { font-size:20px; }
+.sort-btn:disabled { opacity:.45; cursor:default; }
+/* Tirer pour recharger (appli installée). */
+.ptr { position:fixed; top:0; left:50%; z-index:80; display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:999px; background:linear-gradient(135deg,#1d1440,#2a1d5c); border:1px solid rgba(244,201,93,.4); color:#fff; font-size:13px; font-weight:600; box-shadow:0 10px 30px rgba(0,0,0,.5); pointer-events:none; }
+.ptr-ic { display:inline-block; font-size:18px; }
+.ptr-ic.spin { animation:ptrspin .8s linear infinite; }
+@keyframes ptrspin { to { transform:rotate(360deg); } }
 .cardhead { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
 .mini-card { width:46px; height:64px; border-radius:10px; flex:0 0 auto; display:flex; align-items:flex-end; justify-content:center; padding-bottom:6px; font-size:22px; }
 
