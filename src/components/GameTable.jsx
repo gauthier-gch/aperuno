@@ -3,6 +3,7 @@ import { MYID } from "../me.js";
 import { ProfileChip } from "./Account.jsx";
 import { TYPE_META, CARD_INFO, GAMES, actionDrink } from "../game/constants.js";
 import { Overlay, Ava, RichText } from "./common.jsx";
+import { sortedHand } from "../game/engine.js";
 import { Minigame } from "../minigames/index.jsx";
 import { RuleDiagram } from "./RuleDiagram.jsx";
 
@@ -31,7 +32,7 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
   const total = card.type === "action" ? card.sips * qty : 0;
 
   return (
-    <Overlay>
+    <Overlay onClose={close}>
       <div className="cardhead">
         <div className="mini-card" style={{ background: `linear-gradient(160deg,${m.color},${m.color}cc)`, boxShadow: `0 8px 20px ${m.glow}` }}>{m.ic}</div>
         <div>
@@ -69,7 +70,6 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
       {canPlay && card.type === "diable" && <p className="muted" style={{ color: "#c78bff" }}>Ouvre plutôt une carte <b>action</b> puis « Jouer avec un Diable ».</p>}
       {canPlay && card.type === "joker" && <p className="muted" style={{ color: "#27d17c" }}>Garde-la : elle se déclenchera quand un diable te visera.</p>}
       {canPlay && card.type === "plus" && <p className="muted" style={{ color: "#ff9b2f" }}>Se joue en réaction quand un diable te vise : tu renvoies la peine +{card.value} à un autre joueur.</p>}
-      <button className="btn btn-ghost btn-sm mt" onClick={close}>Fermer</button>
     </Overlay>
   );
 }
@@ -95,6 +95,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
   const pendingDraw = useRef(false);
   const prevHandIds = useRef(me.hand.map((c) => c.id));
   const hasDiable = me.hand.some((c) => c.type === "diable");
+  const isSorted = sortedHand(me.hand).every((c, i) => c.id === me.hand[i].id);
   const turnName = room.players[room.current] ? room.players[room.current].name : "";
 
   const requestLeave = () => setConfirmLeave(true);
@@ -199,6 +200,11 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
       </div>
       <div className="hand">
         {me.hand.map((c) => <CardFace key={c.id} c={c} onClick={() => setSheet(c)} />)}
+        {me.hand.length > 1 && (
+          <button className="sort-btn" disabled={busy || isSorted} onClick={() => act({ type: "sortHand" })}>
+            <span className="ic">↕️</span>{isSorted ? "Main triée" : "Trier mes cartes"}
+          </button>
+        )}
       </div>
 
       {canPlay && (
@@ -215,7 +221,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
       )}
 
       {swapCard && (
-        <Overlay>
+        <Overlay onClose={() => setSwapCard(null)}>
           <h3 className="h-title">Quelle carte défausser ? 🔃</h3>
           <p className="muted mb">Elle sera remplacée par une carte de la pioche.</p>
           <div className="wrap">
@@ -225,14 +231,13 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
               </button>
             ))}
           </div>
-          <button className="btn btn-ghost btn-sm mt" onClick={() => setSwapCard(null)}>Annuler</button>
         </Overlay>
       )}
 
       {playerMenu && (() => {
         const isCurrent = room.players[room.current] && room.players[room.current].id === playerMenu.id;
         return (
-          <Overlay>
+          <Overlay onClose={() => setPlayerMenu(null)}>
             <div className="center-col">
               <Ava p={playerMenu} size={64} />
               <h3 className="h-title">{playerMenu.name}</h3>
@@ -246,27 +251,25 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
               <p className="muted dim mt mb">A quitté la pièce ? Retire-le/la du salon (ses cartes retournent dans la pioche).</p>
               <button className="btn" style={{ background: "linear-gradient(135deg,#ff5c7a,#e8401e)" }} disabled={busy}
                 onClick={() => { setKickConfirm(playerMenu); setPlayerMenu(null); }}>🚪 Virer du salon</button>
-              <button className="btn btn-ghost btn-sm mt" onClick={() => setPlayerMenu(null)}>Annuler</button>
             </div>
           </Overlay>
         );
       })()}
 
       {kickConfirm && (
-        <Overlay>
+        <Overlay onClose={() => setKickConfirm(null)}>
           <div className="center-col">
             <div style={{ fontSize: 44 }}>🚪</div>
             <h3 className="h-title">Virer {kickConfirm.name} ?</h3>
             <p className="muted mb">Ce joueur sera retiré définitivement du salon. À utiliser s'il/elle a quitté la pièce sans quitter le jeu.</p>
             <button className="btn btn-primary" disabled={busy}
               onClick={() => { const id = kickConfirm.id; setKickConfirm(null); act({ type: "removePlayer", targetId: id }); }}>Oui, virer du salon</button>
-            <button className="btn btn-ghost btn-sm mt" onClick={() => setKickConfirm(null)}>Annuler</button>
           </div>
         </Overlay>
       )}
 
       {target && (
-        <Overlay>
+        <Overlay onClose={() => setTarget(null)}>
           <h3 className="h-title">À qui le diable ? 😈</h3>
           <p className="muted mb">La peine part chez…</p>
           <div className="wrap">
@@ -276,12 +279,11 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
               </button>
             ))}
           </div>
-          <button className="btn btn-ghost btn-sm mt" onClick={() => setTarget(null)}>Annuler</button>
         </Overlay>
       )}
 
       {swap && (
-        <Overlay>
+        <Overlay onClose={() => setSwap(null)}>
           <h3 className="h-title">Échanger ta main avec… 🔄</h3>
           <p className="muted mb">Vous échangez intégralement vos mains.</p>
           <div className="wrap">
@@ -291,7 +293,6 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
               </button>
             ))}
           </div>
-          <button className="btn btn-ghost btn-sm mt" onClick={() => setSwap(null)}>Annuler</button>
         </Overlay>
       )}
 
@@ -360,13 +361,12 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
       )}
 
       {confirmLeave && (
-        <Overlay>
+        <Overlay onClose={() => setConfirmLeave(false)}>
           <div className="center-col">
             <div style={{ fontSize: 44 }}>⚠️</div>
             <h3 className="h-title">Quitter le salon ?</h3>
             <p className="muted mb">Attention, tu vas quitter le salon. Tu es sûr(e) ?</p>
             <button className="btn btn-primary" onClick={() => { setConfirmLeave(false); leave(); }}>Oui, quitter</button>
-            <button className="btn btn-ghost btn-sm mt" onClick={() => setConfirmLeave(false)}>Annuler — je reste</button>
           </div>
         </Overlay>
       )}

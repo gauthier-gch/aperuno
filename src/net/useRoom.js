@@ -9,7 +9,7 @@ import {
   doc, onSnapshot, runTransaction, setDoc, getDoc,
   collection, setDoc as setDocRaw, Timestamp,
 } from "firebase/firestore";
-import { db, myUid, hasAccount, ensureAuth, withTokenRetry } from "../firebase.js";
+import { db, myUid, hasAccount, ensureAuth, withTokenRetry, refreshTokens } from "../firebase.js";
 import { newLobby, dealNewGame, applyMove, joinInProgress, trackStats, ident } from "../game/engine.js";
 import { genCode } from "../game/deck.js";
 
@@ -31,29 +31,66 @@ function stamp(s) {
 }
 
 /* Abonnement live à un salon. Renvoie { room, error }.
-   On rafraîchit aussi au retour en avant-plan (reconnexion / réveil). */
+   L'écoute se répare toute seule : sur mobile, la veille coupe la connexion et
+   fait expirer les jetons Auth / App Check ; Firestore arrête alors
+   définitivement l'écoute (erreur) ou la laisse muette. On se réabonne donc
+   après une erreur (jetons rafraîchis, délai croissant) et à chaque retour en
+   avant-plan / retour du réseau. Un état plus ancien (`rev` inférieur) que
+   celui affiché est ignoré : une réponse en retard n'écrase jamais un état
+   plus récent. */
 export function useRoom(code) {
   const [room, setRoom] = useState(null);
   const [error, setError] = useState(null);
   useEffect(() => {
     if (!code) { setRoom(null); return; }
     const ref = roomRef(code);
-    const unsub = onSnapshot(
-      ref,
-      (snap) => setRoom(snap.exists() ? snap.data() : false),
-      (e) => setError(e.message),
-    );
-    const onVis = () => {
-      if (document.visibilityState === "visible") {
-        getDoc(ref).then((snap) => setRoom(snap.exists() ? snap.data() : false)).catch(() => {});
-      }
+    let unsub = null;
+    let retryTimer = null;
+    let failures = 0;
+    let alive = true;
+    let lastRev = -1;
+
+    const accept = (snap) => {
+      if (!alive) return;
+      if (!snap.exists()) { lastRev = -1; setRoom(false); return; }
+      const data = snap.data();
+      const rev = data.rev || 0;
+      if (rev < lastRev) return; // état périmé (réponse arrivée en retard)
+      lastRev = rev;
+      failures = 0;
+      setError(null);
+      setRoom(data);
     };
-    document.addEventListener("visibilitychange", onVis);
-    window.addEventListener("online", onVis);
+
+    const subscribe = () => {
+      clearTimeout(retryTimer);
+      if (unsub) unsub();
+      unsub = onSnapshot(ref, accept, (e) => {
+        // Écoute morte : on rafraîchit les jetons puis on se réabonne
+        // (1 s, 2 s, 4 s… plafonné à 15 s).
+        unsub = null;
+        setError(e.message);
+        const delay = Math.min(15000, 1000 * 2 ** failures);
+        failures += 1;
+        retryTimer = setTimeout(() => {
+          refreshTokens().finally(() => { if (alive) subscribe(); });
+        }, delay);
+      });
+    };
+    subscribe();
+
+    // Retour en avant-plan / réseau retrouvé : on repart sur une écoute neuve.
+    const onWake = () => {
+      if (document.visibilityState === "visible") { failures = 0; subscribe(); }
+    };
+    document.addEventListener("visibilitychange", onWake);
+    window.addEventListener("online", onWake);
     return () => {
-      unsub();
-      document.removeEventListener("visibilitychange", onVis);
-      window.removeEventListener("online", onVis);
+      alive = false;
+      clearTimeout(retryTimer);
+      if (unsub) unsub();
+      document.removeEventListener("visibilitychange", onWake);
+      window.removeEventListener("online", onWake);
     };
   }, [code]);
   return { room, error };

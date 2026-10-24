@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Overlay } from "../components/common.jsx";
 
 const PIPS = {
   1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8],
@@ -129,6 +130,9 @@ function makeAudio() {
 
 export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
   const [phase, setPhase] = useState("intro"); // intro (avertissement son) | playing | dropped
+  const [checklist, setChecklist] = useState(false); // modale « mode son + volume »
+  const [soundOn, setSoundOn] = useState(false);
+  const [volumeUp, setVolumeUp] = useState(false);
   const [value, setValue] = useState(null);
   const [rolling, setRolling] = useState(false);
   const audioRef = useRef(null);
@@ -240,14 +244,30 @@ export function PatateGame({ mg, isLauncher, launcher, act, busy }) {
     }, 650);
   }
 
-  // Avertissement son AVANT de lancer : le son ne part qu'au clic (geste réel).
+  // Avertissement son AVANT de lancer : « C'est parti » ouvre une petite
+  // check-list (mode son + volume) ; le son ne part qu'au clic sur « Lancer »
+  // (geste réel → autoplay garanti).
   if (phase === "intro") {
     return (
       <div className="center-col">
         <div style={{ fontSize: 56 }}>🥔🔥</div>
-        <p className="b" style={{ color: "var(--gold)", fontSize: 18 }}>🔊 Volume à fond + désactive le mode silencieux !</p>
-        <p className="muted dim" style={{ fontSize: 13, marginTop: -2 }}>Sur iPhone, le petit switch « silencieux » peut parfois bloquer le son</p>
-        <button className="btn btn-primary mt" disabled={busy} onClick={startGame}>Lancer la patate chaude 🥔🔥</button>
+        <button className="btn btn-primary mt" disabled={busy} onClick={() => setChecklist(true)}>C'est parti 🥔🔥</button>
+        {checklist && (
+          <Overlay onClose={() => setChecklist(false)}>
+            <h3 className="h-title">Avant de lancer 🔊</h3>
+            <div className="col-gap mb">
+              <label className="check-row">
+                <input type="checkbox" checked={soundOn} onChange={(e) => setSoundOn(e.target.checked)} />
+                <span>Mets ton tel en mode son<span className="muted dim check-sub">Sur iPhone, le petit switch « silencieux » peut bloquer le son</span></span>
+              </label>
+              <label className="check-row">
+                <input type="checkbox" checked={volumeUp} onChange={(e) => setVolumeUp(e.target.checked)} />
+                <span>Augmente le volume de ton tel</span>
+              </label>
+            </div>
+            <button className="btn btn-primary" disabled={busy} onClick={() => { setChecklist(false); startGame(); }}>Lancer la patate chaude 🥔🔥</button>
+          </Overlay>
+        )}
       </div>
     );
   }

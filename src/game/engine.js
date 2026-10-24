@@ -105,6 +105,22 @@ export function ident(p) {
   return { id: p.id, name: p.name, photo: p.photo || null, uid: p.uid || null, account: !!p.account };
 }
 
+/* Ordre de tri d'une main : mini-jeux, gorgées (croissant), shots (croissant),
+   diables, relances (croissant), jokers, échanges de main, échanges de carte.
+   Tri stable : à rang égal, l'ordre actuel est conservé. */
+const SORT_RANK = { jeu: 0, action: 1, diable: 3, plus: 4, joker: 5, echange: 6, echangecarte: 7 };
+function sortKey(c) {
+  if (c.type === "action") return [c.unit === "shot" ? 2 : 1, c.sips || 0];
+  if (c.type === "plus") return [SORT_RANK.plus, c.value || 0];
+  return [SORT_RANK[c.type] ?? 9, 0];
+}
+export function sortedHand(hand) {
+  return hand
+    .map((c, i) => ({ c, i, k: sortKey(c) }))
+    .sort((a, b) => a.k[0] - b.k[0] || a.k[1] - b.k[1] || a.i - b.i)
+    .map((x) => x.c);
+}
+
 function clone(s) { return JSON.parse(JSON.stringify(s)); }
 /* long = true → l'annonce reste affichée longtemps (messages « X boit … »).
    Les autres (pioche, lance un jeu, échange…) disparaissent vite. */
@@ -370,6 +386,12 @@ export function applyMove(s0, move, myId) {
       s.announce = note(`${mine.name} lance « ${card.label} » 🎲`);
       return s;
     }
+    /* ---------- tri de ma main (à tout moment, ne change rien au jeu) ---------- */
+    case "sortHand": {
+      mine.hand = sortedHand(mine.hand);
+      return s;
+    }
+
     case "pass": {
       requireTurnPlay(s, myId);
       s.announce = note(`${mine.name} passe son tour 🙅`);
