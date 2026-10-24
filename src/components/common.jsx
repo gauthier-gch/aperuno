@@ -62,7 +62,13 @@ export function Overlay({ children, className = "", onClose }) {
   return (
     <div className="overlay">
       <div className={`sheet pop ${className}`}>
-        {onClose && <button className="sheet-close" aria-label="Fermer" onClick={onClose}>✕</button>}
+        {onClose && (
+          <button className="sheet-close" aria-label="Fermer" onClick={onClose}>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" fill="none" />
+            </svg>
+          </button>
+        )}
         {children}
       </div>
     </div>
