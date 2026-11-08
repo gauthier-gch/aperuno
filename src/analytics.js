@@ -37,3 +37,24 @@ export function logGameStart(room) {
     }).catch(() => {});
   } catch (e) { /* le suivi ne doit jamais casser le jeu */ }
 }
+
+/* Formulaire « Suggérer une amélioration » : envoyé au même web app Apps
+   Script, qui ajoute une ligne dans l'onglet « Suggestions » et envoie un
+   mail à aperuno.app@gmail.com. En no-cors la réponse est opaque : on sait
+   seulement que la requête est partie (une erreur réseau rejette la promesse). */
+export async function sendSuggestion({ message, name, contact, website }) {
+  if (!SHEET_WEBHOOK_URL) throw new Error("no webhook");
+  await fetch(SHEET_WEBHOOK_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+      event: "suggestion",
+      at: new Date().toISOString(),
+      message, name, contact,
+      website,                               // pot de miel anti-robots (doit rester vide)
+      page: location.href,
+      ua: navigator.userAgent,
+    }),
+  });
+}

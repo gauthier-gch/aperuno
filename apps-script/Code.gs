@@ -6,6 +6,9 @@
    1) doPost         → onglet « Salons » : une ligne au lancement d'une partie
                        (appelé par l'appli, src/analytics.js). Sans uid : ils
                        sont loggés en fin de partie dans « Parties ».
+      doPost (event « suggestion ») → formulaire « Suggérer une amélioration »
+                       de la home : ligne dans l'onglet « Suggestions » + mail
+                       à SUGGEST_TO (src/analytics.js → sendSuggestion).
    2) logEndedRooms  → onglet « Parties » : une ligne par salon juste avant
                        sa suppression (TTL 12 h après la dernière activité).
                        À exécuter par un déclencheur horaire. Lit Firestore
@@ -25,10 +28,18 @@ var PARTIES_ID_COL = 12; // colonne « ID » (sert à ne pas logger deux fois)
 // tourne toutes les heures) — ou s'il a déjà expiré sans être encore supprimé.
 var LOG_BEFORE_EXPIRY_MS = 65 * 60 * 1000;
 
+// Formulaire de suggestions.
+var SUGGEST_TO = 'aperuno.app@gmail.com';
+var SUGGEST_SHEET = 'Suggestions';
+var SUGGEST_HEADERS = ['Date', 'Prénom', 'Contact', 'Message', 'Page', 'Navigateur'];
+var SUGGEST_MAX_LEN = 3000;
+var SUGGEST_MAX_PER_HOUR = 30; // garde-fou anti-spam global (quota Gmail ~100 mails/jour)
+
 function doPost(e) {
+  var d = JSON.parse(e.postData.contents);
+  if (d.event === 'suggestion') return handleSuggestion_(d);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Salons') || ss.getSheets()[0];
-  var d = JSON.parse(e.postData.contents);
   sheet.appendRow([
     new Date(d.at),                 // Date + heure
     d.code,                          // Code du salon
@@ -39,6 +50,46 @@ function doPost(e) {
     d.accounts == null ? '' : d.accounts // nb de joueurs connectés à un compte
   ]);
   return ContentService.createTextOutput('ok');
+}
+
+function handleSuggestion_(d) {
+  var ok = ContentService.createTextOutput('ok');
+  if (d.website) return ok;                              // pot de miel rempli → robot
+  var msg = String(d.message || '').trim().slice(0, SUGGEST_MAX_LEN);
+  if (msg.length < 5) return ok;
+  var name = String(d.name || '').trim().slice(0, 40);
+  var contact = String(d.contact || '').trim().slice(0, 120);
+  var page = String(d.page || '').slice(0, 200);
+  var ua = String(d.ua || '').slice(0, 300);
+
+  // Limite globale : au-delà de N suggestions / heure, on ignore.
+  var cache = CacheService.getScriptCache();
+  var count = Number(cache.get('suggest_count') || 0);
+  if (count >= SUGGEST_MAX_PER_HOUR) return ok;
+  cache.put('suggest_count', String(count + 1), 3600);
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SUGGEST_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(SUGGEST_SHEET);
+    sheet.appendRow(SUGGEST_HEADERS);
+    sheet.setFrozenRows(1);
+  }
+  // Préfixe « ' » : empêche l'interprétation de formules (=, +, -, @).
+  var safe = function (v) { return /^[=+\-@]/.test(v) ? "'" + v : v; };
+  sheet.appendRow([new Date(), safe(name), safe(contact), safe(msg), page, ua]);
+
+  var isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+  var opts = {
+    to: SUGGEST_TO,
+    subject: '💡 apéruno — suggestion' + (name ? ' de ' + name : ''),
+    body: msg + '\n\n— ' + (name || 'Anonyme') + (contact ? ' (' + contact + ')' : '') +
+      '\nPage : ' + page + '\nNavigateur : ' + ua,
+    name: 'apéruno'
+  };
+  if (isEmail) opts.replyTo = contact;                   // « Répondre » écrit directement au joueur
+  MailApp.sendEmail(opts);
+  return ok;
 }
 
 function logEndedRooms() {

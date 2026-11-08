@@ -282,6 +282,22 @@ Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
    Après toute modification de `doPost` : **Déployer → Gérer les déploiements
    → ✏️ → Version : Nouvelle version → Déployer** (l'URL ne change pas).
 
+### 💡 Formulaire de suggestions
+
+Le bouton **« Suggérer une amélioration »** de l'accueil ouvre un formulaire
+(message, prénom et e-mail facultatifs). Il est envoyé au **même web app** que
+le suivi des salons (`event: "suggestion"`) : `doPost` ajoute une ligne dans
+l'onglet `Suggestions` (créé automatiquement) et envoie un mail à
+`aperuno.app@gmail.com` (constante `SUGGEST_TO` de `Code.gs`) ; si le joueur
+a laissé son e-mail, « Répondre » lui écrit directement. Anti-spam : champ
+pot de miel + 30 suggestions / heure max.
+
+Mise en place : recopie `Code.gs` et le scope `script.send_mail` de
+`appsscript.json`, exécute une fonction une fois dans l'éditeur pour accepter
+la nouvelle autorisation (envoi d'e-mails), puis **Déployer → Gérer les
+déploiements → ✏️ → Nouvelle version**. Si l'envoi échoue côté réseau, le
+formulaire propose un lien `mailto:` de secours.
+
 > L'envoi `Salons` est « fire-and-forget » (`fetch` en `no-cors`) : il
 > n'affiche jamais d'erreur au joueur et ne peut pas bloquer la partie. L'URL
 > du web app est publique (visible dans le bundle) — n'y mets aucune donnée
