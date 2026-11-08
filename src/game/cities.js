@@ -58,6 +58,64 @@ export const CITIES = [
   { name: "Ajaccio", lat: 41.9192, lng: 8.7386 },
 ];
 
+/* « Place la plage » (mini-jeu éphémère de l'été) : 50 stations balnéaires
+   parmi les plus fréquentées de France (même carte et même projection). */
+export const BEACHES = [
+  { name: "Biarritz", lat: 43.4832, lng: -1.5586 },
+  { name: "Saint-Jean-de-Luz", lat: 43.3881, lng: -1.6631 },
+  { name: "Hendaye", lat: 43.3584, lng: -1.7744 },
+  { name: "Hossegor", lat: 43.6647, lng: -1.3975 },
+  { name: "Mimizan-Plage", lat: 44.2133, lng: -1.295 },
+  { name: "Biscarrosse-Plage", lat: 44.4447, lng: -1.25 },
+  { name: "Arcachon", lat: 44.6586, lng: -1.1689 },
+  { name: "Lacanau-Océan", lat: 44.9939, lng: -1.2006 },
+  { name: "Soulac-sur-Mer", lat: 45.5131, lng: -1.1236 },
+  { name: "Royan", lat: 45.6249, lng: -1.0281 },
+  { name: "Saint-Pierre-d'Oléron", lat: 45.9431, lng: -1.3058 },
+  { name: "Saint-Martin-de-Ré", lat: 46.2031, lng: -1.3675 },
+  { name: "Les Sables-d'Olonne", lat: 46.4967, lng: -1.7831 },
+  { name: "Saint-Gilles-Croix-de-Vie", lat: 46.6975, lng: -1.9456 },
+  { name: "Saint-Jean-de-Monts", lat: 46.7906, lng: -2.0606 },
+  { name: "Noirmoutier-en-l'Île", lat: 47.0033, lng: -2.2506 },
+  { name: "Pornic", lat: 47.1153, lng: -2.1044 },
+  { name: "La Baule", lat: 47.2867, lng: -2.3908 },
+  { name: "Quiberon", lat: 47.4839, lng: -3.1189 },
+  { name: "Carnac", lat: 47.5839, lng: -3.0778 },
+  { name: "Bénodet", lat: 47.8753, lng: -4.1069 },
+  { name: "Morgat", lat: 48.2253, lng: -4.4986 },
+  { name: "Perros-Guirec", lat: 48.815, lng: -3.4419 },
+  { name: "Saint-Malo", lat: 48.6493, lng: -2.0257 },
+  { name: "Granville", lat: 48.8378, lng: -1.5975 },
+  { name: "Cabourg", lat: 49.2856, lng: -0.1172 },
+  { name: "Deauville", lat: 49.36, lng: 0.075 },
+  { name: "Étretat", lat: 49.7071, lng: 0.2056 },
+  { name: "Le Touquet-Paris-Plage", lat: 50.5211, lng: 1.5856 },
+  { name: "Wimereux", lat: 50.7697, lng: 1.6111 },
+  { name: "Malo-les-Bains", lat: 51.0475, lng: 2.4011 },
+  { name: "Argelès-sur-Mer", lat: 42.5461, lng: 3.0236 },
+  { name: "Canet-en-Roussillon", lat: 42.7056, lng: 3.0081 },
+  { name: "Gruissan", lat: 43.1072, lng: 3.0867 },
+  { name: "Le Cap d'Agde", lat: 43.2794, lng: 3.5156 },
+  { name: "Sète", lat: 43.4028, lng: 3.6928 },
+  { name: "Palavas-les-Flots", lat: 43.5278, lng: 3.9311 },
+  { name: "La Grande-Motte", lat: 43.5614, lng: 4.0839 },
+  { name: "Les Saintes-Maries-de-la-Mer", lat: 43.4517, lng: 4.4289 },
+  { name: "Cassis", lat: 43.2147, lng: 5.5381 },
+  { name: "Bandol", lat: 43.1364, lng: 5.7536 },
+  { name: "Hyères", lat: 43.1204, lng: 6.1286 },
+  { name: "Le Lavandou", lat: 43.1372, lng: 6.3681 },
+  { name: "Saint-Tropez", lat: 43.2727, lng: 6.6406 },
+  { name: "Saint-Raphaël", lat: 43.4253, lng: 6.7683 },
+  { name: "Cannes", lat: 43.5528, lng: 7.0174 },
+  { name: "Juan-les-Pins", lat: 43.5683, lng: 7.1128 },
+  { name: "Menton", lat: 43.7747, lng: 7.4975 },
+  { name: "Calvi", lat: 42.5675, lng: 8.7575 },
+  { name: "Porto-Vecchio", lat: 41.5911, lng: 9.2794 },
+];
+
+/* Liste de lieux d'une partie de « Place la ville / la plage ». */
+export function placesOf(kind) { return kind === "beach" ? BEACHES : CITIES; }
+
 /* Boîte de projection (équirectangulaire) englobant la métropole + Corse. */
 const BOX = { lngMin: -5.4, lngMax: 9.8, latMin: 41.2, latMax: 51.3 };
 

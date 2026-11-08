@@ -65,7 +65,8 @@ function richText(text) {
 const plain = (s) => String(s).replace(/\*\*|__|\*/g, "").replace(/\s*\n\s*-?\s*/g, " ").replace(/\s+/g, " ").trim();
 const clip = (s, n = 155) => (s.length <= n ? s : s.slice(0, s.lastIndexOf(" ", n - 1)) + "…");
 
-const games = [...GAMES]
+// Mini-jeux éphémères exclus : pages permanentes = jeux toujours présents.
+const games = GAMES.filter((g) => !g.seasonal)
   .sort((a, b) => a.name.localeCompare(b.name, "fr"))
   .map((g) => ({ ...g, slug: slugify(g.name), horsApp: HORS_APP_KINDS.includes(g.kind) }));
 

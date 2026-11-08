@@ -1,7 +1,8 @@
 import React from "react";
 import { MYID } from "../me.js";
 import { game } from "../game/constants.js";
-import { Overlay, DesignateLoser, ManualEscape, PartialEscape, RichText } from "../components/common.jsx";
+import { Overlay, DesignateLoser, ManualEscape, PartialEscape, PARTIAL_KINDS, RichText } from "../components/common.jsx";
+import { SEASONS } from "../game/seasons.js";
 import { DiceGame } from "./Dice.jsx";
 import { VoteGame } from "./Vote.jsx";
 import { PetitBacGame } from "./PetitBac.jsx";
@@ -18,13 +19,29 @@ import { ConnexionGame } from "./Connexion.jsx";
 import { PatateGame } from "./Patate.jsx";
 import { PiraterieGame } from "./Piraterie.jsx";
 import { CategorieGame } from "./Categorie.jsx";
+import { NewYearGame } from "./NewYear.jsx";
+import { CupidonGame } from "./Cupidon.jsx";
+import { FleurGame } from "./Fleur.jsx";
+import { EggsGame } from "./Eggs.jsx";
+import { SunGame } from "./Sun.jsx";
+import { InterroGame } from "./Interro.jsx";
+import { TrainGame } from "./Train.jsx";
+import { SantaGame } from "./Santa.jsx";
 
-/* Mini-jeux qu'on peut arrêter avec les joueurs qui ont déjà joué. */
-const PARTIAL_KINDS = ["inapp_pear", "inapp_city", "inapp_vote"];
+/* Phases pendant lesquelles on peut arrêter un mini-jeu avec les joueurs qui
+   ont déjà joué (PARTIAL_KINDS : poire, ville, vote, Cupidon, Secret Santa). */
+const PARTIAL_PHASES = { inapp_santa: ["give"], inapp_cupidon: ["vote"] };
+const LIVE_KINDS = ["inapp_newyear", "inapp_eggs", "inapp_sun", "inapp_train"];
+function canPartial(mg) {
+  if (!PARTIAL_KINDS.includes(mg.kind)) return false;
+  const ph = PARTIAL_PHASES[mg.kind];
+  return ph ? ph.includes(mg.phase) : mg.phase !== "result" && mg.phase !== "intro";
+}
 
 export function Minigame({ room, act, busy, leave }) {
   const mg = room.minigame;
   const g = game(mg.gameId);
+  const season = g.seasonal ? SEASONS[g.seasonal] : null;
   const launcher = room.players[mg.launcherIdx];
   const isLauncher = launcher && launcher.id === MYID;
   const others = room.players.map((p, i) => ({ p, i })).filter((x) => x.p.id !== launcher.id);
@@ -48,6 +65,14 @@ export function Minigame({ room, act, busy, leave }) {
     case "inapp_patate": body = <PatateGame {...shared} />; break;
     case "inapp_piraterie": body = <PiraterieGame {...shared} />; break;
     case "inapp_categorie": body = <CategorieGame {...shared} />; break;
+    case "inapp_newyear": body = <NewYearGame {...shared} />; break;
+    case "inapp_cupidon": body = <CupidonGame {...shared} />; break;
+    case "inapp_fleur": body = <FleurGame {...shared} />; break;
+    case "inapp_eggs": body = <EggsGame {...shared} />; break;
+    case "inapp_sun": body = <SunGame {...shared} />; break;
+    case "inapp_interro": body = <InterroGame {...shared} />; break;
+    case "inapp_train": body = <TrainGame {...shared} />; break;
+    case "inapp_santa": body = <SantaGame {...shared} />; break;
     default:
       if (g.duel) {
         // duels : choisir l'adversaire PUIS désigner le perdant.
@@ -68,16 +93,19 @@ export function Minigame({ room, act, busy, leave }) {
   return (
     <Overlay className="mg-sheet">
       <div className="space mb">
-        <span className="chip">🎲 Carte jeu</span>
+        {season
+          ? <span className="chip season-chip">{season.emoji} Mini-jeu éphémère</span>
+          : <span className="chip">🎲 Carte jeu</span>}
         <button className="btn btn-ghost auto quit-btn" onClick={leave}>Quitter la partie</button>
       </div>
       <h3 className="h-title">{g.name}</h3>
-      <RichText className="muted mb" text={g.rule} />
+      {/* Jeux en temps réel : la règle laisse la place à l'action une fois lancés. */}
+      {!(LIVE_KINDS.includes(mg.kind) && mg.phase !== "intro") && <RichText className="muted mb" text={g.rule} />}
       {body}
       {/* Débloquer un mini-jeu quand quelqu'un (y compris le lanceur) est absent :
           accessible à TOUS, car seul le lanceur a les boutons de fin.
           Inutile pour la patate chaude (un seul téléphone, piloté par le lanceur). */}
-      {PARTIAL_KINDS.includes(mg.kind) && mg.phase !== "result" && mg.phase !== "intro" ? (
+      {canPartial(mg) ? (
         <PartialEscape mg={mg} room={room} onStop={() => act({ type: "mgPartialResult" })} />
       ) : mg.kind !== "inapp_patate" && (
         <ManualEscape

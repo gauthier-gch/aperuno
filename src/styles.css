@@ -404,3 +404,132 @@ p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px a
 .stat-tile .v { font-family:'Marcellus',serif; font-size:34px; color:var(--gold); line-height:1.1; }
 .stat-tile .l { font-size:12px; color:#b9aee0; text-align:center; }
 .seg.plain button.on { background:rgba(255,255,255,.16); }
+
+/* =========================== mini-jeux éphémères =========================== */
+/* Carte Jeu saisonnière : bleu plus clair + icône de la période en haut à droite. */
+.card.seasonal { color:#06243f; }
+.card.seasonal .tag { position:relative; padding-right:24px; }
+.card .season-ic { position:absolute; top:-4px; right:-4px; font-size:20px; line-height:1; filter:drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.reveal-card .card .season-ic { font-size:28px; }
+.season-chip { background:rgba(108,196,255,.16); border-color:rgba(108,196,255,.55); }
+.seasonal-mini { background:rgba(108,196,255,.1); border-color:rgba(108,196,255,.4); }
+
+/* Lunettes du bronzé (Coup de soleil) sur la photo de profil. */
+.ava-bronze { position:relative; display:inline-flex; flex:0 0 auto; }
+.ava-shades { position:absolute; left:50%; top:36%; transform:translate(-50%,-50%); line-height:1; pointer-events:none; filter:drop-shadow(0 1px 2px rgba(0,0,0,.5)); animation:shadespop .5s cubic-bezier(.2,1.6,.5,1); }
+@keyframes shadespop { from{ transform:translate(-50%,-160%) scale(.4); opacity:0; } to{ transform:translate(-50%,-50%) scale(1); opacity:1; } }
+
+/* ---- Le compte à rebours ---- */
+.ny-count { font-family:'Marcellus',serif; font-size:110px; line-height:1.1; min-height:122px; color:var(--gold); text-shadow:0 0 30px rgba(244,201,93,.6); animation:nytick .9s ease-out; }
+.ny-count.hidden { color:rgba(255,255,255,.18); text-shadow:none; animation:nyhide 1s ease-in-out infinite alternate; }
+@keyframes nytick { from{ transform:scale(1.5); opacity:.2; } to{ transform:scale(1); opacity:1; } }
+@keyframes nyhide { from{ opacity:.25; } to{ opacity:.6; } }
+.ny-btn { background:linear-gradient(135deg,#f4c95d,#ff3b5c 60%,#b15bff); font-size:22px; padding:24px 16px; box-shadow:0 14px 34px rgba(244,201,93,.45); }
+
+/* ---- Cupidon ---- */
+.cupid-btn { border-color:rgba(255,107,134,.45); }
+.cupid-couple { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; padding:14px; background:rgba(255,59,92,.1); border-color:rgba(255,107,134,.45); }
+.cupid-heart { font-size:30px; animation:pulse 1s ease-in-out infinite; }
+
+/* ---- Arrose la fleur ---- */
+.flower-stage { position:relative; width:220px; height:270px; margin:6px auto 12px; cursor:pointer; touch-action:manipulation; user-select:none; -webkit-user-select:none; }
+.flower { position:absolute; left:50%; bottom:56px; margin-left:-35px; width:70px; height:70px; transform-origin:50% 100%; transition:transform .25s cubic-bezier(.2,1.5,.5,1); }
+.flower-head { display:block; font-size:66px; line-height:1; text-align:center; transform-origin:50% 100%; animation:flowerwob 1.2s ease-in-out infinite alternate; }
+@keyframes flowerwob { from{ transform:rotate(calc(var(--wob,0deg) * -1)); } to{ transform:rotate(var(--wob,0deg)); } }
+.flower-pot { position:absolute; left:50%; bottom:0; width:96px; height:62px; transform:translateX(-50%); background:linear-gradient(180deg,#d9783f,#a4532a); clip-path:polygon(0 0,100% 0,84% 100%,16% 100%); border-radius:4px; box-shadow:inset 0 8px 0 rgba(255,255,255,.15); }
+.drop { position:absolute; left:50%; top:0; font-size:22px; animation:dropfall .6s ease-in forwards; pointer-events:none; }
+@keyframes dropfall { from{ transform:translate(-50%,-10px); opacity:1; } to{ transform:translate(-50%,150px); opacity:0; } }
+.flower-boom { position:absolute; left:50%; bottom:70px; transform:translateX(-50%); font-size:110px; animation:rdboom .6s ease; }
+.petal { position:absolute; left:50%; bottom:110px; font-size:28px; animation:petalfly 1.1s ease-out forwards; }
+@keyframes petalfly { from{ transform:translate(-50%,0) rotate(var(--a)) translateY(0); opacity:1; } to{ transform:translate(-50%,0) rotate(var(--a)) translateY(-130px) rotate(200deg); opacity:0; } }
+
+/* ---- Chasse aux œufs ---- */
+.egg-count { color:var(--gold); font-size:16px; }
+.egg-timer { width:100%; height:8px; border-radius:6px; background:rgba(255,255,255,.1); overflow:hidden; margin:6px 0 8px; }
+.egg-timer span { display:block; height:100%; background:linear-gradient(90deg,#ff3b5c,#f4c95d,#27d17c); transition:width .1s linear; }
+.egg-view { position:relative; width:100%; max-width:360px; height:420px; overflow:hidden; border-radius:18px; margin:0 auto 8px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.15); }
+.egg-zoom { position:absolute; inset:0; transform-origin:center center; }
+.egg-scene { position:absolute; inset:0; overflow:hidden; }
+.egg-deco { position:absolute; font-size:34px; opacity:.85; pointer-events:none; }
+.egg-spot { position:absolute; transform:translate(-50%,-50%); }
+.egg-obj { position:relative; z-index:1; display:block; line-height:1; text-align:center; pointer-events:none; user-select:none; -webkit-user-select:none; filter:drop-shadow(0 3px 2px rgba(0,0,0,.25)); }
+.egg { position:absolute; top:66%; z-index:0; border-radius:50% 50% 50% 50% / 60% 60% 40% 40%; transform:translate(-50%,-50%) rotate(-8deg); box-shadow:0 2px 3px rgba(0,0,0,.3); pointer-events:none; }
+.egg.shake { animation:eggshake .35s ease-in-out infinite; }
+@keyframes eggshake { 0%,100%{ transform:translate(-50%,-50%) rotate(-14deg); } 50%{ transform:translate(-50%,-62%) rotate(14deg); } }
+.egg.got { animation:egggot .45s ease-out forwards; z-index:3; }
+@keyframes egggot { to{ transform:translate(-50%,-180%) scale(1.8); opacity:0; } }
+.egg-hit { position:absolute; top:66%; z-index:2; transform:translate(-50%,-50%); background:transparent; border:none; padding:0; border-radius:50%; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.egg-ready { position:absolute; inset:0; z-index:200; display:flex; flex-direction:column; gap:8px; align-items:center; justify-content:center; font-family:'Marcellus',serif; font-size:34px; background:rgba(10,7,24,.55); backdrop-filter:blur(3px); }
+.egg-ready.small { font-size:24px; background:rgba(10,7,24,.65); }
+
+/* ---- Coup de soleil ---- */
+.sun-row { display:flex; gap:16px; align-items:stretch; justify-content:center; width:100%; margin:4px 0 10px; }
+.sun-gauge { position:relative; width:42px; height:240px; border-radius:22px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.25); overflow:hidden; }
+.sun-fill { position:absolute; left:0; right:0; bottom:0; background:linear-gradient(0deg,#ffe28a 0%,#ffb347 45%,#ff6a3d 75%,#ff2d55 100%); background-size:100% 240px; background-position:bottom; transition:height .08s linear; }
+.sun-gauge.burnt { border-color:#ff3b5c; box-shadow:0 0 26px rgba(255,59,92,.8); animation:pulse .6s ease-in-out infinite; }
+.sun-burnline { position:absolute; left:0; right:0; text-align:center; font-size:16px; transform:translateY(50%); }
+.sun-scene { flex:1; max-width:220px; position:relative; border-radius:18px; background:linear-gradient(180deg,#7fd6ff 0%,#bfe9ff 50%,#f2d39a 50%,#e8c27e 100%); overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:12px; }
+.sun-sun { position:absolute; top:14px; right:16px; font-size:46px; transition:transform .2s linear; transform-origin:center; }
+.sun-me { font-size:58px; line-height:1; }
+.sun-spot { font-size:12px; font-weight:700; color:#3a2a06; background:rgba(255,255,255,.65); padding:3px 10px; border-radius:999px; margin-top:4px; }
+.sun-burn { color:#ff6f86; font-size:20px; animation:pulse .6s ease-in-out infinite; }
+.sun-chip { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; padding:4px 9px; border-radius:999px; background:rgba(255,155,47,.15); border:1px solid rgba(255,155,47,.4); }
+.sun-chip.shade { background:rgba(55,166,255,.15); border-color:rgba(55,166,255,.45); }
+.sun-winner { margin:4px 0 8px; filter:drop-shadow(0 0 22px rgba(244,201,93,.7)); }
+
+/* ---- Interro surprise ---- */
+.interro-q { background:repeating-linear-gradient(180deg,rgba(255,255,255,.06) 0 26px,rgba(108,196,255,.18) 26px 27px), rgba(255,255,255,.04); }
+.interro-opt { font-size:15px; text-align:left; justify-content:flex-start; line-height:1.35; }
+
+/* ---- Évite les monstres (train fantôme) ---- */
+.train-stage { position:relative; width:100%; max-width:360px; height:330px; margin:0 auto 10px; border-radius:18px; overflow:hidden; background:radial-gradient(260px 200px at 50% 20%, rgba(177,91,255,.35), transparent 70%), linear-gradient(180deg,#0d0820,#1d0f35); box-shadow:inset 0 0 40px rgba(0,0,0,.8); }
+.train-rails { position:absolute; left:50%; top:0; bottom:0; width:56px; transform:translateX(-50%);
+  background:linear-gradient(90deg,transparent 0 8px,#8a7fb0 8px 12px,transparent 12px 44px,#8a7fb0 44px 48px,transparent 48px),
+    repeating-linear-gradient(180deg,transparent 0 16px,#4a3a2a 16px 24px); background-size:100% 100%,100% 24px; }
+.train-stage.rolling .train-rails { animation:rails .35s linear infinite; }
+@keyframes rails { from{ background-position:0 0,0 0; } to{ background-position:0 0,0 24px; } }
+.train-fork-no { position:absolute; left:10px; top:10px; font-size:11px; font-weight:700; color:#c9b8ff; background:rgba(0,0,0,.45); padding:3px 8px; border-radius:999px; z-index:4; }
+.train-list { position:absolute; right:8px; top:8px; z-index:5; display:flex; flex-direction:column; gap:3px; max-height:62%; overflow:hidden; background:rgba(0,0,0,.5); padding:6px 8px; border-radius:12px; }
+.train-pass { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; }
+.train-pass .nm { max-width:70px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.train-pass.dead .nm { text-decoration:line-through; opacity:.6; }
+.train-fork { position:absolute; inset:0; z-index:2; animation:rdfade .3s ease; }
+.train-branches { position:absolute; inset:0; width:100%; height:100%; }
+.train-branches path { fill:none; stroke:#8a7fb0; stroke-width:4; vector-effect:non-scaling-stroke; stroke-dasharray:6 5; }
+.train-wall { position:absolute; left:50%; top:34%; transform:translateX(-50%); font-size:22px; text-align:center; line-height:1; }
+.train-wall span { display:block; font-size:30px; margin-bottom:2px; }
+.train-side { position:absolute; top:30%; font-size:40px; transform:translateX(-50%); transition:transform .3s; }
+.train-side.L { left:18%; } .train-side.R { left:82%; }
+.train-side.bad { animation:rdboom .5s ease; filter:drop-shadow(0 0 14px rgba(255,59,92,.9)); }
+.train-side.ok { opacity:.8; }
+.train-cart { position:absolute; left:50%; bottom:14px; z-index:3; display:flex; flex-direction:column; align-items:center; transform:translateX(-50%); transition:transform 1.4s cubic-bezier(.4,0,.2,1); }
+.train-cart .train-wagon { font-size:40px; line-height:1; margin-top:-6px; }
+.train-cart.lean-L { transform:translateX(-50%) rotate(-12deg); }
+.train-cart.lean-R { transform:translateX(-50%) rotate(12deg); }
+.train-cart.go-L { transform:translate(calc(-50% - 110px), -170px); }
+.train-cart.go-R { transform:translate(calc(-50% + 110px), -170px); }
+.train-cart.go-C { transform:translate(-50%, -150px); }
+.train-boom { position:absolute; top:-10px; font-size:52px; animation:rdboom .6s ease 1s both; }
+.train-ghost { position:absolute; left:50%; bottom:20px; transform:translateX(-50%); font-size:48px; animation:rdfloat 1.6s ease-in-out infinite; }
+.train-timer { font-family:'Marcellus',serif; font-size:44px; color:var(--gold); line-height:1; }
+.train-btn { background:linear-gradient(135deg,#7d3bff,#3a1d70); border:1px solid rgba(255,255,255,.2); font-size:18px; }
+.train-btn.on { background:linear-gradient(135deg,#f4c95d,#ff9b2f); color:#3a2a06; }
+.train-btn:disabled.on { opacity:1; }
+
+/* ---- Secret Santa ---- */
+.santa-hand { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+.santa-card { width:84px; height:116px; border-radius:12px; border:none; color:#fff; padding:8px; display:flex; flex-direction:column; justify-content:space-between; text-align:left; cursor:pointer; box-shadow:0 6px 16px rgba(0,0,0,.35); font-family:'Montserrat'; }
+.santa-card .t { font-size:8px; letter-spacing:1px; font-weight:800; opacity:.9; }
+.santa-card b { font-family:'Marcellus'; font-size:14px; line-height:1.1; font-weight:400; }
+.santa-card .i { align-self:flex-end; font-size:20px; }
+.santa-card:active { transform:scale(.95); }
+.gift-box { appearance:none; border:none; cursor:pointer; width:150px; height:150px; border-radius:22px; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(90deg,transparent 42%,#f4c95d 42% 58%,transparent 58%),linear-gradient(0deg,transparent 42%,#f4c95d 42% 58%,transparent 58%),linear-gradient(135deg,#ff3b5c,#b3122e);
+  box-shadow:0 18px 40px rgba(255,59,92,.45); animation:giftwiggle 1.4s ease-in-out infinite; }
+.gift-box span { font-size:56px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+.gift-box.small { width:90px; height:90px; border-radius:16px; animation:none; }
+.gift-box.small span { font-size:34px; }
+@keyframes giftwiggle { 0%,100%{ transform:rotate(0); } 10%{ transform:rotate(-6deg); } 20%{ transform:rotate(6deg); } 30%{ transform:rotate(-3deg); } 40%{ transform:rotate(0); } }
+.egg-view .map-zoom-ctrl { top:8px; bottom:auto; right:auto; left:8px; flex-direction:row; z-index:150; }
+.egg-view .map-zoom-ctrl button { width:30px; height:30px; font-size:16px; }
+.santa-card.seasonal { color:#06243f; }

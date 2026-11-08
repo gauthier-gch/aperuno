@@ -29,11 +29,20 @@ export function Shell({ children, timers }) {
 export function Ava({ p, size = 40, online }) {
   const st = { width: size, height: size, fontSize: size * 0.42 };
   const off = online === false;
-  if (p && p.photo) return <img className={"avatar" + (off ? " off" : "")} style={st} src={p.photo} alt="" referrerPolicy="no-referrer" />;
+  const face = p && p.photo
+    ? <img className={"avatar" + (off ? " off" : "")} style={st} src={p.photo} alt="" referrerPolicy="no-referrer" />
+    : (
+      <div className={"avatar" + (off ? " off" : "")} style={st}>
+        {(p && p.name && p.name[0] && p.name[0].toUpperCase()) || "?"}
+      </div>
+    );
+  // Bronzé du « Coup de soleil » : lunettes de soleil jusqu'au prochain coup de soleil.
+  if (!p || !p.bronze) return face;
   return (
-    <div className={"avatar" + (off ? " off" : "")} style={st}>
-      {(p && p.name && p.name[0] && p.name[0].toUpperCase()) || "?"}
-    </div>
+    <span className="ava-bronze" style={{ width: size, height: size }}>
+      {face}
+      <span className="ava-shades" style={{ fontSize: Math.max(12, size * 0.62) }} aria-label="lunettes de soleil">🕶️</span>
+    </span>
   );
 }
 
@@ -93,19 +102,28 @@ export function ManualEscape({ players, onPick, onClose }) {
 
 /* Poire / ville / vote : au lieu de désigner un perdant à l'aveugle, on arrête
    la manche et on affiche les résultats de ceux qui ont déjà joué. */
+const PARTIAL_TEXT = {
+  inapp_pear: ["cuts", "joué. Le perdant sera désigné parmi eux.", "Arrêter avec les joueurs qui ont joué ⏭️"],
+  inapp_city: ["marks", "joué. Le perdant sera désigné parmi eux.", "Arrêter avec les joueurs qui ont joué ⏭️"],
+  inapp_vote: ["votes", "voté. Le résultat sera calculé avec leurs votes.", "Arrêter avec les votes déjà faits ⏭️"],
+  inapp_cupidon: ["votes", "choisi. Les couples seront formés avec leurs choix.", "Arrêter avec les choix déjà faits ⏭️"],
+  inapp_santa: ["gifts", "emballé un cadeau. Seuls ces cadeaux seront distribués.", "Distribuer les cadeaux déjà emballés ⏭️"],
+};
+export const PARTIAL_KINDS = Object.keys(PARTIAL_TEXT);
+
 export function PartialEscape({ mg, room, onStop }) {
   const [open, setOpen] = useState(false);
   if (!open)
     return <button className="btn btn-ghost btn-sm mt" onClick={() => setOpen(true)}>⚠️ Un joueur absent bloque le jeu ?</button>;
-  const vote = mg.kind === "inapp_vote";
-  const done = Object.keys((mg.kind === "inapp_pear" ? mg.cuts : vote ? mg.votes : mg.marks) || {}).length;
+  const [field, text, btn] = PARTIAL_TEXT[mg.kind] || PARTIAL_TEXT.inapp_pear;
+  const done = Object.keys(mg[field] || {}).length;
   return (
     <div className="mt center-col">
       <p className="muted mb">
-        {done}/{room.players.length} joueurs ont {vote ? "voté. Le résultat sera calculé avec leurs votes." : "joué. Le perdant sera désigné parmi eux."}
+        {done}/{room.players.length} joueurs ont {text}
       </p>
       <button className="btn btn-gold btn-sm" disabled={!done} onClick={() => { setOpen(false); onStop(); }}>
-        {vote ? "Arrêter avec les votes déjà faits ⏭️" : "Arrêter avec les joueurs qui ont joué ⏭️"}
+        {btn}
       </button>
       <button className="btn btn-ghost btn-sm mt" onClick={() => setOpen(false)}>Annuler</button>
     </div>
