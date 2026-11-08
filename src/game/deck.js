@@ -55,7 +55,6 @@ export function buildDeck(mode, premium) {
   for (let i = 0; i < plus2; i++) deck.push({ id: makeUid("p", n++), type: "plus", value: 2, label: "+2" });
   for (let i = 0; i < plus4; i++) deck.push({ id: makeUid("p", n++), type: "plus", value: 4, label: "+4" });
   for (let i = 0; i < 3; i++) deck.push({ id: makeUid("e", n++), type: "echange", label: "Échange de main" });
-  for (let i = 0; i < 3; i++) deck.push({ id: makeUid("ec", n++), type: "echangecarte", label: "Échange de carte" });
   return deck;
 }
 

@@ -5,7 +5,7 @@ import { CARD_INFO, GAMES, actionDrink, cardMeta } from "../game/constants.js";
 import { seasonDates } from "../game/seasons.js";
 import { CardFace } from "./CardFace.jsx";
 import { Overlay, Ava, RichText } from "./common.jsx";
-import { sortedHand } from "../game/engine.js";
+import { sortedHand, recoverError } from "../game/engine.js";
 import { Minigame } from "../minigames/index.jsx";
 import { RuleDiagram } from "./RuleDiagram.jsx";
 
@@ -122,7 +122,7 @@ function Hand({ hand, onOpen, onReorder, footer }) {
   );
 }
 
-function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDiableStack, onJeu, onEchange, onEchangeCarte }) {
+function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDiableStack, onJeu, onEchange }) {
   const m = cardMeta(card);
   const g = card.type === "jeu" ? GAMES.find((x) => x.id === card.gameId) : null;
   const rule = g ? g.rule : CARD_INFO[card.type];
@@ -171,7 +171,6 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
       )}
       {canPlay && card.type === "jeu" && <button className="btn btn-blue" onClick={onJeu}>Lancer ce jeu 🎲</button>}
       {canPlay && card.type === "echange" && <button className="btn" style={{ background: "linear-gradient(135deg,#00c6c6,#0094c6)" }} onClick={onEchange}>Échanger ma main 🔄</button>}
-      {canPlay && card.type === "echangecarte" && <button className="btn" style={{ background: "linear-gradient(135deg,#12b3a6,#0a8f85)" }} onClick={onEchangeCarte}>Échanger une carte 🔃</button>}
       {canPlay && card.type === "diable" && <p className="muted" style={{ color: "#c78bff" }}>Ouvre plutôt une carte <b>action</b> puis « Jouer avec un Diable ».</p>}
       {canPlay && card.type === "joker" && <p className="muted" style={{ color: "#27d17c" }}>Garde-la : elle se déclenchera quand un diable te visera.</p>}
       {canPlay && card.type === "plus" && <p className="muted" style={{ color: "#ff9b2f" }}>Se joue en réaction quand un diable te vise : tu renvoies la peine +{card.value} à un autre joueur.</p>}
@@ -191,13 +190,14 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
   const [sheet, setSheet] = useState(null);
   const [target, setTarget] = useState(null);     // { cardIds, diableId } -> diable
   const [swap, setSwap] = useState(null);          // { cardId } -> échange de main
-  const [swapCard, setSwapCard] = useState(null);  // { cardId } -> échange de carte
+  const [discardPick, setDiscardPick] = useState(false); // choix de la carte à défausser
   const [reactPlus, setReactPlus] = useState(null);
   const [playerMenu, setPlayerMenu] = useState(null); // joueur sur lequel agir (passer / virer)
   const [kickConfirm, setKickConfirm] = useState(null); // confirmation avant de virer un joueur
   const [confirmLeave, setConfirmLeave] = useState(false); // confirmation avant de quitter
   const [drawReveal, setDrawReveal] = useState(null);      // carte piochée à révéler
   const pendingDraw = useRef(false);
+  const drawFrom = useRef("deck"); // "deck" | "discard" (texte de la révélation)
   const prevHandIds = useRef(me.hand.map((c) => c.id));
   const hasDiable = me.hand.some((c) => c.type === "diable");
   const isSorted = sortedHand(me.hand).every((c, i) => c.id === me.hand[i].id);
@@ -243,8 +243,15 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
   function playJeu(c) { setSheet(null); act({ type: "playJeu", cardId: c.id }); }
   function openEchange(c) { setSheet(null); setSwap({ cardId: c.id }); }
   function sendEchange(targetId) { const sw = swap; setSwap(null); act({ type: "echange", cardId: sw.cardId, targetId }); }
-  function openEchangeCarte(c) { setSheet(null); setSwapCard({ cardId: c.id }); }
-  function sendEchangeCarte(discardId) { const sw = swapCard; setSwapCard(null); act({ type: "echangeCarte", cardId: sw.cardId, discardId }); }
+  function sendDiscard(cardId) { setDiscardPick(false); act({ type: "discardCard", cardId }); }
+  // Récupérer la carte du dessus de la défausse (à la place de la pioche).
+  const topErr = recoverError(top);
+  function takeDiscard() {
+    if (!mustDraw || busy) return;
+    if (topErr) { flash(topErr); return; }
+    pendingDraw.current = true; drawFrom.current = "discard";
+    act({ type: "drawDiscard" });
+  }
 
   return (
     <div className="fade">
@@ -286,16 +293,21 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
       <div className="center-zone">
         <div className="pile">
           <div className={"pile-card pile-back" + (mustDraw && !busy ? " draw-now" : "")}
-            onClick={() => { if (mustDraw && !busy) { pendingDraw.current = true; act({ type: "drawTurn" }); } }}>{room.deck.length}</div>
+            onClick={() => { if (mustDraw && !busy) { pendingDraw.current = true; drawFrom.current = "deck"; act({ type: "drawTurn" }); } }}>{room.deck.length}</div>
           {mustDraw && !busy
             ? <div className="pile-lbl draw-lbl"><span className="draw-hand">👆</span>Touche pour piocher</div>
             : <div className="pile-lbl">Pioche</div>}
         </div>
         <div className="pile">
           {top
-            ? <div className="pile-card" style={{ background: `linear-gradient(160deg,${cardMeta(top).color},${cardMeta(top).color}cc)`, fontSize: 12, padding: 6, textAlign: "center" }}>{top.label}</div>
+            ? <div className={"pile-card pile-discard" + (topErr ? " locked" : mustDraw && !busy ? " can-take" : "")}
+                title={topErr || "Carte récupérable"}
+                onClick={takeDiscard}
+                style={{ background: `linear-gradient(160deg,${cardMeta(top).color},${cardMeta(top).color}cc)`, fontSize: 12, padding: 6, textAlign: "center" }}>{top.label}</div>
             : <div className="pile-card pile-empty">vide</div>}
-          <div className="pile-lbl">Défausse</div>
+          {mustDraw && !busy && top && !topErr
+            ? <div className="pile-lbl draw-lbl">ou récupère-la ♻️</div>
+            : <div className="pile-lbl">Défausse</div>}
         </div>
       </div>
 
@@ -316,8 +328,8 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
         )} />
 
       {canPlay && (
-        <button className="btn btn-ghost mt" disabled={busy} onClick={() => act({ type: "pass" })}>
-          Passer mon tour 🙅
+        <button className="btn btn-ghost mt" disabled={busy || me.hand.length <= 1} onClick={() => setDiscardPick(true)}>
+          Défausser une carte 🗑️
         </button>
       )}
 
@@ -325,16 +337,16 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
         <CardSheet card={sheet} hand={me.hand} canPlay={canPlay} hasDiable={hasDiable}
           close={() => setSheet(null)}
           onActionStack={playActionStack} onDiableStack={openDiable}
-          onJeu={() => playJeu(sheet)} onEchange={() => openEchange(sheet)} onEchangeCarte={() => openEchangeCarte(sheet)} />
+          onJeu={() => playJeu(sheet)} onEchange={() => openEchange(sheet)} />
       )}
 
-      {swapCard && (
-        <Overlay onClose={() => setSwapCard(null)}>
-          <h3 className="h-title">Quelle carte défausser ? 🔃</h3>
-          <p className="muted mb">Elle sera remplacée par une carte de la pioche.</p>
+      {discardPick && canPlay && (
+        <Overlay onClose={() => setDiscardPick(false)}>
+          <h3 className="h-title">Quelle carte défausser ? 🗑️</h3>
+          <p className="muted mb">Elle part dans la défausse et ton tour se termine.</p>
           <div className="wrap">
-            {me.hand.filter((c) => c.id !== swapCard.cardId).map((c) => (
-              <button key={c.id} className="btn btn-ghost btn-sm auto" onClick={() => sendEchangeCarte(c.id)}>
+            {me.hand.map((c) => (
+              <button key={c.id} className="btn btn-ghost btn-sm auto" disabled={busy} onClick={() => sendDiscard(c.id)}>
                 <span style={{ color: cardMeta(c).color }}>{cardMeta(c).ic}</span> {c.label}
               </button>
             ))}
@@ -459,7 +471,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
       {drawReveal && (
         <div className="overlay draw-overlay" onClick={() => setDrawReveal(null)}>
           <div className="center-col">
-            <p className="muted mb">Tu as pioché…</p>
+            <p className="muted mb">{drawFrom.current === "discard" ? "Tu as récupéré…" : "Tu as pioché…"}</p>
             <div className="reveal-card">
               <CardFace c={drawReveal} onClick={() => {}} />
             </div>

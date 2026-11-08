@@ -19,8 +19,8 @@ import { useGameLog } from "./account.js";
    un jeu / mini-jeux : dés, lettres, roulette, cartes…), qui doit venir du
    serveur pour être cohérent entre les téléphones. */
 const OPTIMISTIC_MOVES = new Set([
-  "drawTurn", "action", "actionDiable", "reactDrink", "reactForce",
-  "echange", "echangeCarte", "pass", "skipCurrent", "removePlayer", "winnerSec", "sortHand", "reorderHand",
+  "drawTurn", "drawDiscard", "action", "actionDiable", "reactDrink", "reactForce",
+  "echange", "discardCard", "skipCurrent", "removePlayer", "winnerSec", "sortHand", "reorderHand",
 ]);
 
 export default function App() {

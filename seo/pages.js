@@ -188,16 +188,15 @@ ${playCta()}
 
 <h2>🔁 Déroulé d'un tour</h2>
 <div class="panel">
-<p>1️⃣ Tu <strong>pioches</strong> obligatoirement une carte.<br>2️⃣ Puis tu <strong>joues</strong> une carte, ou tu <strong>passes</strong>.</p>
+<p>1️⃣ Tu <strong>pioches</strong> obligatoirement une carte, ou tu <strong>récupères</strong> celle du dessus de la défausse.<br>2️⃣ Puis tu <strong>joues</strong> une carte, ou tu en <strong>défausses</strong> une de ton choix.</p>
+<p>Toutes les cartes se récupèrent dans la défausse, sauf les mini-jeux et les échanges de main, et chaque carte une seule fois par partie.</p>
 <p>Comme tu pioches puis joues, le seul moyen de réduire ta main est de poser <strong>plusieurs cartes d'un coup</strong> :</p>
 <ul>
 <li><strong>Cartes identiques</strong> : empile-les (2 × « 2 gorgées » = 4 gorgées).</li>
 <li><strong>Action + Diable</strong> : un autre joueur boit (tu poses 2 cartes).</li>
 <li><strong>Échange de main</strong> : tu échanges toute ta main avec un adversaire.</li>
-<li><strong>Échange de carte</strong> : tu défausses une carte et en pioches une nouvelle.</li>
 <li><strong>Joker</strong> / <strong>Relance</strong> : se jouent en réaction (et quittent ta main).</li>
 </ul>
-<p>Une carte posée ne peut jamais être reprise.</p>
 </div>
 
 <h2>🎲 Les cartes Jeu</h2>

@@ -31,12 +31,12 @@ export function sipsFor(mode, premium) {
 
 /* -------------------------------------------------------------------------
    Mode PREMIUM : l'hôte compose lui-même le paquet.
-   - Cartes « spéciales » (hors gorgée / hors échange) : réglables de 0 à
+   - Cartes « spéciales » (hors gorgée / hors échange de main) : réglables de 0 à
      5× leur nombre classique (le nombre classique = valeur ci-dessous, fixe
      quel que soit le mode dans le paquet standard).
    - Mini-jeux : chacun réglable de 0 à 10 (défaut = valeur du mode Harr).
    - mgSips : gorgées infligées au perdant d'un mini-jeu (1 à 3, défaut 2).
-   Les cartes gorgée/shot et les cartes Échange restent aux valeurs Harr.
+   Les cartes gorgée/shot et les cartes Échange de main restent fixes.
    ------------------------------------------------------------------------- */
 export const CLASSIC_COUNTS = { diable: 24, joker: 8, plus2: 8, plus4: 4 };
 export const PREMIUM_MAX_MULT = 5; // scale « de 0 à 5× le nombre classique »
@@ -72,7 +72,7 @@ export const MODE_INFO = {
 export function premiumRecos(cfg) {
   const c = sanitizePremium(cfg);
   const actionTotal = ACTION_CARDS.reduce((s, a) => s + a.harr, 0); // gorgées/shots (fixes)
-  const echange = 6; // 3 échange de main + 3 échange de carte (fixes)
+  const echange = 3; // 3 échange de main (fixes)
   const gamesTotal = availableGames().reduce((s, g) => s + (c.games[g.id] || 0), 0);
   const plus = c.plus2 + c.plus4;
   const special = c.diable + c.joker + plus;
@@ -165,14 +165,15 @@ export const GAMES = [
     rule: "Pendant **10 minutes**, interdit de dire « __oui__ » ou « __non__ ».\n\nChaque personne qui se fait avoir boit **une gorgée**." },
   { id: "motinterdit", name: "Mot interdit", chill: 2, harr: 2, kind: "inapp_timer",
     rule: "Le joueur choisit un **mot interdit** pour les **10 prochaines minutes**.\n\nChaque personne qui le prononce boit **une gorgée**." },
-  { id: "comptez", name: "Comptez-vous", chill: 2, harr: 2, kind: "facilitator", noLoser: true,
-    rule: "Tous ensemble, comptez **à voix haute de 1 jusqu'au nombre de joueurs** : chacun dit **un seul** chiffre, *dans n'importe quel ordre* et sans se concerter.\n- Exemple à 5 : Léa dit « 1 », puis Hugo dit « 2 », puis Sarah dit « 3 »… jusqu'à ce que chacun ait parlé.\n- Si **deux joueurs** disent un chiffre en même temps : ils boivent **une gorgée** et on **recommence à 1**.\n\nLe jeu est fini quand vous arrivez au bout sans collision 🎉" },
+  { id: "comptez", name: "Comptez-vous", chill: 2, harr: 2, kind: "facilitator",
+    loserLabel: "Qui a dit le dernier chiffre ? (il/elle boit)",
+    rule: "Tous ensemble, comptez **à voix haute de 1 jusqu'au nombre de joueurs** : chacun dit **un seul** chiffre, *dans n'importe quel ordre* et sans se concerter.\n- Exemple à 5 : Léa dit « 1 », puis Hugo dit « 2 », puis Sarah dit « 3 »… jusqu'à ce que chacun ait parlé.\n- Si **deux joueurs** disent un chiffre en même temps : ils boivent **une gorgée** et on **recommence à 1**.\n\nQuand vous arrivez au bout sans collision, le joueur qui a dit **le dernier chiffre** perd et boit 🍻" },
   { id: "regard", name: "Le regard", chill: 3, harr: 2, kind: "regard",
-    rule: "Tout le monde fixe la table.\nAu **top**, chacun lève les yeux vers quelqu'un.\n\nSi deux personnes **se regardent** : elles boivent une gorgée." },
+    rule: "Tout le monde fixe la table.\nLe lanceur fait le décompte **à voix haute** *(3, 2, 1… top !)*. Au **top**, chacun lève les yeux vers quelqu'un.\n\nSi deux personnes **se regardent** : elles boivent une gorgée." },
   { id: "vote", name: "Vote secret", chill: 4, harr: 2, kind: "inapp_vote",
     rule: "Le lanceur choisit une question *(une suggestion de l'app ou la sienne)*.\nChacun vote **en secret**.\n\nLe (ou les) plus voté perd et boit." },
   { id: "mime", name: "Mime", chill: 2, harr: 2, kind: "inapp_mime",
-    rule: "Le lanceur choisit un mot ou une situation. **Tout le monde mime** en même temps.\n\nLe lanceur désigne le **pire mime**, qui boit." },
+    rule: "Le lanceur choisit un mot ou une situation. **Tout le monde mime** en même temps.\n\nLe lanceur désigne :\n- le **meilleur mime**, qui **distribue 3 gorgées** ;\n- le **pire mime**, qui boit." },
   { id: "doigt", name: "Jeu du doigt", chill: 2, harr: 2, kind: "facilitator",
     rule: "Chaque joueur pose **un doigt sur le verre**.\n- Le lanceur compte *1, 2, 3* puis annonce combien de doigts resteront.\n- Les autres retirent ou non leur doigt.\n- Si le lanceur devine juste, il retire **définitivement** son doigt.\n\nLe dernier à pouvoir retirer son doigt perd et boit.\n__Attention__ : si tu célèbres ta réussite en retirant ton doigt, tu dois le remettre en jeu !" },
   { id: "poire", name: "Coupe la poire", chill: 2, harr: 2, kind: "inapp_pear",
@@ -248,6 +249,8 @@ export const TYPE_META = {
   joker: { color: "#27d17c", glow: "rgba(39,209,124,.55)", tag: "JOKER", ic: "🃏" },
   plus: { color: "#ff9b2f", glow: "rgba(255,155,47,.55)", tag: "RELANCE", ic: "⏫" },
   echange: { color: "#00c6c6", glow: "rgba(0,198,198,.55)", tag: "ÉCHANGE", ic: "🔄" },
+  // Ancienne carte « Échange de carte » (retirée du paquet) : gardée pour l'affichage
+  // des salons créés avant son retrait.
   echangecarte: { color: "#12b3a6", glow: "rgba(18,179,166,.55)", tag: "ÉCHANGE 1", ic: "🔃" },
 };
 
@@ -274,7 +277,7 @@ export const CARD_INFO = {
   joker: "**Carte joker.** Se joue *en réaction* pour **refuser un diable** dirigé contre toi.\n\nQuand tu la joues, elle quitte ta main.",
   plus: "**Carte relance (+2 / +4).** En réaction à un diable : tu **renvoies la peine** à un autre joueur en ajoutant *+2 ou +4 gorgées*.\n\nElle quitte ta main.",
   echange: "**Carte échange de main.** À ton tour : choisis un adversaire, vous **échangez intégralement** vos mains.\n\n*Parfait pour te débarrasser d'une grosse main !*",
-  echangecarte: "**Carte échange de carte.** À ton tour : choisis une carte de ta main à **défausser**, elle est remplacée par une carte piochée.\n\n*Idéal pour te débarrasser d'une carte qui ne t'arrange pas.*",
+  echangecarte: "**Ancienne carte échange de carte**, retirée du jeu.\n\nTu peux t'en débarrasser avec « Défausser une carte ».",
 };
 
 /* Mots / situations proposés pour le mime (mélange décalé + piquant). */

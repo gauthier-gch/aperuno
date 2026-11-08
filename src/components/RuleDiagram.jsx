@@ -79,9 +79,9 @@ const LE21 = [
 const DOWN = { down: true };
 const REGARD = [
   { ms: 1800, cap: "Tout le monde baisse la tête", p: ps(DOWN), center: { big: "🙇" } },
-  { ms: 800, cap: "Décompte…", p: ps(DOWN), center: { big: "3" } },
-  { ms: 800, cap: "Décompte…", p: ps(DOWN), center: { big: "2" } },
-  { ms: 800, cap: "Décompte…", p: ps(DOWN), center: { big: "1" } },
+  { ms: 800, cap: "Le lanceur compte à voix haute…", p: ps(DOWN, { [G_]: { down: true, say: "3" } }), center: { big: "3" } },
+  { ms: 800, cap: "Le lanceur compte à voix haute…", p: ps(DOWN, { [G_]: { down: true, say: "2" } }), center: { big: "2" } },
+  { ms: 800, cap: "Le lanceur compte à voix haute…", p: ps(DOWN, { [G_]: { down: true, say: "1" } }), center: { big: "1" } },
   { ms: 2400, cap: "Top ! Chacun lève les yeux vers un joueur", p: ps({ mark: "👀" }), links: [[G_, CHLOE], [JU, G_], [CHLOE, G_], [LEC, JU]], center: { big: "Top !" } },
   { ms: 3000, cap: "G et Chloé se regardent : les deux boivent !", p: ps({ dim: true }, { [G_]: { hl: true, lose: true, mark: "🍺", dim: false }, [CHLOE]: { hl: true, lose: true, mark: "🍺", dim: false } }), links: [[G_, CHLOE, "both"]], center: { big: "😳" } },
 ];
@@ -125,7 +125,7 @@ const COMPTEZ = [
   { ms: 1500, cap: "Ju enchaîne avec le 2", p: ps({}, { [LEC]: OK, [JU]: { say: "2", hl: true } }), center: CPT(2) },
   { ms: 1700, cap: "Chloé ose le 3…", p: ps({}, { [LEC]: OK, [JU]: OK, [CHLOE]: { say: "3", hl: true } }), center: CPT(3) },
   { ms: 1500, cap: "Il ne reste que G : le 4 est pour lui", p: ps({}, { [LEC]: OK, [JU]: OK, [CHLOE]: OK, [G_]: { say: "4 !", hl: true } }), center: CPT(4) },
-  { ms: 2800, cap: "Tout le monde a parlé sans collision : gagné ! 🎉", p: ps({ mark: "🎉" }), center: { big: "4 🎉", tag: "réussi" } },
+  { ms: 2800, cap: "Tout le monde a parlé sans collision… G a dit le dernier chiffre : il boit !", p: ps({ dim: true }, { [G_]: { hl: true, lose: true, mark: "🍺", dim: false } }), center: { big: "4 🍺", tag: "dernier chiffre" } },
 ];
 
 const DIAGRAMS = { cascade: CASCADE, comptez: COMPTEZ, connexion: CONNEXION, doigt: DOIGT, enchere: ENCHERE, "21": LE21, regard: REGARD, patate: PATATE, russe: RUSSE };

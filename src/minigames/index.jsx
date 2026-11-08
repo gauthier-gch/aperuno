@@ -85,7 +85,7 @@ export function Minigame({ room, act, busy, leave }) {
       } else {
         // le lanceur désigne le perdant qui boit.
         body = isLauncher
-          ? <DesignateLoser players={room.players} onPick={(id) => act({ type: "mgFinish", loserId: id })} label="Le perdant boit :" />
+          ? <DesignateLoser players={room.players} onPick={(id) => act({ type: "mgFinish", loserId: id })} label={g.loserLabel || "Le perdant boit :"} />
           : waiting;
       }
   }
