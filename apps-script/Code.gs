@@ -42,6 +42,9 @@ var SUGGEST_MAX_PER_HOUR = 30; // garde-fou anti-spam global (quota Gmail ~100 m
 function doPost(e) {
   var d = JSON.parse(e.postData.contents);
   if (d.event === 'suggestion') return handleSuggestion_(d);
+  // Onglet « Salons » : UNIQUEMENT les lancements de partie (event « start »).
+  // Tout autre envoi est ignoré, pour ne jamais polluer le suivi.
+  if (d.event !== 'start' || !d.code) return ContentService.createTextOutput('ignored');
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName('Salons') || ss.getSheets()[0];
   sheet.appendRow([
