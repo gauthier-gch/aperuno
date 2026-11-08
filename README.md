@@ -119,9 +119,12 @@ Dans « Règles & mini-jeux », seul le mini-jeu de la période en cours appara�
 | 🎃 Spooky | 10 octobre → 15 novembre | **Évite les monstres** — train fantôme, 3 bifurcations |
 | 🎅 Noël | 1er → 31 décembre | **Secret Santa** — chacun offre une carte de sa main |
 
-> 🧪 **Phase de test** : `SEASONAL_TEST_ALL = true` dans
+Hors période, aucun mini-jeu éphémère n'apparaît (ni dans la pioche, ni
+dans les règles, ni dans la composition Premium).
+
+> 🧪 **Mode test** : passer `SEASONAL_TEST_ALL` à `true` dans
 > `src/game/seasons.js` active **tous** les mini-jeux éphémères en même
-> temps. Le passer à `false` pour ne garder que celui de la période.
+> temps (désactivé en production).
 
 ## 🗂️ Structure du repo
 

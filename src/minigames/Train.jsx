@@ -113,7 +113,9 @@ export function TrainGame({ room, mg, isLauncher, launcher, act, busy, waiting }
               const list = groups[g];
               const pos = wagonPos(g, list.indexOf(p), list.length);
               const me = p.id === MYID;
-              const lean = !revealing && me && myChoice ? " lean-" + myChoice : "";
+              // Avant la révélation, chaque wagon penche du côté choisi par son joueur.
+              const ch = mg.choices && mg.choices[p.id] && mg.choices[p.id][f];
+              const lean = !revealing && st.step === "choose" && ch ? " lean-" + ch : "";
               const boom = revealing && deaths[p.id] && deaths[p.id].fork === f;
               return (
                 <div key={p.id} className={"train-cart" + (me ? " me" : "") + lean} style={pos}>
@@ -125,21 +127,23 @@ export function TrainGame({ room, mg, isLauncher, launcher, act, busy, waiting }
             });
           })()}
           {deadBefore && <div className="train-ghost">👻</div>}
+          {/* Boutons au milieu de la scène : pas besoin de faire défiler. */}
+          {st.step === "choose" && !deadBefore && (
+            <div className="train-choice">
+              <button className={"btn train-btn" + (myChoice === "L" ? " on" : "")} disabled={busy || !!myChoice}
+                onClick={() => act({ type: "mgTrainChoose", fork: f, side: "L" })}>⬅️<br />Gauche</button>
+              <span className="train-timer">{secLeft}</span>
+              <button className={"btn train-btn" + (myChoice === "R" ? " on" : "")} disabled={busy || !!myChoice}
+                onClick={() => act({ type: "mgTrainChoose", fork: f, side: "R" })}>➡️<br />Droite</button>
+            </div>
+          )}
         </div>
 
         {st.step === "prep" && <p className="b">Attachez vos ceintures… 🎢</p>}
         {deadBefore ? (
           <p className="muted">{deaths[MYID].ic} {cap(deaths[MYID].name)} t'a attrapé : bois {TRAIN_SIPS} gorgées et regarde la suite 👀</p>
         ) : st.step === "choose" ? (
-          <>
-            <p className="b train-timer">{secLeft}</p>
-            <div className="row" style={{ width: "100%" }}>
-              <button className={"btn train-btn" + (myChoice === "L" ? " on" : "")} disabled={busy || !!myChoice}
-                onClick={() => act({ type: "mgTrainChoose", fork: f, side: "L" })}>⬅️ Gauche</button>
-              <button className={"btn train-btn" + (myChoice === "R" ? " on" : "")} disabled={busy || !!myChoice}
-                onClick={() => act({ type: "mgTrainChoose", fork: f, side: "R" })}>Droite ➡️</button>
-            </div>
-          </>
+          <p className="b">{myChoice ? `Tu pars à ${myChoice === "L" ? "gauche" : "droite"}… 🤞` : "Gauche ou droite ? Vite ! ⏱️"}</p>
         ) : revealing ? (
           diedHere
             ? <p className="b">{deaths[MYID].ic} {cap(deaths[MYID].name)} t'a attrapé{deaths[MYID].wall ? " dans le mur" : ""} ! Bois {TRAIN_SIPS} gorgées 🍻</p>

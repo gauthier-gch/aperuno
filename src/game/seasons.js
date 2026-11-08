@@ -5,10 +5,10 @@
    Les dates sont inclusives, au format [mois, jour] (mois 1 = janvier).
    ========================================================================= */
 
-/* ⚠️ PHASE DE TEST : tant que ce drapeau vaut `true`, TOUS les mini-jeux
-   éphémères sont actifs en même temps (quelle que soit la date). Passer à
-   `false` pour ne garder que celui de la période en cours. */
-export const SEASONAL_TEST_ALL = true;
+/* Mode test : `true` = TOUS les mini-jeux éphémères actifs en même temps
+   (quelle que soit la date). `false` (production) = seulement celui de la
+   période en cours — et rien hors période. */
+export const SEASONAL_TEST_ALL = false;
 
 export const SEASONS = {
   newyear: { id: "newyear", name: "New Year", emoji: "🎆", from: [1, 1], to: [1, 15] },
