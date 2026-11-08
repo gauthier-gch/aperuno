@@ -33,7 +33,7 @@ var LOG_BEFORE_EXPIRY_MS = 65 * 60 * 1000;
 var SUGGEST_TO = 'aperuno.app@gmail.com';
 // ID du Google Sheet qui reçoit les suggestions (dans son URL :
 // docs.google.com/spreadsheets/d/<ID>/edit). Vide → onglet du Sheet de suivi.
-var SUGGEST_SPREADSHEET_ID = '';
+var SUGGEST_SPREADSHEET_ID = '1V6LN798pqFsVBkhHp1UKRTrrnXVgkjodYxUzSfywOBU';
 var SUGGEST_SHEET = 'Suggestions';
 var SUGGEST_HEADERS = ['Date', 'Prénom', 'Contact', 'Message', 'Page', 'Navigateur'];
 var SUGGEST_MAX_LEN = 3000;
