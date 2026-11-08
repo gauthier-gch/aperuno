@@ -287,13 +287,18 @@ Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
 Le bouton **« Suggérer une amélioration »** de l'accueil ouvre un formulaire
 (message, prénom et e-mail facultatifs). Il est envoyé au **même web app** que
 le suivi des salons (`event: "suggestion"`) : `doPost` ajoute une ligne dans
-l'onglet `Suggestions` (créé automatiquement) et envoie un mail à
+l'onglet `Suggestions` (créé automatiquement) d'un **Google Sheet dédié**
+(son ID va dans `SUGGEST_SPREADSHEET_ID` de `Code.gs` ; vide → onglet du Sheet
+de suivi) et envoie un mail à
 `aperuno.app@gmail.com` (constante `SUGGEST_TO` de `Code.gs`) ; si le joueur
 a laissé son e-mail, « Répondre » lui écrit directement. Anti-spam : champ
 pot de miel + 30 suggestions / heure max.
 
-Mise en place : recopie `Code.gs` et le scope `script.send_mail` de
-`appsscript.json`, exécute une fonction une fois dans l'éditeur pour accepter
+Mise en place : crée le Sheet des suggestions (avec le même compte Google
+que le script), colle son ID dans `SUGGEST_SPREADSHEET_ID`, recopie `Code.gs`
+et les scopes de `appsscript.json` (`spreadsheets` — et non plus
+`spreadsheets.currentonly`, nécessaire pour écrire dans un autre Sheet — et
+`script.send_mail`), exécute une fonction une fois dans l'éditeur pour accepter
 la nouvelle autorisation (envoi d'e-mails), puis **Déployer → Gérer les
 déploiements → ✏️ → Nouvelle version**. Si l'envoi échoue côté réseau, le
 formulaire propose un lien `mailto:` de secours.

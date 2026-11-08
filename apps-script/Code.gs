@@ -7,7 +7,8 @@
                        (appelé par l'appli, src/analytics.js). Sans uid : ils
                        sont loggés en fin de partie dans « Parties ».
       doPost (event « suggestion ») → formulaire « Suggérer une amélioration »
-                       de la home : ligne dans l'onglet « Suggestions » + mail
+                       de la home : ligne dans l'onglet « Suggestions » d'un
+                       Sheet dédié (SUGGEST_SPREADSHEET_ID) + mail
                        à SUGGEST_TO (src/analytics.js → sendSuggestion).
    2) logEndedRooms  → onglet « Parties » : une ligne par salon juste avant
                        sa suppression (TTL 12 h après la dernière activité).
@@ -30,6 +31,9 @@ var LOG_BEFORE_EXPIRY_MS = 65 * 60 * 1000;
 
 // Formulaire de suggestions.
 var SUGGEST_TO = 'aperuno.app@gmail.com';
+// ID du Google Sheet qui reçoit les suggestions (dans son URL :
+// docs.google.com/spreadsheets/d/<ID>/edit). Vide → onglet du Sheet de suivi.
+var SUGGEST_SPREADSHEET_ID = '';
 var SUGGEST_SHEET = 'Suggestions';
 var SUGGEST_HEADERS = ['Date', 'Prénom', 'Contact', 'Message', 'Page', 'Navigateur'];
 var SUGGEST_MAX_LEN = 3000;
@@ -68,7 +72,9 @@ function handleSuggestion_(d) {
   if (count >= SUGGEST_MAX_PER_HOUR) return ok;
   cache.put('suggest_count', String(count + 1), 3600);
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SUGGEST_SPREADSHEET_ID
+    ? SpreadsheetApp.openById(SUGGEST_SPREADSHEET_ID)
+    : SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SUGGEST_SHEET);
   if (!sheet) {
     sheet = ss.insertSheet(SUGGEST_SHEET);
