@@ -432,8 +432,10 @@ export const CONNEXION_CATS = [
   "Un truc jaune", "Une position pour dormir", "Un truc qu'on dit quand on a trop bu",
 ];
 
-/* Adresse qui reçoit les suggestions d'amélioration (bouton de la home). */
-export const SUGGEST_EMAIL = "gauthier.gache@gmail.com";
+/* Adresse qui reçoit les suggestions d'amélioration (formulaire de la home).
+   NB : l'envoi réel est fait par apps-script/Code.gs (constante SUGGEST_TO) ;
+   celle-ci sert de solution de repli (lien mailto si l'envoi échoue). */
+export const SUGGEST_EMAIL = "aperuno.app@gmail.com";
 
 /* Page de dons/soutien (bouton « Soutenir le projet » de la home). */
 export const SUPPORT_URL = "https://ko-fi.com/aperuno";

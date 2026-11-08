@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { sendSuggestion } from "../analytics.js";
 import {
   GAMES, MODE_INFO, SUGGEST_EMAIL, SUPPORT_URL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED,
   SITE_NAME, LEGAL_EDITOR, LEGAL_PUBLISHER, LEGAL_HOST, INSTAGRAM_URL, TIKTOK_URL,
@@ -17,9 +18,9 @@ function SocialIcon({ d }) {
   return <svg className="social-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d={d} /></svg>;
 }
 
-const SUGGEST_HREF = `mailto:${SUGGEST_EMAIL}` +
+const suggestMailto = (msg = "") => `mailto:${SUGGEST_EMAIL}` +
   `?subject=${encodeURIComponent("apéruno — suggestion d'amélioration")}` +
-  `&body=${encodeURIComponent("Salut !\n\nVoici mon idée pour améliorer apéruno :\n\n")}`;
+  `&body=${encodeURIComponent("Salut !\n\nVoici mon idée pour améliorer apéruno :\n\n" + msg)}`;
 
 export function Home({ go }) {
   return (
@@ -43,7 +44,7 @@ export function Home({ go }) {
         <button className="btn btn-blue" onClick={() => go("join")}><span className="ico">🔗</span> Rejoindre une partie</button>
         <button className="btn btn-ghost" onClick={() => go("rules")}><span className="ico">📜</span> Règles & mini-jeux</button>
         <button className="btn btn-ghost" onClick={() => go("install")}><span className="ico">📱</span> Installe l'app sur ton tél</button>
-        <a className="btn btn-ghost" href={SUGGEST_HREF} style={{ textDecoration: "none" }}><span className="ico">💡</span> Suggérer une amélioration</a>
+        <button className="btn btn-ghost" onClick={() => go("suggest")}><span className="ico">💡</span> Suggérer une amélioration</button>
         <a className="btn btn-support" href={SUPPORT_URL} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}><span className="ico">❤️</span> Soutenir le projet</a>
       </div>
 
@@ -275,7 +276,7 @@ export function Privacy({ back }) {
 
       <div className="panel mb">
         <p className="b w mb-sm">☁️ Hébergement & partage</p>
-        <p className="muted">Les données sont hébergées via <b>Google Firebase</b> (Firestore / Authentification). Un suivi des parties (date, mode, prénoms et identifiants des joueurs) est aussi tenu dans un tableur privé <b>Google Sheets</b>, accessible au seul éditeur. Le prénom et la photo que tu choisis sont visibles par les autres joueurs du <b>même salon</b>. Ton profil et ton historique ne sont visibles que par toi. Nous ne vendons ni ne louons tes données, et ne les utilisons pas à des fins publicitaires.</p>
+        <p className="muted">Les données sont hébergées via <b>Google Firebase</b> (Firestore / Authentification). Un suivi des parties (date, mode, prénoms et identifiants des joueurs) est aussi tenu dans un tableur privé <b>Google Sheets</b>, accessible au seul éditeur. Les <b>suggestions</b> envoyées via le formulaire (message, et prénom / e-mail si tu les indiques) y sont aussi enregistrées et nous sont transmises par e-mail (Gmail), uniquement pour te répondre et améliorer le jeu. Le prénom et la photo que tu choisis sont visibles par les autres joueurs du <b>même salon</b>. Ton profil et ton historique ne sont visibles que par toi. Nous ne vendons ni ne louons tes données, et ne les utilisons pas à des fins publicitaires.</p>
       </div>
 
       <div className="panel mb">
@@ -306,6 +307,68 @@ function CopyLink() {
     <a onClick={copy} style={{ color: "var(--gold)", textDecoration: "underline", cursor: "pointer" }}>
       {done ? "lien copié ✅" : "en cliquant ici"}
     </a>
+  );
+}
+
+const SUGGEST_MAX = 3000;
+
+export function Suggest({ back }) {
+  const [message, setMessage] = useState("");
+  const [name, setName] = useState(() => { try { return localStorage.getItem("aperuno_name") || ""; } catch (e) { return ""; } });
+  const [contact, setContact] = useState("");
+  const [website, setWebsite] = useState(""); // pot de miel (invisible)
+  const [state, setState] = useState("idle"); // idle | sending | sent | error
+  const [err, setErr] = useState("");
+
+  async function submit(e) {
+    e.preventDefault();
+    const msg = message.trim();
+    if (msg.length < 5) return setErr("Écris-nous un peu plus que ça 🙂");
+    setErr(""); setState("sending");
+    try {
+      await sendSuggestion({ message: msg, name: name.trim(), contact: contact.trim(), website });
+      setState("sent");
+    } catch (e2) { setState("error"); }
+  }
+
+  if (state === "sent") return (
+    <div className="fade">
+      <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
+      <h2 className="h-title">Merci ! 🍻</h2>
+      <p className="muted mb">Ta suggestion est bien partie. On lit tout, promis.</p>
+      <button className="btn btn-primary" onClick={back}>Retour à l'accueil</button>
+    </div>
+  );
+
+  return (
+    <div className="fade">
+      <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
+      <h2 className="h-title">Suggérer une amélioration 💡</h2>
+      <p className="muted mb">Une idée de mini-jeu, un bug, une règle à changer ? Dis-nous tout !</p>
+      <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <textarea className="input" rows={7} maxLength={SUGGEST_MAX} required
+          placeholder="Ton idée…" value={message} onChange={(e) => setMessage(e.target.value)}
+          style={{ resize: "vertical", minHeight: 140 }} />
+        <p className="muted dim" style={{ textAlign: "right", marginTop: -6 }}>{message.length}/{SUGGEST_MAX}</p>
+        <input className="input" placeholder="Ton prénom (facultatif)" maxLength={40}
+          value={name} onChange={(e) => setName(e.target.value)} />
+        <input className="input" type="email" placeholder="Ton e-mail, pour te répondre (facultatif)" maxLength={120}
+          value={contact} onChange={(e) => setContact(e.target.value)} />
+        <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true"
+          value={website} onChange={(e) => setWebsite(e.target.value)}
+          style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
+        {err && <p className="muted" style={{ color: "#ff8a8a" }}>{err}</p>}
+        {state === "error" && (
+          <p className="muted" style={{ color: "#ff8a8a" }}>
+            Oups, l'envoi a échoué. Réessaie, ou <a className="foot-link" href={suggestMailto(message)}>envoie-la par e-mail</a>.
+          </p>
+        )}
+        <button className="btn btn-primary" type="submit" disabled={state === "sending"}>
+          {state === "sending" ? "Envoi…" : "Envoyer 🚀"}
+        </button>
+        <p className="muted dim center">Ton message (et ton e-mail si tu le donnes) sert uniquement à te répondre et à améliorer le jeu.</p>
+      </form>
+    </div>
   );
 }
 

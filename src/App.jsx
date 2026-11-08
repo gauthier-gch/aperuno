@@ -5,7 +5,7 @@ import { useRoom, usePresence, startGame, doMove } from "./net/useRoom.js";
 import { applyMove } from "./game/engine.js";
 import { logGameStart } from "./analytics.js";
 import { Shell } from "./components/common.jsx";
-import { Home, Rules, Install, Terms, Privacy, Legal, AgeGate, InstallPrompt } from "./components/Home.jsx";
+import { Home, Rules, Install, Suggest, Terms, Privacy, Legal, AgeGate, InstallPrompt } from "./components/Home.jsx";
 import { isInstalledApp } from "./util.js";
 import { CreateForm, JoinForm } from "./components/Forms.jsx";
 import { Lobby } from "./components/Lobby.jsx";
@@ -187,6 +187,7 @@ export default function App() {
       {screen === "home" && <Home go={setScreen} />}
       {screen === "rules" && <Rules back={() => setScreen("home")} />}
       {screen === "install" && <Install back={() => setScreen("home")} />}
+      {screen === "suggest" && <Suggest back={() => setScreen("home")} />}
       {screen === "terms" && <Terms back={() => setScreen("home")} />}
       {screen === "privacy" && <Privacy back={() => setScreen("home")} />}
       {screen === "legal" && <Legal back={() => setScreen("home")} />}
