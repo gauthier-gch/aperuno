@@ -40,15 +40,19 @@ Jusqu'à **15 joueurs** par salon.
   ton prénom et ta photo → tu obtiens un **code à 4 lettres** à partager.
 - Les autres joueurs font **Rejoindre une partie** avec ce code.
 - L'**hôte** (👑) choisit qui commence, puis lance la partie.
-- À **chaque tour** : tu **pioches** d'abord une carte (obligatoire), puis tu
-  **joues** une carte (obligatoire).
+- À **chaque tour** : tu **pioches** d'abord une carte (obligatoire) — ou tu
+  **récupères** la carte du dessus de la **défausse** —, puis tu **joues** une
+  carte ou tu en **défausses** une de ton choix.
+- **Récupérer dans la défausse** : toutes les cartes, sauf les **mini-jeux** et
+  les **échanges de main**, et chaque carte **une seule fois** par partie
+  (sinon : « La carte a déjà été récupérée dans la partie »). Une carte non
+  récupérable est affichée **grisée**.
 - Comme on pioche *puis* on joue, le seul moyen de **réduire sa main** est de
   poser plusieurs cartes d'un coup :
   - **cartes identiques empilées** (2 × « 2 gorgées » = 4 gorgées),
   - **Action + Diable** (un autre joueur boit),
   - **Échange de main**,
   - ou se débarrasser d'un **Joker / Relance** joué en réaction.
-- Une carte posée ne peut **jamais** être reprise.
 - Le **perdant d'un mini-jeu boit** (et ne pioche plus).
 - Premier à vider sa main → **victoire** 🏆.
 
@@ -86,7 +90,8 @@ In-app (jouables directement dans l'appli) :
 - 🗳️ **Vote secret** — on peut voter pour soi.
 - 🔤 **Petit bac** — lettre modifiable, chrono synchronisé, catégorie Célébrité,
   réponses en tableau.
-- 🎭 **Mime** — le mot est visible par tous sauf le mimeur.
+- 🎭 **Mime** — tout le monde mime ; le lanceur désigne le **meilleur mime**
+  (distribue 3 gorgées) et le **pire mime** (boit).
 - 🍐 **Coupe la poire** — direction cible à reproduire au doigt.
 - 🗺️ **Place la ville** — carte de France + 50 villes, zoom (pincer / ＋) + classement.
 - 🕵️ **Undercover** — avec un Mister White qui peut deviner le mot.
@@ -94,13 +99,13 @@ In-app (jouables directement dans l'appli) :
 - 🔗 **Connexion** — un mot commun au décompte : les « connectés » boivent.
 - 🔢 **Comptez-vous** (à l'oral) — tout le monde compte jusqu'au nombre de
   joueurs, un chiffre chacun, sans ordre : deux joueurs qui parlent en même
-  temps boivent et on recommence à 1.
+  temps boivent et on recommence à 1 ; celui qui dit le **dernier chiffre** boit.
 - 🎡 **Roulette Harr**, 🥔 **Patate chaude** (build-up sonore + drop, un seul
   téléphone qu'on se passe), 🏴‍☠️ **La Piraterie** (20 coffres, une bombe cachée :
   on ouvre les coffres à tour de rôle sur un seul téléphone, celui qui déterre la
   bombe finit son verre), ⏱️ **chronos** (ni oui ni non, mot interdit,
   🐃 **le Buffalo** — bois de ta bonne main, tu finis ton verre !),
-  👀 **le regard**, ⚔️ **duels**.
+  👀 **le regard** (décompte à l'oral), ⚔️ **duels**.
 
 ### ✨ Mini-jeux éphémères
 

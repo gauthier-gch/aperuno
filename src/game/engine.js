@@ -121,8 +121,10 @@ export function ident(p) {
 }
 
 /* Ordre de tri d'une main : mini-jeux, gorgées (croissant), shots (croissant),
-   diables, relances (croissant), jokers, échanges de main, échanges de carte.
-   Tri stable : à rang égal, l'ordre actuel est conservé. */
+   diables, relances (croissant), jokers, échanges de main.
+   Tri stable : à rang égal, l'ordre actuel est conservé.
+   (echangecarte : ancienne carte « Échange de carte », retirée du paquet —
+   gardée ici pour les salons créés avant son retrait.) */
 const SORT_RANK = { jeu: 0, action: 1, diable: 3, plus: 4, joker: 5, echange: 6, echangecarte: 7 };
 function sortKey(c) {
   if (c.type === "action") return [c.unit === "shot" ? 2 : 1, c.sips || 0];
@@ -135,6 +137,18 @@ export function sortedHand(hand) {
     .sort((a, b) => a.k[0] - b.k[0] || a.k[1] - b.k[1] || a.i - b.i)
     .map((x) => x.c);
 }
+
+/* Récupération dans la défausse : toutes les cartes, sauf les mini-jeux et
+   les cartes spéciales (échange de main), et une seule fois par carte et par
+   partie (drapeau `recovered`, conservé même si la défausse est remélangée). */
+const NOT_RECOVERABLE = ["jeu", "echange", "echangecarte"];
+export function recoverError(c) {
+  if (!c) return "La défausse est vide.";
+  if (NOT_RECOVERABLE.includes(c.type)) return "Cette carte ne peut pas être récupérée dans la défausse.";
+  if (c.recovered) return "La carte a déjà été récupérée dans la partie";
+  return null;
+}
+export function canRecover(c) { return !recoverError(c); }
 
 function clone(s) { return JSON.parse(JSON.stringify(s)); }
 /* long = true → l'annonce reste affichée longtemps (messages « X boit … »).
@@ -326,6 +340,19 @@ export function applyMove(s0, move, myId) {
       s.announce = note(`${mine.name} pioche une carte 🃏`);
       return s;
     }
+    /* ---------- ou : récupérer la carte du dessus de la défausse ---------- */
+    case "drawDiscard": {
+      requireTurn(s, myId);
+      if (s.turn.drawn) throw new Error("Tu as déjà pioché ce tour-ci.");
+      const top = s.discard[0];
+      const err = recoverError(top);
+      if (err) throw new Error(err);
+      s.discard.shift();
+      mine.hand.push({ ...top, recovered: true });
+      s.turn.drawn = true;
+      s.announce = note(`${mine.name} récupère « ${top.label} » dans la défausse ♻️`);
+      return s;
+    }
 
     /* ---------- jeu obligatoire ensuite ---------- */
     case "action": {
@@ -399,17 +426,6 @@ export function applyMove(s0, move, myId) {
       endTurn(s);
       return s;
     }
-    case "echangeCarte": {
-      requireTurnPlay(s, myId);
-      const card = handCard(mine, move.cardId, "echangecarte");
-      const swapOut = mine.hand.find((c) => c.id === move.discardId);
-      if (!swapOut || swapOut.id === card.id) throw new Error("Choisis une autre carte à défausser.");
-      discardFrom(s, me, [card.id, swapOut.id]);
-      draw(s, me, 1); // remplacée par une carte de la pioche
-      s.announce = note(`${mine.name} échange une carte 🔃`);
-      endTurn(s);
-      return s;
-    }
     case "playJeu": {
       requireTurnPlay(s, myId);
       const card = handCard(mine, move.cardId, "jeu");
@@ -437,9 +453,14 @@ export function applyMove(s0, move, myId) {
       return s;
     }
 
-    case "pass": {
+    /* ---------- au lieu de passer : défausser la carte de son choix ---------- */
+    case "discardCard": {
       requireTurnPlay(s, myId);
-      s.announce = note(`${mine.name} passe son tour 🙅`);
+      const card = mine.hand.find((c) => c.id === move.cardId);
+      if (!card) throw new Error("Carte introuvable.");
+      if (mine.hand.length <= 1) throw new Error("Tu ne peux pas défausser ta dernière carte.");
+      discardFrom(s, me, [card.id]);
+      s.announce = note(`${mine.name} défausse « ${card.label} » 🗑️`);
       endTurn(s);
       return s;
     }
@@ -534,10 +555,18 @@ export function applyMove(s0, move, myId) {
       endTurn(s);
       return s;
     }
-    case "mgRegardCount": {
+    /* ---------- Mime : meilleur mime (distribue 3) + pire mime (boit) ---------- */
+    case "mgMimeVerdict": {
       mgGuard(s, isLauncher);
-      s.minigame.phase = "count";
-      s.minigame.endsAt = Date.now() + 3000;
+      mgKind(s, "inapp_mime", "play");
+      const b = idx(s, move.bestId);
+      const w = idx(s, move.worstId);
+      if (b < 0 || w < 0) throw new Error("Joueur invalide.");
+      if (b === w) throw new Error("Le meilleur et le pire mime doivent être différents.");
+      const n = sipsFor(mode, s.premium);
+      addDrink(s, move.worstId, n);
+      s.announce = note(`🎭 ${s.players[b].name} distribue 3 gorgées · ${s.players[w].name} boit ${n} gorgée${n > 1 ? "s" : ""} 🍻`, true);
+      endTurn(s);
       return s;
     }
     /* ---------- mime / catégorie / vote : le lanceur choisit le texte ---------- */

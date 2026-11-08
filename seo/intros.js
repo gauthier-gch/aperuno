@@ -14,7 +14,7 @@ export const INTROS = {
   motinterdit: "Le mot interdit transforme la conversation en champ de mines : pendant 10 minutes, un mot est banni, et chaque faux pas coûte une gorgée.",
   regard: "Le regard est un jeu de hasard et de complicité : au top, tout le monde lève les yeux vers quelqu'un. Croiser un regard, c'est boire.",
   vote: "Le vote secret est un jeu de « qui est le plus… » : une question, des votes anonymes sur les téléphones, et le plus désigné boit.",
-  mime: "Mime est un jeu d'imitation où tout le monde joue en même temps : le lanceur choisit quoi mimer et désigne le pire mime.",
+  mime: "Mime est un jeu d'imitation où tout le monde joue en même temps : le lanceur choisit quoi mimer, puis désigne le meilleur mime (qui distribue) et le pire (qui boit).",
   doigt: "Le jeu du doigt (ou jeu du verre) est un grand classique de soirée : un verre au centre, un doigt chacun, et un pronostic à chaque tour.",
   poire: "Coupe la poire est un mini-jeu d'adresse sur téléphone : reproduis la coupe demandée le plus fidèlement possible, le moins précis boit.",
   ville: "Place la ville est un quiz de géographie sur carte : une ville française est tirée, chacun la place sur la carte, le plus loin boit.",

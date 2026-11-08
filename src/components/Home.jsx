@@ -352,14 +352,15 @@ export function Rules({ back }) {
       <div className="panel mb">
         <p className="muted">
           <b className="w">Chaque tour :</b><br />
-          1️⃣ Tu <b>pioches</b> obligatoirement une carte.<br />
-          2️⃣ Puis tu <b>joues</b> une carte — ou tu <b>passes</b>.<br /><br />
+          1️⃣ Tu <b>pioches</b> obligatoirement une carte — ou tu <b>récupères</b> celle du dessus de la défausse ♻️.<br />
+          2️⃣ Puis tu <b>joues</b> une carte — ou tu en <b>défausses</b> une de ton choix 🗑️.<br /><br />
+          ♻️ Toutes les cartes se récupèrent dans la défausse, sauf les <b>mini-jeux</b> et les <b>échanges de main</b>, et
+          chaque carte <b>une seule fois</b> par partie (une carte non récupérable apparaît grisée).<br /><br />
           Comme tu pioches puis joues, le seul moyen de réduire ta main est de poser
           <b> plusieurs cartes d'un coup</b> :<br />
           • <b style={{ color: "#ff6f86" }}>Cartes identiques</b> → empile-les (2 × « 2 gorgées » = 4 gorgées).<br />
           • <b style={{ color: "#c78bff" }}>Action + Diable</b> → un autre boit (tu poses 2 cartes).<br />
           • <b style={{ color: "#00c6c6" }}>Échange de main</b> → tu échanges toute ta main avec un adversaire.<br />
-          • <b style={{ color: "#12b3a6" }}>Échange de carte</b> → tu défausses une carte et en pioches une nouvelle.<br />
           • <b style={{ color: "#27d17c" }}>Joker</b> / <b style={{ color: "#ff9b2f" }}>Relance</b> → se jouent en réaction (et quittent ta main).
         </p>
       </div>
