@@ -4,7 +4,8 @@
    « 📊 Suivi des salons »).
 
    1) doPost         → onglet « Salons » : une ligne au lancement d'une partie
-                       (appelé par l'appli, src/analytics.js).
+                       (appelé par l'appli, src/analytics.js). Sans uid : ils
+                       sont loggés en fin de partie dans « Parties ».
    2) logEndedRooms  → onglet « Parties » : une ligne par salon juste avant
                        sa suppression (TTL 12 h après la dernière activité).
                        À exécuter par un déclencheur horaire. Lit Firestore
@@ -16,8 +17,10 @@ var FIREBASE_PROJECT_ID = 'aperuno-spahd';
 var PARTIES_SHEET = 'Parties';
 var PARTIES_HEADERS = [
   'Code', 'Créée le', 'Mode', 'Nb joueurs', 'Cartes piochées', 'Partie finie',
-  'Gagnant', 'Manches lancées', 'Début', 'Fin', 'Durée (min)', 'ID'
+  'Gagnant', 'Manches lancées', 'Début', 'Fin', 'Durée (min)', 'ID',
+  'UIDs', 'UIDs arrivés en cours'
 ];
+var PARTIES_ID_COL = 12; // colonne « ID » (sert à ne pas logger deux fois)
 // Un salon est loggé quand il expire dans moins de 65 min (le déclencheur
 // tourne toutes les heures) — ou s'il a déjà expiré sans être encore supprimé.
 var LOG_BEFORE_EXPIRY_MS = 65 * 60 * 1000;
@@ -33,7 +36,6 @@ function doPost(e) {
     d.playerCount,                   // Nombre de joueurs
     (d.players || []).join(', '),    // Pseudos (pas de photo — RGPD)
     d.id || '',                      // ID du salon (= colonne ID de « Parties »)
-    (d.uids || []).join(', '),       // uid Firebase des joueurs (= users/{uid})
     d.accounts == null ? '' : d.accounts // nb de joueurs connectés à un compte
   ]);
   return ContentService.createTextOutput('ok');
@@ -54,11 +56,16 @@ function logEndedRooms() {
       var id = room.code + '-' + room.createdAt;
       if (logged[id]) return;                            // déjà loggée
       var end = st.endedAt || st.lastAt || st.startedAt;
+      var players = st.players || {};
+      var late = st.late || {};
+      // uid Firebase (= users/{uid}) ; `true` = ancien salon sans uid.
+      var uidOf = function (pid) { return typeof players[pid] === 'string' ? players[pid] : ''; };
+      var ids = Object.keys(players);
       rows.push([
         room.code,
         new Date(room.createdAt),
         room.mode || '',
-        Object.keys(st.players || {}).length,
+        ids.length,
         st.draws || 0,
         (st.wins || 0) > 0 ? 'Oui' : 'Non',
         st.winner || '',
@@ -66,7 +73,9 @@ function logEndedRooms() {
         new Date(st.startedAt),
         new Date(end),
         Math.round((end - st.startedAt) / 60000),
-        id
+        id,
+        ids.map(uidOf).filter(String).join(', '),
+        Object.keys(late).map(uidOf).filter(String).join(', ')
       ]);
       logged[id] = true;
     });
@@ -85,6 +94,9 @@ function partiesSheet_() {
     sheet = ss.insertSheet(PARTIES_SHEET);
     sheet.appendRow(PARTIES_HEADERS);
     sheet.setFrozenRows(1);
+  } else if (sheet.getLastColumn() < PARTIES_HEADERS.length) {
+    // Onglet créé avant l'ajout de colonnes : on complète les en-têtes.
+    sheet.getRange(1, 1, 1, PARTIES_HEADERS.length).setValues([PARTIES_HEADERS]);
   }
   return sheet;
 }
@@ -93,7 +105,7 @@ function loggedIds_(sheet) {
   var ids = {};
   var n = sheet.getLastRow() - 1;
   if (n < 1) return ids;
-  sheet.getRange(2, PARTIES_HEADERS.length, n, 1).getValues().forEach(function (r) {
+  sheet.getRange(2, PARTIES_ID_COL, n, 1).getValues().forEach(function (r) {
     if (r[0]) ids[r[0]] = true;
   });
   return ids;

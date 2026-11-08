@@ -80,11 +80,19 @@ export function trackStats(prev, s, moveType, now = Date.now()) {
   if (s.status === "lobby") return s;
   const st = { draws: 0, games: 0, wins: 0, players: {}, ...(prev.stats || {}) };
   st.players = { ...st.players };
+  st.late = { ...(st.late || {}) };
   if (!st.endedAt && st.lastAt && now - st.lastAt >= STATS_GAP_MS) st.endedAt = st.lastAt;
   if (!st.endedAt) {
+    // Joueur vu pour la 1re fois alors que la partie était déjà lancée →
+    // arrivé en cours de partie (repéré dans l'onglet « Parties »).
+    const alreadyStarted = !!st.startedAt;
     if (!st.startedAt) st.startedAt = now;
     st.lastAt = now;
-    s.players.forEach((p) => { st.players[p.id] = true; });
+    s.players.forEach((p) => {
+      if (alreadyStarted && !(p.id in st.players)) st.late[p.id] = true;
+      // uid Firebase (= users/{uid}) si connu, sinon `true` (anciens salons).
+      st.players[p.id] = p.uid || st.players[p.id] || true;
+    });
     if (prev.status !== "playing" && s.status === "playing") st.games += 1;
     if (moveType === "drawTurn") st.draws += 1;
     if (prev.status !== "finished" && s.status === "finished") {

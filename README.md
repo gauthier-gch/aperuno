@@ -205,16 +205,18 @@ Firestore**. Pour repartir d'un projet Firebase neuf :
 Deux onglets dans le même Google Sheet :
 
 - **`Salons`** — une ligne **à chaque partie lancée** (date/heure, code, mode,
-  nombre de joueurs, pseudos, ID du salon — le même que dans `Parties`, uid
-  Firebase des joueurs — à relier à `users/{uid}` —, nombre de joueurs
-  connectés à un compte), envoyée par l'appli côté **hôte uniquement**,
+  nombre de joueurs, pseudos, ID du salon — le même que dans `Parties` —,
+  nombre de joueurs connectés à un compte), envoyée par l'appli côté **hôte uniquement**,
   une seule fois par salon. **RGPD : seuls les pseudos sont envoyés — jamais
   les photos.** Désactivé tant que `SHEET_WEBHOOK_URL` est vide.
 - **`Parties`** (créé automatiquement) — une ligne **par salon, juste avant sa
   suppression** (12 h après la dernière activité) : code, date de création,
   mode, nombre total de joueurs (y compris arrivés en cours / virés), nombre
   de cartes piochées (= nombre de tours), partie finie (au moins un gagnant)
-  + gagnant, manches lancées, début, fin et durée (du lancement à la fin).
+  + gagnant, manches lancées, début, fin et durée (du lancement à la fin),
+  ID, **uid Firebase de tous les joueurs** (à relier à `users/{uid}`) et
+  **uid des joueurs arrivés en cours de partie**. Les en-têtes manquants
+  sont ajoutés automatiquement à un onglet existant.
 
 > **Fin de partie (stats)** : dès qu'il s'écoule **10 min sans aucun coup**, la
 > dernière activité avant ce trou marque la fin de la partie ; plus rien n'est
@@ -230,8 +232,7 @@ ceux qui expirent dans l'heure.
 Mise en place (aucun serveur à héberger, tout passe par Google Apps Script) :
 
 1. Crée un Google Sheet avec un onglet `Salons` et les en-têtes :
-   `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs` · `ID` · `UIDs` ·
-   `Nb comptes`.
+   `Date` · `Code` · `Mode` · `Nb joueurs` · `Joueurs` · `ID` · `Nb comptes`.
 2. Dans le Sheet : **Extensions → Apps Script**, colle le contenu de
    [`apps-script/Code.gs`](apps-script/Code.gs) à la place du code existant.
 3. **Paramètres du projet** (⚙️) → coche « Afficher le fichier manifeste
