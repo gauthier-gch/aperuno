@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import {
   GAMES, MODE_INFO, SUGGEST_EMAIL, SUPPORT_URL, APP_NAME, CONTACT_EMAIL, LEGAL_UPDATED,
   SITE_NAME, LEGAL_EDITOR, LEGAL_PUBLISHER, LEGAL_HOST, INSTAGRAM_URL, TIKTOK_URL,
+  activeSeasonalGames,
 } from "../game/constants.js";
+import { SEASONS, seasonDates } from "../game/seasons.js";
 import { RuleDiagram, hasRuleDiagram } from "./RuleDiagram.jsx";
 import { RichText } from "./common.jsx";
 
@@ -337,6 +339,9 @@ export function Install({ back }) {
 }
 
 export function Rules({ back }) {
+  // Mini-jeux classiques (toujours là) + éphémère(s) de la période en cours.
+  const classics = GAMES.filter((g) => !g.seasonal);
+  const seasonal = activeSeasonalGames();
   return (
     <div className="fade">
       <button className="btn btn-ghost btn-sm back" onClick={back}>← Retour</button>
@@ -379,10 +384,31 @@ export function Rules({ back }) {
           <p className="muted dim" style={{ marginTop: 6 }}>L'hôte règle le nombre de Diables, Jokers, +2, +4 (jusqu'à 5× la quantité habituelle), le nombre de chaque mini-jeu (0 à 10) et les gorgées infligées au perdant d'un mini-jeu. Les cartes gorgée/shot et Échange restent aux valeurs Harr.</p>
         </div>
       </div>
-      <h2 className="h-title" style={{ marginTop: 28 }}>🎲 Les {GAMES.length} mini-jeux</h2>
+      {seasonal.length > 0 && (
+        <>
+          <h2 className="h-title" style={{ marginTop: 28 }}>✨ {seasonal.length > 1 ? "Les mini-jeux éphémères" : "Le mini-jeu éphémère du moment"}</h2>
+          <p className="muted dim mb">{seasonal.length > 1 ? "Présents dans le paquet uniquement pendant leur période" : "Présent dans le paquet uniquement pendant sa période"} — cartes bleu clair 💙</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {seasonal.map((g) => {
+              const se = SEASONS[g.seasonal];
+              return (
+                <div className="panel seasonal-mini" key={g.id} style={{ padding: 14 }}>
+                  <div className="space">
+                    <b className="apr-serif" style={{ fontSize: 18 }}>{g.name}</b>
+                    <span className="chip season-chip" style={{ flex: "0 0 auto" }}>{se.emoji} {se.name}</span>
+                  </div>
+                  <p className="dim" style={{ marginTop: 4 }}>{seasonDates(se.id)}</p>
+                  <RichText className="muted mt" text={g.rule} />
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+      <h2 className="h-title" style={{ marginTop: 28 }}>🎲 Les {classics.length} mini-jeux</h2>
       <p className="muted dim mb">🔥 = réservé au mode Harr · « in-app » = piloté par l'appli, « hors-app » = à l'oral / physique.</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {[...GAMES].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((g) => {
+        {[...classics].sort((a, b) => a.name.localeCompare(b.name, "fr")).map((g) => {
           const horsApp = HORS_APP_KINDS.includes(g.kind);
           return (
             <div className={"panel" + (g.harrOnly ? " harr-mini" : "")} key={g.id} style={{ padding: 14 }}>

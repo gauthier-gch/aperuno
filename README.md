@@ -102,6 +102,27 @@ In-app (jouables directement dans l'appli) :
   🐃 **le Buffalo** — bois de ta bonne main, tu finis ton verre !),
   👀 **le regard**, ⚔️ **duels**.
 
+### ✨ Mini-jeux éphémères
+
+Selon la période de l'année, un mini-jeu saisonnier rejoint le paquet
+(**4 cartes**, en **bleu clair** avec l'icône de la période en haut à droite).
+Dans « Règles & mini-jeux », seul le mini-jeu de la période en cours apparaît.
+
+| Période | Dates | Mini-jeu |
+| --- | --- | --- |
+| 🎆 New Year | 1er → 15 janvier | **Le compte à rebours** — appuyer pile au zéro (chiffres cachés sous 5) |
+| 💘 Love Season | 5 → 20 février | **Cupidon** — choix secrets, les couples réciproques distribuent 3 |
+| 🌸 Enfin le printemps | 8 → 25 mars | **Arrose la fleur** — un téléphone, la fleur finit par exploser |
+| 🐣 Pâques | 26 mars → 26 avril | **Chasse aux œufs** — 10 œufs parmi 20 cachettes, 20 s, zoom au pincer |
+| 🏖️ Été | 15 juin → 30 août | **Coup de soleil** (2 cartes) + **Place la plage** (2 cartes, 50 stations) |
+| 🎒 Back to school | 1er → 20 septembre | **Interro surprise** — questions sur le lanceur, qui note les copies |
+| 🎃 Spooky | 10 octobre → 15 novembre | **Évite les monstres** — train fantôme, 3 bifurcations |
+| 🎅 Noël | 1er → 31 décembre | **Secret Santa** — chacun offre une carte de sa main |
+
+> 🧪 **Phase de test** : `SEASONAL_TEST_ALL = true` dans
+> `src/game/seasons.js` active **tous** les mini-jeux éphémères en même
+> temps. Le passer à `false` pour ne garder que celui de la période.
+
 ## 🗂️ Structure du repo
 
 ```
@@ -128,7 +149,9 @@ src/
     constants.js               → cartes, métadonnées mini-jeux, mots de mime, textes légaux
     deck.js                    → construction/mélange du paquet + génération du code de salon
     engine.js                  → reducer pur applyMove (toutes les règles + aléatoire)
-    cities.js                  → 50 villes + projection + tracé de la France
+    cities.js                  → 50 villes + 50 stations balnéaires + projection + tracé de la France
+    seasons.js                 → périodes des mini-jeux éphémères (+ drapeau de test)
+    seasonal.js                → données / règles pures des mini-jeux éphémères
   components/                  → Home, Rules, Forms, Account (profil, connexion), Lobby, GameTable, Win, common
   minigames/                   → Dice, Vote, PetitBac, Timer, Regard, Mime, Pear, City,
                                  Roulette, Patate, Piraterie, Imposteur, Duel, Dix,

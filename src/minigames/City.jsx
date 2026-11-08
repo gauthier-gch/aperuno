@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { MYID } from "../me.js";
-import { CITIES, project, FRANCE_PATH, CORSICA_PATH } from "../game/cities.js";
+import { placesOf, project, FRANCE_PATH, CORSICA_PATH } from "../game/cities.js";
 
 function FranceMap() {
   return (
@@ -23,7 +23,7 @@ export function CityGame({ room, mg, isLauncher, act, busy, waiting }) {
   const placing = useRef(false);
   const downPt = useRef(null);
   const tapCandidate = useRef(false);
-  const city = CITIES[mg.cityIdx];
+  const city = placesOf(mg.places)[mg.cityIdx]; // ville ou station balnéaire (Place la plage)
   const submitted = mg.marks && mg.marks[MYID] != null;
 
   /* Zoom + déplacement de la carte des résultats. Le déplacement est borné

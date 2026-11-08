@@ -9,10 +9,16 @@
 import {
   GAMES, game, PETITBAC_LETTERS, PETITBAC_DURATION, TEN_MIN, MIME_WORDS,
   ROULETTE, sipsFor, actionDrink, IMPOSTER_PAIRS, imposterSetup, CARD_SUITS,
-  CONNEXION_CATS, CATEGORIE_CATS, VOTE_QUESTIONS, sanitizePremium,
+  CONNEXION_CATS, CATEGORIE_CATS, VOTE_QUESTIONS, sanitizePremium, INTERRO_QUESTIONS,
 } from "./constants.js";
 import { buildDeck, shuffle, makeUid } from "./deck.js";
-import { CITIES, project, unproject, distanceKm } from "./cities.js";
+import { placesOf, unproject, distanceKm } from "./cities.js";
+import {
+  NY_PREP, NY_COUNT, NY_GRACE, newYearRanking, cupidCouples,
+  EGG_COUNT, EGG_SPOTS, EGG_SCENES, EGG_COLORS, EGG_DURATION, EGG_PREP,
+  SUN_PREP, SUN_DURATION, SUN_BURN_MIN, SUN_BURN_MAX, SUN_BURN_SIPS,
+  TRAIN_PREP, TRAIN_FORKS, TRAIN_SIPS, trainFork, trainEnd, trainDeaths, santaDraw,
+} from "./seasonal.js";
 
 /* ----------------------------- création d'état --------------------------- */
 
@@ -36,7 +42,8 @@ export function newLobby(code, mode, host, premium) {
 export function dealNewGame(s0, starterIdx) {
   const s = clone(s0);
   const deck = shuffle(buildDeck(s.mode, s.premium));
-  s.players = s.players.map((p) => ({ ...p, hand: deck.splice(0, 7) }));
+  // (bronze : lunettes du « Coup de soleil », retirées à chaque nouvelle partie)
+  s.players = s.players.map(({ bronze, ...p }) => ({ ...p, hand: deck.splice(0, 7) }));
   s.deck = deck;
   s.discard = [];
   s.current = Math.max(0, Math.min(starterIdx, s.players.length - 1));
@@ -222,7 +229,28 @@ function initMinigame(s, gameId) {
     case "inapp_mime": return { ...base, word: pickFrom(MIME_WORDS) };
     case "inapp_categorie": return { ...base, word: pickFrom(CATEGORIE_CATS) };
     case "inapp_pear": return { ...base, phase: "cut", targetAngle: Math.floor(Math.random() * 180), cuts: {} };
-    case "inapp_city": return { ...base, phase: "mark", cityIdx: Math.floor(Math.random() * CITIES.length), marks: {} };
+    case "inapp_city": {
+      // « Place la ville » ou « Place la plage » (places: "beach").
+      const places = g.places || null;
+      return { ...base, phase: "mark", places, cityIdx: Math.floor(Math.random() * placesOf(places).length), marks: {} };
+    }
+    /* ---------------- mini-jeux éphémères ---------------- */
+    case "inapp_newyear": return { ...base, phase: "intro", clicks: {} };
+    case "inapp_cupidon": return { ...base, phase: "vote", votes: {} };
+    case "inapp_eggs": {
+      const eggs = shuffle(Array.from({ length: EGG_SPOTS }, (_, i) => i)).slice(0, EGG_COUNT);
+      const colors = eggs.map(() => EGG_COLORS[Math.floor(Math.random() * EGG_COLORS.length)]);
+      return { ...base, phase: "intro", scene: Math.floor(Math.random() * EGG_SCENES.length), eggs, colors, found: {} };
+    }
+    case "inapp_sun":
+      // Un nouveau coup de soleil retire les lunettes du précédent bronzé.
+      s.players.forEach((p) => { delete p.bronze; });
+      return { ...base, phase: "intro", shade: {} };
+    case "inapp_interro": return { ...base, phase: "choose", options: pickN(INTERRO_QUESTIONS, 3), answers: {} };
+    case "inapp_train":
+      return { ...base, phase: "intro", monsterSide: Array.from({ length: TRAIN_FORKS }, () => (Math.random() < 0.5 ? "L" : "R")), choices: {} };
+    case "inapp_santa":
+      return { ...base, phase: "give", santa: santaDraw(s.players.map((p) => p.id), shuffle), gifts: {}, received: {}, opened: {} };
     case "inapp_roulette": return { ...base, segment: null };
     case "inapp_dix": {
       const suit = CARD_SUITS[Math.floor(Math.random() * CARD_SUITS.length)];
@@ -236,6 +264,7 @@ function initMinigame(s, gameId) {
 }
 function randLetter() { return PETITBAC_LETTERS[Math.floor(Math.random() * PETITBAC_LETTERS.length)]; }
 function randCategory() { return CONNEXION_CATS[Math.floor(Math.random() * CONNEXION_CATS.length)]; }
+function pickN(list, n) { return shuffle(list).slice(0, n); }
 function pickFrom(list, avoid) {
   if (list.length < 2) return list[0];
   let w;
@@ -558,13 +587,18 @@ export function applyMove(s0, move, myId) {
        pour le vote : dépouillement des votes déjà faits). */
     case "mgPartialResult": {
       const k = s.minigame && s.minigame.kind;
-      if (k !== "inapp_pear" && k !== "inapp_city" && k !== "inapp_vote") throw new Error("Rien à arrêter ici.");
-      if (s.minigame.phase === "result") throw new Error("Les résultats sont déjà affichés.");
+      const PARTIAL = {
+        inapp_pear: ["cuts", pearResult], inapp_city: ["marks", cityResult], inapp_vote: ["votes", voteResult],
+        inapp_cupidon: ["votes", cupidResult], inapp_santa: ["gifts", santaDistribute],
+      };
+      if (!PARTIAL[k]) throw new Error("Rien à arrêter ici.");
+      if (s.minigame.phase === "result" || s.minigame.phase === "open") throw new Error("Les résultats sont déjà affichés.");
       if (s.minigame.phase === "intro") throw new Error("Le jeu n'a pas encore commencé.");
-      const done = Object.keys(k === "inapp_pear" ? s.minigame.cuts : k === "inapp_vote" ? s.minigame.votes : s.minigame.marks);
+      const [field, resolve] = PARTIAL[k];
+      const done = Object.keys(s.minigame[field] || {});
       if (!done.length) throw new Error("Personne n'a encore joué.");
       s.minigame.partial = true;
-      if (k === "inapp_pear") pearResult(s); else if (k === "inapp_vote") voteResult(s); else cityResult(s);
+      resolve(s);
       s.announce = note(`Arrêt anticipé : résultats de ceux qui ont joué (${mine.name}) ⏭️`);
       return s;
     }
@@ -719,6 +753,201 @@ export function applyMove(s0, move, myId) {
       return s;
     }
 
+    /* ======================= mini-jeux éphémères ======================= */
+
+    /* ---------- Le compte à rebours (New Year) ---------- */
+    case "mgNyStart": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_newyear", "intro");
+      s.minigame.phase = "count";
+      s.minigame.startsAt = Date.now() + NY_PREP;
+      s.minigame.zeroAt = s.minigame.startsAt + NY_COUNT * 1000;
+      s.announce = note("Le compte à rebours commence ! 🎆");
+      return s;
+    }
+    case "mgNyClick": {
+      mgKind(s, "inapp_newyear", "count");
+      if (typeof s.minigame.clicks[myId] === "number") throw new Error("Tu as déjà appuyé !");
+      if (typeof move.delta !== "number" || !Number.isFinite(move.delta)) throw new Error("Appui invalide.");
+      s.minigame.clicks[myId] = Math.round(Math.max(-NY_COUNT * 1000 - NY_PREP, Math.min(NY_GRACE, move.delta)));
+      if (Object.keys(s.minigame.clicks).length >= s.players.length) newYearResult(s);
+      return s;
+    }
+    case "mgNyEnd": {
+      if (mgDone(s, "inapp_newyear")) return s;
+      mgKind(s, "inapp_newyear", "count");
+      if (Date.now() < s.minigame.zeroAt + NY_GRACE - 1000) throw new Error("Le décompte n'est pas fini.");
+      newYearResult(s);
+      return s;
+    }
+
+    /* ---------- Cupidon ---------- */
+    case "mgCupidVote": {
+      mgKind(s, "inapp_cupidon", "vote");
+      const t = idx(s, move.targetId);
+      if (t < 0 || move.targetId === myId) throw new Error("Choisis un autre joueur.");
+      s.minigame.votes[myId] = move.targetId;
+      if (Object.keys(s.minigame.votes).length >= s.players.length) cupidResult(s);
+      return s;
+    }
+
+    /* ---------- Chasse aux œufs ---------- */
+    case "mgEggStart": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_eggs", "intro");
+      s.minigame.phase = "play";
+      s.minigame.startsAt = Date.now() + EGG_PREP;
+      s.minigame.endsAt = s.minigame.startsAt + EGG_DURATION;
+      s.announce = note(`Chasse aux œufs : ${EGG_SCENES[s.minigame.scene].name.toLowerCase()} ! 🐣`);
+      return s;
+    }
+    case "mgEggDone": {
+      if (mgDone(s, "inapp_eggs")) return s; // fin déjà prononcée (envoi tardif)
+      mgKind(s, "inapp_eggs", "play");
+      if (typeof s.minigame.found[myId] === "number") return s; // déjà compté
+      const n = Math.max(0, Math.min(EGG_COUNT, Math.round(Number(move.found) || 0)));
+      s.minigame.found[myId] = n;
+      if (Object.keys(s.minigame.found).length >= s.players.length) eggResult(s);
+      return s;
+    }
+    case "mgEggEnd": {
+      if (mgDone(s, "inapp_eggs")) return s;
+      mgKind(s, "inapp_eggs", "play");
+      if (Date.now() < s.minigame.endsAt + 1000) throw new Error("La chasse n'est pas finie.");
+      eggResult(s);
+      return s;
+    }
+
+    /* ---------- Coup de soleil ---------- */
+    case "mgSunStart": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_sun", "intro");
+      s.minigame.phase = "play";
+      s.minigame.startsAt = Date.now() + SUN_PREP;
+      s.minigame.duration = SUN_DURATION;
+      s.minigame.burn = Math.round(SUN_DURATION * (SUN_BURN_MIN + Math.random() * (SUN_BURN_MAX - SUN_BURN_MIN)));
+      s.announce = note("Coup de soleil : tout le monde au soleil ! ☀️");
+      return s;
+    }
+    case "mgSunShade": {
+      if (mgDone(s, "inapp_sun")) throw new Error("Trop tard : coup de soleil ! 🥵");
+      mgKind(s, "inapp_sun", "play");
+      if (typeof s.minigame.shade[myId] === "number") throw new Error("Tu es déjà à l'ombre.");
+      const t = Number(move.t);
+      if (!Number.isFinite(t)) throw new Error("Temps invalide.");
+      if (t >= s.minigame.burn) throw new Error("Trop tard : coup de soleil ! 🥵");
+      s.minigame.shade[myId] = Math.max(0, Math.round(t));
+      if (Object.keys(s.minigame.shade).length >= s.players.length) sunResult(s);
+      return s;
+    }
+    case "mgSunEnd": {
+      if (mgDone(s, "inapp_sun")) return s;
+      mgKind(s, "inapp_sun", "play");
+      if (Date.now() < s.minigame.startsAt + s.minigame.burn - 800) throw new Error("Pas encore de coup de soleil.");
+      sunResult(s);
+      return s;
+    }
+
+    /* ---------- Interro surprise ---------- */
+    case "mgInterroReroll": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_interro", "choose");
+      s.minigame.options = pickN(INTERRO_QUESTIONS.filter((q) => !s.minigame.options.includes(q)), 3);
+      return s;
+    }
+    case "mgInterroPick": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_interro", "choose");
+      const q = s.minigame.options[move.idx];
+      if (!q) throw new Error("Question invalide.");
+      s.minigame.question = q.replace(/\{n\}/g, s.players[launcher].name);
+      s.minigame.phase = "answer";
+      s.announce = note(`Interro surprise 📝 : ${s.minigame.question}`);
+      return s;
+    }
+    case "mgInterroAnswer": {
+      mgKind(s, "inapp_interro", "answer");
+      if (isLauncher) throw new Error("Le lanceur ne répond pas à sa propre question.");
+      const text = String(move.text || "").trim().slice(0, 120);
+      if (!text) throw new Error("Écris une réponse.");
+      s.minigame.answers[myId] = text;
+      if (Object.keys(s.minigame.answers).length >= s.players.length - 1) s.minigame.phase = "judge";
+      return s;
+    }
+    case "mgInterroClose": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_interro", "answer");
+      s.minigame.phase = "judge";
+      return s;
+    }
+    case "mgInterroVerdict": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_interro", "judge");
+      const w = move.winnerId ? idx(s, move.winnerId) : -1;
+      const l = move.loserId ? idx(s, move.loserId) : -1;
+      if ((move.winnerId && (w < 0 || w === launcher)) || (move.loserId && (l < 0 || l === launcher)))
+        throw new Error("Joueur invalide.");
+      if (w < 0 && l < 0) throw new Error("Désigne au moins un gagnant ou un perdant.");
+      if (w >= 0 && w === l) throw new Error("Le gagnant et le perdant doivent être différents.");
+      const parts = [];
+      if (w >= 0) parts.push(`🏆 ${s.players[w].name} distribue 3 gorgées`);
+      if (l >= 0) { parts.push(`📝 ${s.players[l].name} boit 3 gorgées`); addDrink(s, move.loserId, 3); }
+      s.announce = note(`Interro surprise : ${parts.join(" · ")} 🍻`, true);
+      endTurn(s);
+      return s;
+    }
+
+    /* ---------- Évite les monstres (train fantôme) ---------- */
+    case "mgTrainStart": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_train", "intro");
+      s.minigame.phase = "play";
+      s.minigame.startsAt = Date.now() + TRAIN_PREP;
+      s.announce = note("Tout le monde à bord du train fantôme ! 🎃");
+      return s;
+    }
+    case "mgTrainChoose": {
+      mgKind(s, "inapp_train", "play");
+      const f = move.fork;
+      if (!Number.isInteger(f) || f < 0 || f >= TRAIN_FORKS) throw new Error("Bifurcation invalide.");
+      if (move.side !== "L" && move.side !== "R") throw new Error("Choisis gauche ou droite.");
+      if (trainDeaths(s.minigame, [mine], f)[myId]) throw new Error("Un monstre t'a déjà attrapé 👻");
+      const mineChoices = (s.minigame.choices[myId] = s.minigame.choices[myId] || {});
+      if (mineChoices[f]) throw new Error("Tu as déjà choisi.");
+      const w = trainFork(s.minigame, f);
+      const now = Date.now();
+      if (now < w.choose - 1500 || now > w.reveal + 1500) throw new Error("Trop tard pour choisir !");
+      mineChoices[f] = move.side;
+      return s;
+    }
+    case "mgTrainEnd": {
+      if (mgDone(s, "inapp_train")) return s;
+      mgKind(s, "inapp_train", "play");
+      if (Date.now() < trainEnd(s.minigame) - 1000) throw new Error("Le train roule encore.");
+      const deaths = trainDeaths(s.minigame, s.players);
+      s.minigame.deaths = deaths;
+      s.minigame.drinks = {};
+      Object.keys(deaths).forEach((id) => { s.minigame.drinks[id] = TRAIN_SIPS; });
+      s.minigame.phase = "result";
+      return s;
+    }
+
+    /* ---------- Secret Santa ---------- */
+    case "mgSantaGive": {
+      mgKind(s, "inapp_santa", "give");
+      if (!s.minigame.santa[myId]) throw new Error("Tu n'as personne à qui offrir.");
+      const card = mine.hand.find((c) => c.id === move.cardId);
+      if (!card) throw new Error("Carte introuvable.");
+      s.minigame.gifts[myId] = card.id;
+      if (Object.keys(s.minigame.gifts).length >= s.players.length) santaDistribute(s);
+      return s;
+    }
+    case "mgSantaOpen": {
+      mgKind(s, "inapp_santa", "open");
+      s.minigame.opened[myId] = true;
+      return s;
+    }
+
     /* ---------- débloquer / terminer un mini-jeu (n'importe qui) ----------
        Utile si le LANCEUR lui-même est absent (lui seul a les boutons de fin)
        ou si un participant déconnecté bloque une phase collective. */
@@ -733,6 +962,7 @@ export function applyMove(s0, move, myId) {
         ids.forEach((id) => addDrink(s, id, n));
       } else {
         s.announce = note(`« ${game(s.minigame.gameId).name} » terminé (débloqué) ⏭️`);
+        countMgDrinks(s); // résultats déjà calculés (mini-jeux éphémères)
       }
       endTurn(s);
       return s;
@@ -784,6 +1014,16 @@ function mgGuard(s, isLauncher) {
   if (!s.minigame) throw new Error("Aucun mini-jeu en cours.");
   if (!isLauncher) throw new Error("Seul le lanceur peut faire ça.");
 }
+/* Vérifie le type (et éventuellement la phase) du mini-jeu en cours. */
+function mgKind(s, kind, phase) {
+  if (!s.minigame || s.minigame.kind !== kind) throw new Error("Ce mini-jeu n'est plus en cours.");
+  if (phase && s.minigame.phase !== phase) throw new Error("Trop tard (ou trop tôt) pour ça.");
+}
+/* Mini-jeu de ce type déjà terminé (résultats affichés) ? Les coups « fin de
+   chrono », envoyés par plusieurs téléphones, deviennent alors sans effet. */
+function mgDone(s, kind) {
+  return !!(s.minigame && s.minigame.kind === kind && s.minigame.phase === "result");
+}
 
 export function roleLabel(role) {
   return role === "imposteur" ? "Undercover" : role === "white" ? "Mister White" : "Civil";
@@ -830,7 +1070,7 @@ function voteResult(s) {
 }
 /* Place la ville : distance de chaque marqueur posé ; le plus loin perd. */
 function cityResult(s) {
-  const city = CITIES[s.minigame.cityIdx];
+  const city = placesOf(s.minigame.places)[s.minigame.cityIdx];
   let loserId = null, worst = -1;
   s.players.forEach((p) => {
     const m = s.minigame.marks[p.id];
@@ -852,10 +1092,74 @@ function dixReveal(s) {
     ? Math.round(ecarts.reduce((a, b) => a + b, 0) / ecarts.length) : 0;
   s.minigame.phase = "reveal";
 }
+/* ---------------------- résultats des mini-jeux éphémères ---------------------- */
+function newYearResult(s) {
+  const ranking = newYearRanking(s.players, s.minigame.clicks);
+  s.minigame.ranking = ranking;
+  s.minigame.drinks = {};
+  ranking.forEach((r) => { if (r.sips) s.minigame.drinks[r.id] = r.sips; });
+  s.minigame.phase = "result";
+}
+function cupidResult(s) {
+  s.minigame.couples = cupidCouples(s.players, s.minigame.votes);
+  s.minigame.phase = "result";
+}
+function eggResult(s) {
+  s.minigame.drinks = {};
+  Object.entries(s.minigame.found).forEach(([id, n]) => {
+    if (n < EGG_COUNT) s.minigame.drinks[id] = EGG_COUNT - n;
+  });
+  s.minigame.phase = "result";
+}
+/* Coup de soleil : ceux restés au soleil brûlent ; le dernier parti à l'ombre
+   (sans brûler) devient le bronzé 😎 (lunettes jusqu'au prochain coup de soleil). */
+function sunResult(s) {
+  const mg = s.minigame;
+  mg.drinks = {};
+  let bronzeId = null, best = -1;
+  s.players.forEach((p) => {
+    const t = mg.shade[p.id];
+    if (typeof t !== "number") { mg.drinks[p.id] = SUN_BURN_SIPS; return; }
+    if (t > best) { best = t; bronzeId = p.id; }
+  });
+  mg.bronzeId = bronzeId;
+  s.players.forEach((p) => { if (p.id === bronzeId) p.bronze = true; else delete p.bronze; });
+  mg.phase = "result";
+}
+/* Secret Santa : chaque cadeau quitte la main du donneur et arrive (emballé)
+   dans celle du receveur. On retire d'abord tous les cadeaux, puis on les
+   distribue : une carte reçue ne peut pas être ré-offerte dans la foulée. */
+function santaDistribute(s) {
+  const mg = s.minigame;
+  const moving = [];
+  Object.entries(mg.gifts).forEach(([giver, cardId]) => {
+    const gi = idx(s, giver);
+    const ri = idx(s, mg.santa[giver]);
+    if (gi < 0 || ri < 0) return;
+    const card = s.players[gi].hand.find((c) => c.id === cardId);
+    if (!card) return;
+    s.players[gi].hand = s.players[gi].hand.filter((c) => c.id !== cardId);
+    moving.push([ri, card]);
+  });
+  moving.forEach(([ri, card]) => {
+    s.players[ri].hand.push(card);
+    mg.received[s.players[ri].id] = card;
+  });
+  mg.phase = "open";
+}
+/* Gorgées déjà calculées par un mini-jeu (champ mg.drinks : { id: gorgées }). */
+function countMgDrinks(s) {
+  const d = s.minigame && s.minigame.drinks;
+  if (!d || s.minigame.drinksCounted) return;
+  Object.entries(d).forEach(([id, n]) => addDrink(s, id, n));
+  s.minigame.drinksCounted = true;
+}
+
 /* Mini-jeux terminés avec un texte libre : on déduit qui boit quoi de l'état
    du mini-jeu (jamais du texte), quand c'est connu. */
 function countFinishDrinks(s, move) {
   const mg = s.minigame;
+  countMgDrinks(s);
   const launcherId = s.players[mg.launcherIdx] && s.players[mg.launcherIdx].id;
   if (mg.kind === "inapp_dix") addDrink(s, launcherId, mg.launcherSips || 0);
   if (mg.kind === "inapp_roulette" && mg.segment != null) {

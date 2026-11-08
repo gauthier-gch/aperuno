@@ -1,23 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MYID } from "../me.js";
 import { ProfileChip } from "./Account.jsx";
-import { TYPE_META, CARD_INFO, GAMES, actionDrink } from "../game/constants.js";
+import { CARD_INFO, GAMES, actionDrink, cardMeta } from "../game/constants.js";
+import { seasonDates } from "../game/seasons.js";
+import { CardFace } from "./CardFace.jsx";
 import { Overlay, Ava, RichText } from "./common.jsx";
 import { sortedHand } from "../game/engine.js";
 import { Minigame } from "../minigames/index.jsx";
 import { RuleDiagram } from "./RuleDiagram.jsx";
-
-function CardFace({ c, onClick, selected, className = "", style, ...rest }) {
-  const m = TYPE_META[c.type];
-  return (
-    <div className={"card" + (selected ? " sel" : "") + (className ? " " + className : "")} onClick={onClick} {...rest}
-      style={{ background: `linear-gradient(160deg, ${m.color}, ${m.color}cc)`, boxShadow: `0 10px 26px ${m.glow}`, ...style }}>
-      <div className="tag">{m.tag} <span style={{ float: "right", opacity: 0.8 }}>ⓘ</span></div>
-      <div className="big">{c.label}</div>
-      <div className="ic">{m.ic}</div>
-    </div>
-  );
-}
 
 /* Main du joueur. Appui court → règles de la carte. Appui long → la carte
    grossit et se « décolle » : on la fait glisser à gauche / à droite pour
@@ -108,7 +98,7 @@ function Hand({ hand, onOpen, onReorder, footer }) {
     const id = c.id;
     if (!drag) return settling ? { transition: "none" } : undefined;
     // carte soulevée : fond opaque (le dégradé est translucide) pour masquer celles qu'elle survole
-    if (id === drag.id) return { transform: `translateX(${drag.dx}px) scale(1.12)`, transition: "none", zIndex: 5, backgroundColor: TYPE_META[c.type].color };
+    if (id === drag.id) return { transform: `translateX(${drag.dx}px) scale(1.12)`, transition: "none", zIndex: 5, backgroundColor: cardMeta(c).color };
     const { from, to } = drag;
     const step = g.current ? g.current.step : 104;
     if (from < to && i > from && i <= to) return { transform: `translateX(${-step}px)`, transition: "transform .18s" };
@@ -133,7 +123,7 @@ function Hand({ hand, onOpen, onReorder, footer }) {
 }
 
 function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDiableStack, onJeu, onEchange, onEchangeCarte }) {
-  const m = TYPE_META[card.type];
+  const m = cardMeta(card);
   const g = card.type === "jeu" ? GAMES.find((x) => x.id === card.gameId) : null;
   const rule = g ? g.rule : CARD_INFO[card.type];
   const sameCount = card.type === "action"
@@ -150,9 +140,11 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
         <div className="mini-card" style={{ background: `linear-gradient(160deg,${m.color},${m.color}cc)`, boxShadow: `0 8px 20px ${m.glow}` }}>{m.ic}</div>
         <div>
           <span className="chip" style={{ borderColor: m.color }}>{m.tag}</span>
+          {m.season && <span className="chip season-chip" style={{ marginLeft: 6 }}>{m.season.emoji} {m.season.name}</span>}
           <h3 className="h-title" style={{ margin: "6px 0 0" }}>{card.label}</h3>
         </div>
       </div>
+      {m.season && <p className="dim mb">✨ Mini-jeu éphémère, {seasonDates(m.season.id)}.</p>}
       <RichText className="muted mb" text={rule} />
       {g && <RuleDiagram id={g.id} />}
       {!canPlay && <p className="muted dim mb">Ce n'est pas ton tour (ou tu dois d'abord piocher) — tu peux seulement consulter la règle.</p>}
@@ -301,7 +293,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
         </div>
         <div className="pile">
           {top
-            ? <div className="pile-card" style={{ background: `linear-gradient(160deg,${TYPE_META[top.type].color},${TYPE_META[top.type].color}cc)`, fontSize: 12, padding: 6, textAlign: "center" }}>{top.label}</div>
+            ? <div className="pile-card" style={{ background: `linear-gradient(160deg,${cardMeta(top).color},${cardMeta(top).color}cc)`, fontSize: 12, padding: 6, textAlign: "center" }}>{top.label}</div>
             : <div className="pile-card pile-empty">vide</div>}
           <div className="pile-lbl">Défausse</div>
         </div>
@@ -343,7 +335,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
           <div className="wrap">
             {me.hand.filter((c) => c.id !== swapCard.cardId).map((c) => (
               <button key={c.id} className="btn btn-ghost btn-sm auto" onClick={() => sendEchangeCarte(c.id)}>
-                <span style={{ color: TYPE_META[c.type].color }}>{TYPE_META[c.type].ic}</span> {c.label}
+                <span style={{ color: cardMeta(c).color }}>{cardMeta(c).ic}</span> {c.label}
               </button>
             ))}
           </div>

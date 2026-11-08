@@ -2,7 +2,7 @@
    Construction et mélange du paquet + génération du code de salon.
    ========================================================================= */
 
-import { ACTION_CARDS, GAMES, actionLabel, actionDrink, sanitizePremium } from "./constants.js";
+import { ACTION_CARDS, GAMES, actionLabel, actionDrink, sanitizePremium, isGameAvailable } from "./constants.js";
 
 export function makeUid(prefix, i) {
   return `${prefix}${i}_${Math.random().toString(36).slice(2, 7)}`;
@@ -38,6 +38,8 @@ export function buildDeck(mode, premium) {
       });
   });
   GAMES.forEach((g) => {
+    // Mini-jeux éphémères : seulement pendant leur période (voir seasons.js).
+    if (!isGameAvailable(g)) return;
     // En premium, tous les mini-jeux (Harr-only inclus) sont réglables.
     if (g.harrOnly && !isPremium && mode !== "harr") return;
     const count = isPremium ? cfg.games[g.id] : g[mode];

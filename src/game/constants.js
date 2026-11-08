@@ -3,6 +3,8 @@
    Mode de jeu : "chill" | "harr".  (anciennement "hard" → renommé "Harr")
    ========================================================================= */
 
+import { SEASONS, isSeasonActive } from "./seasons.js";
+
 /* Cartes Action : on stocke une valeur numérique `sips` + une `unit`, ce qui
    permet d'empiler plusieurs cartes identiques (2 × « 2 gorgées » = 4). */
 export const ACTION_CARDS = [
@@ -71,7 +73,7 @@ export function premiumRecos(cfg) {
   const c = sanitizePremium(cfg);
   const actionTotal = ACTION_CARDS.reduce((s, a) => s + a.harr, 0); // gorgées/shots (fixes)
   const echange = 6; // 3 échange de main + 3 échange de carte (fixes)
-  const gamesTotal = Object.values(c.games).reduce((s, n) => s + n, 0);
+  const gamesTotal = availableGames().reduce((s, g) => s + (c.games[g.id] || 0), 0);
   const plus = c.plus2 + c.plus4;
   const special = c.diable + c.joker + plus;
   const total = actionTotal + echange + gamesTotal + special;
@@ -141,7 +143,8 @@ export function sanitizePremium(p) {
 /* kind : inapp_dice | inapp_vote | inapp_timer | inapp_letter | regard |
           inapp_mime | inapp_pear | inapp_city | inapp_roulette |
           inapp_connexion | inapp_patate | inapp_piraterie | inapp_categorie |
-          facilitator | offapp
+          inapp_newyear | inapp_cupidon | inapp_fleur | inapp_eggs | inapp_sun |
+          inapp_interro | inapp_train | inapp_santa | facilitator | offapp
    harrOnly : carte présente uniquement dans le deck du mode Harr. */
 export const GAMES = [
   { id: "21", name: "Le 21", chill: 3, harr: 1, kind: "offapp",
@@ -198,9 +201,45 @@ export const GAMES = [
     rule: "*Réservée au mode Harr.*\n\nUn chrono de **10 minutes** est lancé. Pendant toute la durée, interdit de boire de sa __bonne main__ *(la droite pour les droitiers, la gauche pour les gauchers)*.\n\nQui se fait repérer finit son verre **cul sec** 🥃 !" },
   { id: "piraterie", name: "La Piraterie", chill: 0, harr: 2, kind: "inapp_piraterie", harrOnly: true, noLoser: true,
     rule: "*Réservée au mode Harr.*\n\n**20 coffres** de pirates, un seul cache une **bombe** 💣.\nSur le téléphone du lanceur, chacun son tour ouvre autant de coffres qu'il ose, puis passe l'appareil au voisin.\n\nCelui qui déterre la bombe finit son verre **cul sec** 🥃 !" },
+  /* ------------------------------------------------------------------
+     Mini-jeux ÉPHÉMÈRES : `seasonal` = id de période (voir seasons.js).
+     Présents dans le paquet uniquement pendant leur période (4 cartes,
+     sauf l'été : 2 « Coup de soleil » + 2 « Place la plage »).
+     ------------------------------------------------------------------ */
+  { id: "rebours", name: "Le compte à rebours", chill: 4, harr: 4, kind: "inapp_newyear", seasonal: "newyear",
+    rule: "Un **décompte** démarre sur tous les écrans *(10, 9, 8…)*. À partir de 5, les chiffres **disparaissent** !\nAppuie sur **« Bonne année ! 🎉 »** pile au moment où le **zéro** tombe.\n\nClassement du plus précis au moins précis :\n- ceux qui n'ont pas appuyé boivent **5 gorgées** ;\n- puis les 3 derniers boivent **3, 2 et 1 gorgée**." },
+  { id: "cupidon", name: "Cupidon", chill: 4, harr: 4, kind: "inapp_cupidon", seasonal: "love",
+    rule: "Chacun choisit **en secret** un autre joueur 💘.\n\nQuand tout le monde a choisi, les **couples** *(choix réciproques)* sont révélés : chaque membre d'un couple **distribue 3 gorgées**." },
+  { id: "fleur", name: "Arrose la fleur", chill: 4, harr: 4, kind: "inapp_fleur", seasonal: "spring",
+    rule: "Sur le téléphone du lanceur, une **fleur** 🌷 pousse à chaque coup d'arrosoir.\nChacun son tour arrose autant qu'il ose, puis passe l'appareil au voisin.\n\nMais à un moment, elle devient **trop grosse et explose** 💥 : celui qui l'a fait exploser boit **5 gorgées** *(finit son verre en mode Harr)*." },
+  { id: "oeufs", name: "Chasse aux œufs", chill: 4, harr: 4, kind: "inapp_eggs", seasonal: "easter",
+    rule: "Un **lieu** s'affiche chez tout le monde, avec **10 œufs** cachés parmi 20 cachettes 🥚.\nTrouve-les tous en **20 secondes** *(pince pour zoomer)* — au bout de 15 s, les œufs se mettent à **trembler**.\n\n- Tu n'as pas tout trouvé : bois **la différence** *(œufs manquants)*.\n- Tu as tout trouvé : **distribue 3 gorgées**." },
+  { id: "soleil", name: "Coup de soleil", chill: 2, harr: 2, kind: "inapp_sun", seasonal: "summer",
+    rule: "La **jauge de chaleur** monte petit à petit ☀️ *(elle n'est pas graduée)*.\nAppuie sur **« Aller à l'ombre »** quand tu veux… mais à un moment, les joueurs encore au soleil attrapent un **coup de soleil** et boivent **3 gorgées** 🥵.\n\nCelui qui est resté le plus longtemps sans brûler devient le **Bronzé Mamacita Caramielo** 😎 : il **distribue 5 gorgées** et garde ses lunettes de soleil jusqu'au prochain coup de soleil." },
+  { id: "plage", name: "Place la plage", chill: 2, harr: 2, kind: "inapp_city", places: "beach", seasonal: "summer",
+    rule: "Une **station balnéaire** française est tirée 🏖️.\nChacun place un marqueur sur la carte.\n\nLe plus éloigné de la vraie position perd et boit." },
+  { id: "interro", name: "Interro surprise", chill: 4, harr: 4, kind: "inapp_interro", seasonal: "school",
+    rule: "Le lanceur choisit **une question parmi 3** sur lui-même *(couleur préférée, job, bodycount…)* 📝.\nChacun y répond sur son téléphone, les réponses arrivent chez le lanceur.\n\nLe lanceur désigne ensuite :\n- le **gagnant**, qui distribue **3 gorgées** ;\n- le **perdant**, qui boit **3 gorgées**." },
+  { id: "train", name: "Évite les monstres", chill: 4, harr: 4, kind: "inapp_train", seasonal: "spooky",
+    rule: "Tout le monde monte dans le **train fantôme** 🎢.\nÀ chaque **bifurcation** *(3 au total)*, tu as **5 secondes** pour choisir **gauche** ou **droite** : un des deux chemins cache un **monstre** 🐺🧛🧙. Si tu ne choisis pas, tu fonces tout droit dans le mur… et son monstre 🐍🧟👻 !\n\n- Tu rencontres un monstre : tu bois **3 gorgées** *(et tu regardes la suite)*.\n- Tu évites tous les monstres : tu **distribues 5 gorgées**." },
+  { id: "santa", name: "Secret Santa", chill: 4, harr: 4, kind: "inapp_santa", seasonal: "xmas",
+    rule: "Un joueur secret 🎅 est tiré au sort pour chacun.\nChoisis **une carte de ta main** à lui offrir : chacun **donne une carte** et **en reçoit une**.\n\nTon cadeau arrive dans un **papier cadeau** 🎁 : ouvre-le pour découvrir ta nouvelle carte… sans savoir qui te l'a offerte 🤫" },
 ];
 
 export function game(id) { return GAMES.find((g) => g.id === id); }
+
+/* Mini-jeu disponible (dans le paquet / les règles) : tous les classiques,
+   et les éphémères seulement pendant leur période. */
+export function isGameAvailable(g, date = new Date()) {
+  return !!g && (!g.seasonal || isSeasonActive(g.seasonal, date));
+}
+export function availableGames(date = new Date()) {
+  return GAMES.filter((g) => isGameAvailable(g, date));
+}
+/* Mini-jeux éphémères actifs en ce moment. */
+export function activeSeasonalGames(date = new Date()) {
+  return GAMES.filter((g) => g.seasonal && isSeasonActive(g.seasonal, date));
+}
 
 export const TYPE_META = {
   action: { color: "#ff3b5c", glow: "rgba(255,59,92,.55)", tag: "ACTION", ic: "🍺" },
@@ -211,6 +250,17 @@ export const TYPE_META = {
   echange: { color: "#00c6c6", glow: "rgba(0,198,198,.55)", tag: "ÉCHANGE", ic: "🔄" },
   echangecarte: { color: "#12b3a6", glow: "rgba(18,179,166,.55)", tag: "ÉCHANGE 1", ic: "🔃" },
 };
+
+/* Cartes Jeu éphémères : bleu plus clair + icône de la période en haut à droite. */
+const SEASONAL_META = { color: "#6cc4ff", glow: "rgba(108,196,255,.6)" };
+export function cardMeta(c) {
+  const m = TYPE_META[c.type];
+  if (c.type === "jeu") {
+    const g = game(c.gameId);
+    if (g && g.seasonal && SEASONS[g.seasonal]) return { ...m, ...SEASONAL_META, season: SEASONS[g.seasonal] };
+  }
+  return m;
+}
 
 export const DICE = [null, "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 export const PETITBAC_CATS = ["Prénom", "Pays", "Alcool", "Métier", "Objet", "Animal", "Célébrité"];
@@ -281,6 +331,28 @@ export const VOTE_QUESTIONS = [
   "Qui est le plus susceptible de se marier à Las Vegas sur un coup de tête ?",
   "Qui a les messages vocaux les plus longs ?", "Qui serait le pire prof ?",
   "Qui a le plus de chance de finir dans un fait divers ?", "Qui ronfle le plus fort ?",
+];
+
+/* « Interro surprise » : questions sur le lanceur ({n} = son prénom). */
+export const INTERRO_QUESTIONS = [
+  "Quelle est la couleur préférée de {n} ?", "Quel est le bodycount de {n} ?",
+  "Quel est le métier de {n}, dans le détail ?", "Quel métier {n} rêvait de faire enfant ?",
+  "Quel est le plat préféré de {n} ?", "À quel âge {n} a eu son premier baiser ?",
+  "Quel est l'alcool préféré de {n} ?", "Quelle est la série préférée de {n} ?",
+  "Quel est l'artiste que {n} écoute le plus ?", "Combien de temps a duré la plus longue relation de {n} ?",
+  "Quel est le signe astrologique de {n} ?", "Quelle est la pointure de {n} ?",
+  "Quel est le voyage de rêve de {n} ?", "Quel est le deuxième prénom de {n} ?",
+  "De quoi {n} a le plus peur ?", "Quel est le film préféré de {n} ?",
+  "Combien de frères et sœurs a {n} ?", "Quelle est l'appli que {n} utilise le plus ?",
+  "À quel âge {n} a pris sa première cuite ?", "Quelle célébrité {n} épouserait demain ?",
+  "Quel est le sport préféré de {n} ?", "À quelle heure {n} se couche en semaine ?",
+  "Quel est le plus gros mensonge de {n} à ses parents ?", "Dans quelle ville {n} est né(e) ?",
+  "Quel est le cocktail préféré de {n} ?", "Combien d'ex a {n} ?",
+  "Quelle était la matière préférée de {n} au lycée ?", "Quelle matière {n} détestait à l'école ?",
+  "Quelle note {n} a eu au bac de philo ?", "Quel est le pire job que {n} a fait ?",
+  "Quel est le surnom d'enfance de {n} ?", "Quel est le péché mignon de {n} ?",
+  "Quel est le premier concert de {n} ?", "Quelle est la plus grosse dépense inutile de {n} ?",
+  "Quel animal de compagnie {n} a eu (ou rêve d'avoir) ?", "Quel est le type physique de {n} ?",
 ];
 
 /* Roulette Harr : segments dans l'ordre d'affichage sur la roue.

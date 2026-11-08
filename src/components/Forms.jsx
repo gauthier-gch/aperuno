@@ -5,10 +5,11 @@ import { useAccount, defaultIdentity, rememberName } from "../account.js";
 import { Overlay } from "./common.jsx";
 import { PhotoPicker, AccountBox } from "./Account.jsx";
 import {
-  GAMES, defaultPremium, PREMIUM_CARD_SCALES, PREMIUM_GAME_MAX,
+  availableGames, defaultPremium, PREMIUM_CARD_SCALES, PREMIUM_GAME_MAX,
   PREMIUM_MAX_MULT, PREMIUM_SIPS_MAX, MODE_INFO, premiumRecos,
 } from "../game/constants.js";
 import { buildDeck } from "../game/deck.js";
+import { SEASONS } from "../game/seasons.js";
 
 /* Une réglette (slider) du mode premium. */
 function Scale({ label, ic, value, min = 0, max, onChange, hint }) {
@@ -57,8 +58,8 @@ function PremiumConfig({ cfg, setCfg }) {
       <Scale ic="🥃" label="Gorgées perdant mini-jeu" min={1} max={PREMIUM_SIPS_MAX}
         value={cfg.mgSips} onChange={(v) => setCfg({ ...cfg, mgSips: v })} />
       <p className="muted mt mb-sm">Mini-jeux <span className="dim">(0 à {PREMIUM_GAME_MAX} · 🔥 = jeux Harr)</span></p>
-      {GAMES.map((g) => (
-        <Scale key={g.id} label={g.name + (g.harrOnly ? " 🔥" : "")} value={cfg.games[g.id]}
+      {availableGames().map((g) => (
+        <Scale key={g.id} label={g.name + (g.harrOnly ? " 🔥" : "") + (g.seasonal && SEASONS[g.seasonal] ? " " + SEASONS[g.seasonal].emoji : "")} value={cfg.games[g.id]}
           max={PREMIUM_GAME_MAX} onChange={(v) => setGame(g.id, v)} />
       ))}
       <p className="muted center mt">Paquet : <b>{total}</b> cartes</p>
