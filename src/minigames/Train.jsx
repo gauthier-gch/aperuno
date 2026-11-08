@@ -3,8 +3,21 @@ import { MYID } from "../me.js";
 import { Ava } from "../components/common.jsx";
 import {
   TRAIN_FORKS, TRAIN_MONSTERS, TRAIN_WALLS, TRAIN_SIPS, TRAIN_GIVE,
-  trainFork, trainEnd, trainStage, trainDeaths,
+  trainFork, trainEnd, trainStage, trainDeaths, trainRevealed,
 } from "../game/seasonal.js";
+
+/* Position d'un wagon : groupe (M = train au départ, L / R = branche choisie,
+   C = tout droit dans le mur) puis case dans une petite grille. */
+const ANCHOR = { M: [50, 10, 5], L: [18, 170, 2], R: [82, 170, 2], C: [50, 140, 2] };
+const CELL_W = 44, CELL_H = 50;
+function wagonPos(group, k, n) {
+  const [x, y, cols] = ANCHOR[group];
+  const c = Math.min(cols, n);
+  const col = k % cols, row = Math.floor(k / cols);
+  const rowCount = Math.min(c, n - row * cols);
+  const dx = (col - (rowCount - 1) / 2) * CELL_W;
+  return { left: `calc(${x}% + ${dx}px)`, bottom: y + (group === "M" ? row : -row) * CELL_H };
+}
 import { useClock, useRetrySend } from "./hooks.js";
 
 /* Liste des passagers (en haut à droite du décor) : qui a été attrapé, où. */
@@ -29,7 +42,12 @@ function Passengers({ room, deaths }) {
 export function TrainGame({ room, mg, isLauncher, launcher, act, busy, waiting }) {
   const playing = mg.phase === "play";
   const now = useClock(100, playing);
-  useRetrySend(playing && now >= trainEnd(mg), () => act({ type: "mgTrainEnd" }), isLauncher ? 300 : 2500);
+  // Tous les joueurs attrapés → on arrête le train après la révélation.
+  const revealedNow = playing ? trainRevealed(mg, now) : 0;
+  const allDead = playing && revealedNow > 0
+    && Object.keys(trainDeaths(mg, room.players, revealedNow)).length >= room.players.length
+    && now >= trainFork(mg, revealedNow - 1).reveal + 2200;
+  useRetrySend(playing && (allDead || now >= trainEnd(mg)), () => act({ type: "mgTrainEnd" }), isLauncher ? 300 : 2500);
 
   if (mg.phase === "intro") {
     return (
@@ -56,7 +74,6 @@ export function TrainGame({ room, mg, isLauncher, launcher, act, busy, waiting }
     const revealing = st.step === "reveal";
     const diedHere = !!(revealing && deaths[MYID] && deaths[MYID].fork === f);
     const deadBefore = !!deaths[MYID] && !diedHere;
-    const mySide = myChoice || (deadBefore ? null : "C");
     const monster = TRAIN_MONSTERS[f], wall = TRAIN_WALLS[f];
     const showFork = st.step === "choose" || revealing;
     return (
@@ -80,13 +97,33 @@ export function TrainGame({ room, mg, isLauncher, launcher, act, busy, waiting }
               </div>
             </div>
           )}
-          {!deadBefore && (
-            <div className={"train-cart" + (revealing ? " go-" + (mySide || "C") : myChoice ? " lean-" + myChoice : "")}>
-              <Ava p={room.players.find((p) => p.id === MYID)} size={26} />
-              <span className="train-wagon">🚃</span>
-              {diedHere && <span className="train-boom">💥</span>}
-            </div>
-          )}
+          {(() => {
+            // Wagons de tous les joueurs encore en jeu (ceux attrapés à
+            // cette bifurcation restent visibles le temps de l'explosion).
+            const riders = room.players.filter((p) => !deaths[p.id] || (revealing && deaths[p.id].fork === f));
+            const groupOf = (p) => {
+              if (!revealing) return "M";
+              const c = mg.choices && mg.choices[p.id] && mg.choices[p.id][f];
+              return c || "C";
+            };
+            const groups = {};
+            riders.forEach((p) => { const g = groupOf(p); (groups[g] = groups[g] || []).push(p); });
+            return riders.map((p) => {
+              const g = groupOf(p);
+              const list = groups[g];
+              const pos = wagonPos(g, list.indexOf(p), list.length);
+              const me = p.id === MYID;
+              const lean = !revealing && me && myChoice ? " lean-" + myChoice : "";
+              const boom = revealing && deaths[p.id] && deaths[p.id].fork === f;
+              return (
+                <div key={p.id} className={"train-cart" + (me ? " me" : "") + lean} style={pos}>
+                  <Ava p={p} size={20} />
+                  <span className="train-wagon">🚃</span>
+                  {boom && <span className="train-boom">💥</span>}
+                </div>
+              );
+            });
+          })()}
           {deadBefore && <div className="train-ghost">👻</div>}
         </div>
 

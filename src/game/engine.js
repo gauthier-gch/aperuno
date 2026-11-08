@@ -17,7 +17,7 @@ import {
   NY_PREP, NY_COUNT, NY_GRACE, newYearRanking, cupidCouples,
   EGG_COUNT, EGG_SPOTS, EGG_SCENES, EGG_COLORS, EGG_DURATION, EGG_PREP,
   SUN_PREP, SUN_DURATION, SUN_BURN_MIN, SUN_BURN_MAX, SUN_BURN_SIPS,
-  TRAIN_PREP, TRAIN_FORKS, TRAIN_SIPS, trainFork, trainEnd, trainDeaths, santaDraw,
+  TRAIN_PREP, TRAIN_FORKS, TRAIN_SIPS, trainFork, trainEnd, trainDeaths, trainRevealed, santaDraw,
 } from "./seasonal.js";
 
 /* ----------------------------- création d'état --------------------------- */
@@ -849,12 +849,6 @@ export function applyMove(s0, move, myId) {
     }
 
     /* ---------- Interro surprise ---------- */
-    case "mgInterroReroll": {
-      mgGuard(s, isLauncher);
-      mgKind(s, "inapp_interro", "choose");
-      s.minigame.options = pickN(INTERRO_QUESTIONS.filter((q) => !s.minigame.options.includes(q)), 3);
-      return s;
-    }
     case "mgInterroPick": {
       mgGuard(s, isLauncher);
       mgKind(s, "inapp_interro", "choose");
@@ -923,8 +917,11 @@ export function applyMove(s0, move, myId) {
     case "mgTrainEnd": {
       if (mgDone(s, "inapp_train")) return s;
       mgKind(s, "inapp_train", "play");
-      if (Date.now() < trainEnd(s.minigame) - 1000) throw new Error("Le train roule encore.");
-      const deaths = trainDeaths(s.minigame, s.players);
+      // Fin du parcours… ou plus personne en vie : on arrête le train.
+      const revealed = trainRevealed(s.minigame, Date.now() + 1500);
+      const allDead = Object.keys(trainDeaths(s.minigame, s.players, revealed)).length >= s.players.length;
+      if (!allDead && Date.now() < trainEnd(s.minigame) - 1000) throw new Error("Le train roule encore.");
+      const deaths = trainDeaths(s.minigame, s.players, allDead ? revealed : TRAIN_FORKS);
       s.minigame.deaths = deaths;
       s.minigame.drinks = {};
       Object.keys(deaths).forEach((id) => { s.minigame.drinks[id] = TRAIN_SIPS; });
