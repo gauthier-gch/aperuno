@@ -36,7 +36,7 @@ export function CupidonGame({ room, mg, isLauncher, act, busy, waiting }) {
     );
   }
 
-  const couples = (mg.couples || []).filter(([a, b]) => byId[a] && byId[b]);
+  const couples = (mg.couples || []).map((c) => [c.a, c.b]).filter(([a, b]) => byId[a] && byId[b]);
   const names = couples.map(([a, b]) => `${byId[a].name} & ${byId[b].name}`).join(", ");
   return (
     <div className="center-col pop">

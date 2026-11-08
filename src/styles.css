@@ -482,7 +482,7 @@ p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px a
 .interro-opt { font-size:15px; text-align:left; justify-content:flex-start; line-height:1.35; }
 
 /* ---- Évite les monstres (train fantôme) ---- */
-.train-stage { position:relative; width:100%; max-width:360px; height:330px; margin:0 auto 10px; border-radius:18px; overflow:hidden; background:radial-gradient(260px 200px at 50% 20%, rgba(177,91,255,.35), transparent 70%), linear-gradient(180deg,#0d0820,#1d0f35); box-shadow:inset 0 0 40px rgba(0,0,0,.8); }
+.train-stage { position:relative; width:100%; max-width:360px; height:360px; margin:0 auto 10px; border-radius:18px; overflow:hidden; background:radial-gradient(260px 200px at 50% 20%, rgba(177,91,255,.35), transparent 70%), linear-gradient(180deg,#0d0820,#1d0f35); box-shadow:inset 0 0 40px rgba(0,0,0,.8); }
 .train-rails { position:absolute; left:50%; top:0; bottom:0; width:56px; transform:translateX(-50%);
   background:linear-gradient(90deg,transparent 0 8px,#8a7fb0 8px 12px,transparent 12px 44px,#8a7fb0 44px 48px,transparent 48px),
     repeating-linear-gradient(180deg,transparent 0 16px,#4a3a2a 16px 24px); background-size:100% 100%,100% 24px; }
@@ -502,14 +502,12 @@ p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px a
 .train-side.L { left:18%; } .train-side.R { left:82%; }
 .train-side.bad { animation:rdboom .5s ease; filter:drop-shadow(0 0 14px rgba(255,59,92,.9)); }
 .train-side.ok { opacity:.8; }
-.train-cart { position:absolute; left:50%; bottom:14px; z-index:3; display:flex; flex-direction:column; align-items:center; transform:translateX(-50%); transition:transform 1.4s cubic-bezier(.4,0,.2,1); }
-.train-cart .train-wagon { font-size:40px; line-height:1; margin-top:-6px; }
+.train-cart { position:absolute; z-index:3; display:flex; flex-direction:column; align-items:center; transform:translateX(-50%); transition:left 1.4s cubic-bezier(.4,0,.2,1), bottom 1.4s cubic-bezier(.4,0,.2,1), transform .3s; }
+.train-cart .train-wagon { font-size:30px; line-height:1; margin-top:-5px; }
+.train-cart.me .avatar { box-shadow:0 0 0 2px var(--gold), 0 0 10px rgba(244,201,93,.8); }
 .train-cart.lean-L { transform:translateX(-50%) rotate(-12deg); }
 .train-cart.lean-R { transform:translateX(-50%) rotate(12deg); }
-.train-cart.go-L { transform:translate(calc(-50% - 110px), -170px); }
-.train-cart.go-R { transform:translate(calc(-50% + 110px), -170px); }
-.train-cart.go-C { transform:translate(-50%, -150px); }
-.train-boom { position:absolute; top:-10px; font-size:52px; animation:rdboom .6s ease 1s both; }
+.train-boom { position:absolute; top:-10px; font-size:40px; animation:rdboom .6s ease 1s both; }
 .train-ghost { position:absolute; left:50%; bottom:20px; transform:translateX(-50%); font-size:48px; animation:rdfloat 1.6s ease-in-out infinite; }
 .train-timer { font-family:'Marcellus',serif; font-size:44px; color:var(--gold); line-height:1; }
 .train-btn { background:linear-gradient(135deg,#7d3bff,#3a1d70); border:1px solid rgba(255,255,255,.2); font-size:18px; }
@@ -533,3 +531,7 @@ p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px a
 .egg-view .map-zoom-ctrl { top:8px; bottom:auto; right:auto; left:8px; flex-direction:row; z-index:150; }
 .egg-view .map-zoom-ctrl button { width:30px; height:30px; font-size:16px; }
 .santa-card.seasonal { color:#06243f; }
+.egg-ground { position:absolute; left:0; right:0; bottom:0; }
+.egg-clutter { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+.egg-clutter.front { z-index:130; }
+.egg-filler { position:absolute; transform:translate(-50%,-50%); line-height:1; pointer-events:none; opacity:.92; filter:drop-shadow(0 2px 1px rgba(0,0,0,.2)); }

@@ -32,7 +32,6 @@ export function InterroGame({ room, mg, isLauncher, launcher, act, busy }) {
             {q.replace(/\{n\}/g, launcher.name)}
           </button>
         ))}
-        <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act({ type: "mgInterroReroll" })}>🔁 Autres questions</button>
       </div>
     );
   }

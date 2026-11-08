@@ -13,14 +13,11 @@ export function FleurGame({ room, isLauncher, launcher, act, busy }) {
   const penalty = harr ? "finit son verre cul sec 🥃" : "boit 5 gorgées 🍻";
   const [phase, setPhase] = useState("intro"); // intro | playing | boom
   const [water, setWater] = useState(0);
-  const [turnWater, setTurnWater] = useState(0);
-  const [handoff, setHandoff] = useState(false);
   const [drops, setDrops] = useState([]);
   const limitRef = useRef(0);
   const sfx = useRef(null);
-  const timer = useRef(null);
 
-  useEffect(() => () => { clearTimeout(timer.current); if (sfx.current) sfx.current.close(); }, []);
+  useEffect(() => () => { if (sfx.current) sfx.current.close(); }, []);
 
   if (!isLauncher) {
     return (
@@ -35,12 +32,11 @@ export function FleurGame({ room, isLauncher, launcher, act, busy }) {
   function start() {
     sfx.current = makeSfx();
     limitRef.current = MIN_WATER + Math.floor(Math.random() * (MAX_WATER - MIN_WATER + 1));
-    setWater(0); setTurnWater(0); setHandoff(false);
+    setWater(0);
     setPhase("playing");
   }
   function pour() {
     if (phase !== "playing") return;
-    setHandoff(false);
     const next = water + 1;
     const id = Math.random();
     setDrops((d) => [...d.slice(-4), id]);
@@ -54,13 +50,6 @@ export function FleurGame({ room, isLauncher, launcher, act, busy }) {
     if (sfx.current) sfx.current.blip(900 + next * 25, 500, 0.12, "sine", 0.5);
     if (navigator.vibrate) navigator.vibrate(20);
     setWater(next);
-    setTurnWater((n) => n + 1);
-  }
-  function pass() {
-    setTurnWater(0);
-    setHandoff(true);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setHandoff(false), 1600);
   }
 
   if (phase === "intro") {
@@ -100,9 +89,7 @@ export function FleurGame({ room, isLauncher, launcher, act, busy }) {
 
   return (
     <div className="center-col">
-      <p className="muted">
-        {handoff ? <b className="w">👉 Passe le téléphone au joueur suivant !</b> : "Arrose… puis passe le téléphone quand tu veux."}
-      </p>
+      <p className="muted">Arrose autant que tu oses… <b className="w">puis passe le téléphone 👉 quand tu as fini d'arroser la plante.</b></p>
       <div className="flower-stage" onClick={pour}>
         {drops.map((id) => <span key={id} className="drop">💧</span>)}
         <div className="flower" style={{ transform: `scale(${scale})`, "--wob": `${wobble}deg` }}>
@@ -111,7 +98,6 @@ export function FleurGame({ room, isLauncher, launcher, act, busy }) {
         <div className="flower-pot" />
       </div>
       <button className="btn btn-blue" disabled={busy} onClick={pour}>Arroser 💧</button>
-      <button className="btn btn-ghost btn-sm mt" disabled={busy || turnWater === 0} onClick={pass}>Passer le téléphone 👉</button>
     </div>
   );
 }
