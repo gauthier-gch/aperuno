@@ -122,7 +122,7 @@ function Hand({ hand, onOpen, onReorder, footer }) {
   );
 }
 
-function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDiableStack, onJeu, onEchange, onDiscard }) {
+function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDiableStack, onJeu, onEchange }) {
   const m = cardMeta(card);
   const g = card.type === "jeu" ? GAMES.find((x) => x.id === card.gameId) : null;
   const rule = g ? g.rule : CARD_INFO[card.type];
@@ -174,9 +174,6 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
       {canPlay && card.type === "diable" && <p className="muted" style={{ color: "#c78bff" }}>Ouvre plutôt une carte <b>action</b> puis « Jouer avec un Diable ».</p>}
       {canPlay && card.type === "joker" && <p className="muted" style={{ color: "#27d17c" }}>Garde-la : elle se déclenchera quand un diable te visera.</p>}
       {canPlay && card.type === "plus" && <p className="muted" style={{ color: "#ff9b2f" }}>Se joue en réaction quand un diable te vise : tu renvoies la peine +{card.value} à un autre joueur.</p>}
-      {canPlay && hand.length > 1 && (
-        <button className="btn btn-ghost btn-sm mt" onClick={onDiscard}>Défausser cette carte (fin du tour) 🗑️</button>
-      )}
     </Overlay>
   );
 }
@@ -246,7 +243,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
   function playJeu(c) { setSheet(null); act({ type: "playJeu", cardId: c.id }); }
   function openEchange(c) { setSheet(null); setSwap({ cardId: c.id }); }
   function sendEchange(targetId) { const sw = swap; setSwap(null); act({ type: "echange", cardId: sw.cardId, targetId }); }
-  function sendDiscard(cardId) { setSheet(null); setDiscardPick(false); act({ type: "discardCard", cardId }); }
+  function sendDiscard(cardId) { setDiscardPick(false); act({ type: "discardCard", cardId }); }
   // Récupérer la carte du dessus de la défausse (à la place de la pioche).
   const topErr = recoverError(top);
   function takeDiscard() {
@@ -340,7 +337,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
         <CardSheet card={sheet} hand={me.hand} canPlay={canPlay} hasDiable={hasDiable}
           close={() => setSheet(null)}
           onActionStack={playActionStack} onDiableStack={openDiable}
-          onJeu={() => playJeu(sheet)} onEchange={() => openEchange(sheet)} onDiscard={() => sendDiscard(sheet.id)} />
+          onJeu={() => playJeu(sheet)} onEchange={() => openEchange(sheet)} />
       )}
 
       {discardPick && canPlay && (
