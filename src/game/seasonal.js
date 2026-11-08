@@ -102,7 +102,7 @@ export function eggLayout(sceneIdx) {
     const x = 4 + (cw * col + cw * (0.25 + r() * 0.5)) * 0.92;
     const y = top + ch * row + ch * (0.3 + r() * 0.45);
     const size = 32 + Math.round(r() * 10) + row * 2; // plus gros au premier plan
-    const ex = (r() < 0.5 ? -1 : 1) * (0.2 + r() * 0.12); // œuf qui dépasse (un peu) à gauche / à droite
+    const ex = (r() < 0.5 ? -1 : 1) * (0.32 + r() * 0.12); // œuf qui dépasse à gauche / à droite
     const ey = 0.5 + r() * 0.25;                            // hauteur de l'œuf derrière l'objet
     return { emoji, x, y, size, ex, ey, flip: r() < 0.3 };
   });
@@ -135,10 +135,10 @@ export function eggClutter(sceneIdx) {
     s: minS + r() * (maxS - minS), rot: Math.round(r() * 360),
     c: type === "flower" || type === "confetti" || type === "button" ? pick(NOISE_COLORS) : pick(fk.tint),
   });
-  const back = Array.from({ length: 110 }, () => item(pick(fk.back), 6, 16));
-  const front = Array.from({ length: 26 }, () => item(fk.front, 12, 22));
-  const fillers = Array.from({ length: 14 }, () => ({
-    emoji: pick(sc.spots), x: 5 + r() * 90, y: sc.horizon + 4 + r() * (92 - sc.horizon), size: 18 + Math.round(r() * 8),
+  const back = Array.from({ length: 160 }, () => item(pick(fk.back), 6, 16));
+  const front = Array.from({ length: 40 }, () => item(fk.front, 10, 20));
+  const fillers = Array.from({ length: 30 }, () => ({
+    emoji: pick(sc.spots), x: 4 + r() * 92, y: sc.horizon + 3 + r() * (94 - sc.horizon), size: 16 + Math.round(r() * 10),
   }));
   return { back, front, fillers };
 }

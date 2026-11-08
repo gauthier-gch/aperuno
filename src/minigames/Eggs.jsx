@@ -87,7 +87,7 @@ function Scene({ mg, found, onFind, shake, hideEggs }) {
         const k = eggAt[i];
         const hasEgg = k != null && !hideEggs;
         const got = hasEgg && found.has(k);
-        const eggW = sp.size * 0.3, eggH = sp.size * 0.38; // petits œufs
+        const eggW = sp.size * 0.36, eggH = sp.size * 0.46; // petits œufs, mais visibles
         return (
           <div key={i} className="egg-spot" style={{ left: `${sp.x}%`, top: `${sp.y}%`, width: sp.size, height: sp.size, zIndex: 10 + Math.round(sp.y) }}>
             {hasEgg && (
@@ -103,7 +103,7 @@ function Scene({ mg, found, onFind, shake, hideEggs }) {
           </div>
         );
       })}
-      {/* Premier plan : touffes / poussière qui masquent en partie les œufs (non cliquable). */}
+      {/* Touffes / poussière en plus : sous les cachettes, elles chargent le décor sans masquer les œufs. */}
       <svg className="egg-clutter front" viewBox="0 0 360 420" preserveAspectRatio="none">
         {clutter.front.map((it, i) => <Bit key={i} it={it} />)}
       </svg>

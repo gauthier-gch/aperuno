@@ -6,13 +6,54 @@ import { useClock, useRetrySend } from "./hooks.js";
 
 const BRONZE = "Bronzé Mamacita Caramielo";
 
-/* Jauge de chaleur NON graduée : de jaune pâle à rouge brûlant. */
-function Gauge({ pct, burnt, burnPct }) {
+/* Thermomètre NON gradué : le mercure monte avec la chaleur. */
+function Thermometer({ pct, burnt }) {
+  const h = 172 * Math.min(1, Math.max(0, pct));
   return (
-    <div className={"sun-gauge" + (burnt ? " burnt" : "")}>
-      <span className="sun-fill" style={{ height: `${Math.min(100, pct * 100)}%` }} />
-      {burnPct != null && <span className="sun-burnline" style={{ bottom: `${burnPct * 100}%` }}>🔥</span>}
-    </div>
+    <svg className={"sun-thermo" + (burnt ? " burnt" : "")} viewBox="0 0 44 240" aria-label="Thermomètre">
+      <defs>
+        <linearGradient id="merc" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stopColor="#ff9b2f" /><stop offset="1" stopColor="#ff2d55" />
+        </linearGradient>
+      </defs>
+      <rect x="13" y="6" width="18" height="196" rx="9" fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.55)" strokeWidth="2" />
+      <circle cx="22" cy="212" r="20" fill="#ff3b5c" stroke="rgba(255,255,255,.55)" strokeWidth="2" />
+      <rect x="17.5" y={196 - h} width="9" height={h + 8} rx="4.5" fill="url(#merc)" />
+      <circle cx="16" cy="206" r="5" fill="rgba(255,255,255,.45)" />
+    </svg>
+  );
+}
+
+/* Teinte de peau : de pâle à bien bronzé (rouge en cas de coup de soleil). */
+const PALE = [247, 220, 200], TAN = [122, 69, 36];
+function skinColor(tan, burnt) {
+  if (burnt) return "#e5533f";
+  const k = Math.min(1, Math.max(0, tan));
+  const c = PALE.map((v, i) => Math.round(v + (TAN[i] - v) * k));
+  return `rgb(${c.join(",")})`;
+}
+
+/* Le bonhomme en maillot de bain, qui bronze petit à petit. */
+function Bather({ tan, burnt, shaded }) {
+  const skin = skinColor(tan, burnt);
+  return (
+    <svg className="sun-bather" viewBox="0 0 60 112" aria-label="Bonhomme">
+      <line x1="22" y1="40" x2="10" y2="62" stroke={skin} strokeWidth="6" strokeLinecap="round" />
+      <line x1="38" y1="40" x2="50" y2="62" stroke={skin} strokeWidth="6" strokeLinecap="round" />
+      <line x1="25" y1="70" x2="22" y2="104" stroke={skin} strokeWidth="7" strokeLinecap="round" />
+      <line x1="35" y1="70" x2="38" y2="104" stroke={skin} strokeWidth="7" strokeLinecap="round" />
+      <rect x="19" y="32" width="22" height="36" rx="9" fill={skin} />
+      <rect x="19" y="58" width="22" height="14" rx="4" fill="#37a6ff" />
+      <circle cx="30" cy="17" r="13" fill={skin} />
+      <path d="M17 14 Q30 0 43 14 Q36 8 30 9 Q24 8 17 14 Z" fill="#5a3a1a" />
+      {shaded ? (
+        <g><rect x="20" y="13" width="9" height="6" rx="2" fill="#111" /><rect x="31" y="13" width="9" height="6" rx="2" fill="#111" /><line x1="29" y1="15" x2="31" y2="15" stroke="#111" strokeWidth="1.5" /></g>
+      ) : (
+        <g><circle cx="25" cy="16" r="1.6" fill="#222" /><circle cx="35" cy="16" r="1.6" fill="#222" /></g>
+      )}
+      <path d={burnt ? "M25 24 Q30 20 35 24" : "M25 22 Q30 26 35 22"} stroke="#222" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+      {!shaded && !burnt && tan > 0.45 && <path d="M44 8 Q46 13 44 15 Q42 13 44 8 Z" fill="#7ec8ff" className="sun-sweat" />}
+    </svg>
   );
 }
 
@@ -47,14 +88,20 @@ export function SunGame({ room, mg, isLauncher, launcher, act, busy, waiting }) 
     const started = t >= 0;
     const pct = Math.max(0, t) / mg.duration;
     const inShade = stored || (local != null && local < mg.burn);
+    // Bronzage figé au moment où l'on part à l'ombre.
+    const shadeAt = stored ? shade[MYID] : local;
+    // (rapporté à la durée totale, pas au coup de soleil : rien ne trahit son moment)
+    const tan = (inShade ? shadeAt : Math.max(0, t)) / (mg.duration * 0.9);
     return (
       <div className="center-col">
         <div className="sun-row">
-          <Gauge pct={pct} burnt={burntNow} />
+          <Thermometer pct={pct} burnt={burntNow} />
           <div className="sun-scene">
-            <span className="sun-sun" style={{ transform: `scale(${1 + pct * 0.9})`, filter: `hue-rotate(${-pct * 40}deg) saturate(${1 + pct})` }}>☀️</span>
-            <span className="sun-me">{burntNow && !inShade ? "🥵" : inShade ? "😎" : pct > 0.6 ? "😰" : pct > 0.3 ? "😅" : "😀"}</span>
-            <span className="sun-spot">{inShade ? "⛱️ à l'ombre" : "🏖️ au soleil"}</span>
+            <span className="sun-sun" style={{ transform: `scale(${1 + pct * 0.9})` }}>☀️</span>
+            <div className="sun-shade-zone"><span className="sun-parasol">⛱️</span></div>
+            <div className={"sun-me" + (inShade ? " shaded" : "")}>
+              <Bather tan={tan} burnt={burntNow && !inShade} shaded={inShade} />
+            </div>
           </div>
         </div>
         {!started ? <p className="b">Prêts ? Crème solaire… 🧴</p>

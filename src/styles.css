@@ -464,14 +464,18 @@ p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px a
 
 /* ---- Coup de soleil ---- */
 .sun-row { display:flex; gap:16px; align-items:stretch; justify-content:center; width:100%; margin:4px 0 10px; }
-.sun-gauge { position:relative; width:42px; height:240px; border-radius:22px; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.25); overflow:hidden; }
-.sun-fill { position:absolute; left:0; right:0; bottom:0; background:linear-gradient(0deg,#ffe28a 0%,#ffb347 45%,#ff6a3d 75%,#ff2d55 100%); background-size:100% 240px; background-position:bottom; transition:height .08s linear; }
-.sun-gauge.burnt { border-color:#ff3b5c; box-shadow:0 0 26px rgba(255,59,92,.8); animation:pulse .6s ease-in-out infinite; }
-.sun-burnline { position:absolute; left:0; right:0; text-align:center; font-size:16px; transform:translateY(50%); }
-.sun-scene { flex:1; max-width:220px; position:relative; border-radius:18px; background:linear-gradient(180deg,#7fd6ff 0%,#bfe9ff 50%,#f2d39a 50%,#e8c27e 100%); overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; padding-bottom:12px; }
-.sun-sun { position:absolute; top:14px; right:16px; font-size:46px; transition:transform .2s linear; transform-origin:center; }
-.sun-me { font-size:58px; line-height:1; }
-.sun-spot { font-size:12px; font-weight:700; color:#3a2a06; background:rgba(255,255,255,.65); padding:3px 10px; border-radius:999px; margin-top:4px; }
+.sun-thermo { width:44px; height:240px; flex:0 0 auto; overflow:visible; }
+.sun-thermo.burnt { filter:drop-shadow(0 0 12px rgba(255,59,92,.9)); animation:pulse .6s ease-in-out infinite; }
+.sun-thermo rect[fill^="url"] { transition:y .08s linear, height .08s linear; }
+.sun-scene { flex:1; max-width:260px; height:240px; position:relative; border-radius:18px; overflow:hidden; background:linear-gradient(180deg,#7fd6ff 0%,#bfe9ff 42%,#f2d39a 42%,#e8c27e 100%); }
+.sun-sun { position:absolute; top:10px; left:12px; font-size:44px; transition:transform .2s linear; transform-origin:center; z-index:1; }
+.sun-shade-zone { position:absolute; top:0; right:0; bottom:0; width:36%; background:linear-gradient(180deg,rgba(20,30,60,.0) 0%,rgba(20,30,60,.35) 45%,rgba(20,30,60,.45) 100%); border-left:2px dashed rgba(255,255,255,.35); }
+.sun-parasol { position:absolute; top:58px; left:50%; transform:translateX(-50%); font-size:58px; line-height:1; }
+.sun-me { position:absolute; bottom:10px; left:30%; width:62px; height:116px; transform:translateX(-50%); transition:left 1.1s cubic-bezier(.4,0,.2,1); z-index:2; }
+.sun-me.shaded { left:82%; }
+.sun-bather { width:100%; height:100%; display:block; overflow:visible; filter:drop-shadow(0 4px 3px rgba(0,0,0,.25)); }
+.sun-bather rect, .sun-bather circle, .sun-bather line { transition:fill .3s, stroke .3s; }
+.sun-sweat { animation:rdfloat 1s ease-in-out infinite; }
 .sun-burn { color:#ff6f86; font-size:20px; animation:pulse .6s ease-in-out infinite; }
 .sun-chip { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; padding:4px 9px; border-radius:999px; background:rgba(255,155,47,.15); border:1px solid rgba(255,155,47,.4); }
 .sun-chip.shade { background:rgba(55,166,255,.15); border-color:rgba(55,166,255,.45); }
@@ -509,8 +513,9 @@ p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px a
 .train-cart.lean-R { transform:translateX(-50%) rotate(12deg); }
 .train-boom { position:absolute; top:-10px; font-size:40px; animation:rdboom .6s ease 1s both; }
 .train-ghost { position:absolute; left:50%; bottom:20px; transform:translateX(-50%); font-size:48px; animation:rdfloat 1.6s ease-in-out infinite; }
-.train-timer { font-family:'Marcellus',serif; font-size:44px; color:var(--gold); line-height:1; }
-.train-btn { background:linear-gradient(135deg,#7d3bff,#3a1d70); border:1px solid rgba(255,255,255,.2); font-size:18px; }
+.train-timer { font-family:'Marcellus',serif; font-size:44px; color:var(--gold); line-height:1; text-shadow:0 2px 10px rgba(0,0,0,.8); min-width:34px; text-align:center; }
+.train-choice { position:absolute; left:8px; right:8px; top:48%; z-index:6; display:flex; align-items:center; gap:8px; animation:rdfade .25s ease; }
+.train-btn { flex:1; background:linear-gradient(135deg,rgba(125,59,255,.92),rgba(58,29,112,.92)); border:1px solid rgba(255,255,255,.3); font-size:17px; line-height:1.25; padding:14px 8px; box-shadow:0 8px 22px rgba(0,0,0,.5); }
 .train-btn.on { background:linear-gradient(135deg,#f4c95d,#ff9b2f); color:#3a2a06; }
 .train-btn:disabled.on { opacity:1; }
 
@@ -533,5 +538,5 @@ p.home-pitch { text-align:center; font-size:14px; max-width:320px; margin:14px a
 .santa-card.seasonal { color:#06243f; }
 .egg-ground { position:absolute; left:0; right:0; bottom:0; }
 .egg-clutter { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
-.egg-clutter.front { z-index:130; }
+.egg-clutter.front { z-index:9; }
 .egg-filler { position:absolute; transform:translate(-50%,-50%); line-height:1; pointer-events:none; opacity:.92; filter:drop-shadow(0 2px 1px rgba(0,0,0,.2)); }
