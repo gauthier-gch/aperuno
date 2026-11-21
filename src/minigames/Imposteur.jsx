@@ -43,9 +43,19 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
             );
           })}
         </div>
-        <button className="btn btn-primary" disabled={busy || ids.length < IMPOSTER_MIN} onClick={() => act({ type: "mgImpSetup", playerIds: ids })}>
-          {ids.length < IMPOSTER_MIN ? `Il faut au moins ${IMPOSTER_MIN} joueurs` : `Distribuer les mots (${ids.length} joueurs) 🎲`}
-        </button>
+        {ids.length < IMPOSTER_MIN ? (
+          <>
+            <p className="muted mb">Il faut au moins {IMPOSTER_MIN} joueurs présents pour jouer.</p>
+            <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: "Undercover annulé (pas assez de joueurs présents)", long: false })}>Annuler l'Undercover</button>
+          </>
+        ) : (
+          <>
+            {ids.length === 3 && <p className="muted mb">À 3 joueurs : pas de Mister White.</p>}
+            <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgImpSetup", playerIds: ids })}>
+              Distribuer les mots ({ids.length} joueurs) 🎲
+            </button>
+          </>
+        )}
       </div>
     );
   }
