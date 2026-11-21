@@ -182,7 +182,7 @@ export const GAMES = [
   { id: "ville", name: "Place la ville", chill: 2, harr: 2, kind: "inapp_city",
     rule: "Une **ville française** est tirée.\nChacun place un marqueur sur la carte.\n\nLe plus éloigné de la vraie position perd et boit." },
   { id: "imposteur", name: "Undercover", chill: 2, harr: 2, kind: "inapp_imposteur",
-    rule: "Chacun reçoit un **mot secret**, sauf :\n- l'**undercover**, qui a un mot différent mais proche ;\n- **Mister White**, qui n'a *aucun mot*.\n\nÀ tour de rôle *(dans l'ordre affiché)*, décrivez votre mot **sans le dire**. Puis vient l'**heure de l'élimination** : votez pour éliminer un joueur *(le lanceur désigne l'éliminé)*.\n\nLes civils gagnent si l'undercover et Mister White sont éliminés. **Les éliminés boivent.**" },
+    rule: "Chacun reçoit un **mot secret**, sauf :\n- l'**undercover**, qui a un mot différent mais proche ;\n- **Mister White**, qui n'a *aucun mot*.\n\nÀ tour de rôle *(dans l'ordre affiché)*, décrivez votre mot **sans le dire**. Puis vient l'**heure de l'élimination** : chaque joueur en jeu **vote en secret** ; le plus voté est éliminé *(en cas d'égalité, tranchez à l'oral et le lanceur désigne l'éliminé)*.\n\nLes civils gagnent si l'undercover et Mister White sont éliminés. **Les éliminés boivent.**" },
   { id: "dix", name: "C'est un 10 mais", chill: 2, harr: 2, kind: "inapp_dix",
     rule: "Le lanceur voit une carte *(1 à 9)* et lance un « **c'est un 10 mais…** » à l'oral.\nChacun note de 1 à 9.\n\nAu dévoilement de la carte :\n- chacun boit **l'écart** entre sa note et la carte ;\n- le lanceur boit **la moyenne** des écarts." },
   { id: "cascade", name: "Cascade", chill: 0, harr: 2, kind: "facilitator", noLoser: true, harrOnly: true,
