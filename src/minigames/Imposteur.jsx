@@ -1,13 +1,17 @@
 import React, { useState } from "react";
 import { MYID } from "../me.js";
 import { roleLabel } from "../game/engine.js";
-import { DesignateLoser } from "../components/common.jsx";
+import { DesignateLoser, Ava } from "../components/common.jsx";
 
 export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiting }) {
   const [guess, setGuess] = useState("");
+  const [shown, setShown] = useState(false); // mot révélé (local) ?
+  const [picked, setPicked] = useState(() => room.players.map((p) => p.id)); // joueurs présents
   const myRole = mg.roles ? mg.roles[MYID] : null;
   const myWord = myRole === "imposteur" ? mg.imposterWord : myRole === "white" ? null : mg.civilWord;
-  const active = room.players.filter((p) => !(mg.eliminated || []).includes(p.id));
+  // Seuls les joueurs présents (avec un rôle) participent.
+  const players = room.players.filter((p) => mg.roles && mg.roles[p.id]);
+  const active = players.filter((p) => !(mg.eliminated || []).includes(p.id));
 
   /* pas assez de joueurs */
   if (mg.cantPlay) {
@@ -17,6 +21,31 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
         {isLauncher
           ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: "Undercover annulé (pas assez de joueurs)", long: false })}>Terminer</button>
           : waiting}
+      </div>
+    );
+  }
+
+  /* Le lanceur coche les joueurs présents avant le tirage des rôles. */
+  if (mg.phase === "select") {
+    if (!isLauncher) return <div className="center-col"><p className="muted">{launcher.name} sélectionne les joueurs présents…</p></div>;
+    const toggle = (id) => setPicked((l) => l.includes(id) ? l.filter((x) => x !== id) : [...l, id]);
+    const ids = picked.filter((id) => room.players.some((p) => p.id === id));
+    return (
+      <div className="center-col">
+        <p className="b mb">Qui joue ? Décoche les absents :</p>
+        <div className="wrap mb">
+          {room.players.map((p) => {
+            const on = picked.includes(p.id);
+            return (
+              <button key={p.id} className={"btn btn-sm auto " + (on ? "btn-gold" : "btn-ghost")} style={on ? undefined : { opacity: 0.55 }} onClick={() => toggle(p.id)}>
+                <Ava p={p} size={20} /> {on ? "✅" : "⬜"} {p.name}
+              </button>
+            );
+          })}
+        </div>
+        <button className="btn btn-primary" disabled={busy || ids.length < 3} onClick={() => act({ type: "mgImpSetup", playerIds: ids })}>
+          {ids.length < 3 ? "Il faut au moins 3 joueurs" : `Distribuer les mots (${ids.length} joueurs) 🎲`}
+        </button>
       </div>
     );
   }
@@ -32,14 +61,21 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
     </p>
   );
 
-  const MyWordCard = () => (
-    <div className="panel mb" style={{ width: "100%", textAlign: "center" }}>
-      <p className="dim">Ton mot secret</p>
-      {myRole === "white"
-        ? <b className="apr-serif" style={{ fontSize: 20 }}>🕵️ Tu es Mister White — aucun mot, bluffe !</b>
-        : <b className="apr-serif" style={{ fontSize: 26 }}>{myWord}</b>}
-    </div>
-  );
+  /* Mot secret caché derrière un bouton « Révéler mon mot » (chacun le fait
+     sur son téléphone, quand personne ne regarde). */
+  const MyWordCard = () => {
+    if (!myRole) return <div className="panel mb" style={{ width: "100%", textAlign: "center" }}><p className="muted">Tu ne participes pas à cette manche (absent au lancement).</p></div>;
+    if (!shown) return <button className="btn btn-blue mb" onClick={() => setShown(true)}>👀 Révéler mon mot</button>;
+    return (
+      <div className="panel mb" style={{ width: "100%", textAlign: "center" }}>
+        <p className="dim">Ton mot secret</p>
+        {myRole === "white"
+          ? <b className="apr-serif" style={{ fontSize: 20 }}>🕵️ Tu es Mister White — aucun mot, bluffe !</b>
+          : <b className="apr-serif" style={{ fontSize: 26 }}>{myWord}</b>}
+        <div><button className="btn btn-ghost btn-sm auto mt" style={{ margin: "10px auto 0" }} onClick={() => setShown(false)}>🙈 Cacher</button></div>
+      </div>
+    );
+  };
 
   /* fin de manche */
   if (mg.phase === "over") {
@@ -50,7 +86,7 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
         <p className="b mb">{title}</p>
         <p className="muted mb">Mot des civils : <b className="w">{mg.civilWord}</b> · mot undercover : <b className="w">{mg.imposterWord}</b></p>
         <div className="pb-table" style={{ width: "100%" }}>
-          {room.players.map((p) => (
+          {players.map((p) => (
             <div className="pb-row space" key={p.id}>
               <b>{p.name}</b>
               <span className="muted">{roleLabel(mg.roles[p.id])}{mg.eliminated.includes(p.id) ? " · éliminé" : ""}</span>
@@ -70,7 +106,7 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
       <div className="center-col">
         <MyWordCard />
         <Composition />
-        <p className="muted mb">Chacun regarde son mot en secret. À tour de rôle, décrivez-le sans le dire !</p>
+        <p className="muted mb">Chacun touche « Révéler mon mot » et le regarde en secret. À tour de rôle, décrivez-le sans le dire !</p>
         {isLauncher
           ? <button className="btn btn-blue" disabled={busy} onClick={() => act({ type: "mgImpStart" })}>Commencer les tours de parole 🎤</button>
           : <p className="muted">En attente que {launcher.name} lance…</p>}

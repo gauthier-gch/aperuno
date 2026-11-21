@@ -117,19 +117,19 @@ export function PearGame({ room, mg, isLauncher, act, busy, waiting }) {
               fill="none" stroke="#f4c95d" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           )}
         </svg>
+        {/* Trait tracé : Effacer / Valider au milieu de la poire (pas besoin de
+            faire défiler jusqu'en bas). */}
+        {locked && !submitted && (
+          <div className="pear-actions" onPointerDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
+            <button className="btn btn-blue btn-sm" disabled={busy || pts.length < 2} onClick={submit}>Valider 🔪</button>
+            <button className="btn btn-ghost btn-sm" disabled={busy} onClick={clear}>Effacer</button>
+          </div>
+        )}
       </div>
       </div>
       {submitted
         ? <p className="muted">✅ Coupe validée. En attente des autres… ({Object.keys(mg.cuts).length}/{room.players.length})</p>
-        : (
-          <div className="center-col">
-          {locked && <p className="dim mb">Trait tracé — touche « Effacer » pour en refaire un.</p>}
-          <div className="row sticky-cta">
-            <button className="btn btn-ghost btn-sm auto" disabled={busy || !pts.length} onClick={clear}>Effacer</button>
-            <button className="btn btn-blue btn-sm auto" disabled={busy || pts.length < 2} onClick={submit}>Valider ma coupe 🔪</button>
-          </div>
-          </div>
-        )}
+        : !locked && <p className="dim">Trace ton trait d'un seul geste.</p>}
     </div>
   );
 }

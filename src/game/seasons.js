@@ -8,7 +8,7 @@
 /* Mode test : `true` = TOUS les mini-jeux éphémères actifs en même temps
    (quelle que soit la date). `false` (production) = seulement celui de la
    période en cours — et rien hors période. */
-export const SEASONAL_TEST_ALL = true;
+export const SEASONAL_TEST_ALL = false;
 
 export const SEASONS = {
   newyear: { id: "newyear", name: "New Year", emoji: "🎆", from: [1, 1], to: [1, 15] },

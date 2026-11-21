@@ -5,7 +5,7 @@ import { CARD_INFO, GAMES, actionDrink, cardMeta } from "../game/constants.js";
 import { seasonDates } from "../game/seasons.js";
 import { CardFace } from "./CardFace.jsx";
 import { Overlay, Ava, RichText } from "./common.jsx";
-import { sortedHand, recoverError } from "../game/engine.js";
+import { sortedHand, recoverError, REACT_FORCE_DELAY } from "../game/engine.js";
 import { Minigame } from "../minigames/index.jsx";
 import { RuleDiagram } from "./RuleDiagram.jsx";
 
@@ -175,6 +175,28 @@ function CardSheet({ card, hand, canPlay, hasDiable, close, onActionStack, onDia
       {canPlay && card.type === "joker" && <p className="muted" style={{ color: "#27d17c" }}>Garde-la : elle se déclenchera quand un diable te visera.</p>}
       {canPlay && card.type === "plus" && <p className="muted" style={{ color: "#ff9b2f" }}>Se joue en réaction quand un diable te vise : tu renvoies la peine +{card.value} à un autre joueur.</p>}
     </Overlay>
+  );
+}
+
+/* Bouton « gorgées prises » du lanceur : seulement si le joueur visé ne
+   répond pas au bout de REACT_FORCE_DELAY (sinon il ne peut pas jouer son
+   joker / sa relance). */
+function ReactForce({ reaction, act, busy }) {
+  const [, tick] = useState(0);
+  const left = Math.ceil(((reaction.at || 0) + REACT_FORCE_DELAY - Date.now()) / 1000);
+  useEffect(() => {
+    if (left <= 0) return;
+    const i = setTimeout(() => tick((x) => x + 1), 1000);
+    return () => clearTimeout(i);
+  });
+  if (left > 0) return <p className="muted dim mt">Joueur absent ? Tu pourras valider à sa place dans {left} s.</p>;
+  return (
+    <>
+      <p className="muted dim mt mb">Le joueur visé est absent et ne répond pas ?</p>
+      <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "reactForce" })}>
+        ✅ Valider « gorgées prises »
+      </button>
+    </>
   );
 }
 
@@ -454,14 +476,7 @@ export function GameTable({ room, act, flash, leave, busy, online = {}, onProfil
         <Overlay>
           <div className="center-col">
             <p className="muted">😈 {(room.players.find((p) => p.id === room.reaction.targetId) || {}).name || "Un joueur"} décide : subir, joker ou relancer…</p>
-            {room.reaction.byId === MYID && (
-              <>
-                <p className="muted dim mt mb">Le joueur visé est absent et ne répond pas ?</p>
-                <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "reactForce" })}>
-                  ✅ Valider « gorgées prises »
-                </button>
-              </>
-            )}
+            {room.reaction.byId === MYID && <ReactForce reaction={room.reaction} act={act} busy={busy} />}
           </div>
         </Overlay>
       )}

@@ -388,7 +388,7 @@ export const IMPOSTER_PAIRS = [
   ["Kebab", "McDo"], ["Barman", "Videur"], ["Cendrier", "Briquet"],
   ["Bière", "Cidre"], ["Boîte de nuit", "Bar de strip-tease"],
   /* SEXE */
-  ["Fion", "Anus"], ["Sexe anal", "Sexe oral"], ["Fellation", "Cunnilingus"],
+  ["Fesses", "Anus"], ["Sexe anal", "Sexe oral"], ["Fellation", "Cunnilingus"],
   ["Partouze", "Plan à 3"], ["Masturbation", "Préliminaires"],
   ["Missionnaire", "Levrette"], ["Sextape", "Nudes"], ["Cougar", "MILF"],
   ["Sugar Daddy", "Gigolo"], ["Ex partenaire", "Amant / Maîtresse"],
