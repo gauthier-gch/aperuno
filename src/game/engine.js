@@ -308,10 +308,10 @@ const PROMPT_START_PHASE = { inapp_mime: "play", inapp_categorie: "play", inapp_
 /* Undercover : le lanceur coche d'abord les joueurs PRÉSENTS (phase
    « select ») ; les rôles ne sont tirés qu'entre eux (un absent ne bloque
    plus la manche). Les joueurs sans rôle ne participent pas. */
-/* Undercover : cartes dans le paquet seulement si la partie démarre à 4+ ;
+/* Undercover : cartes dans le paquet seulement si la partie démarre à 3+ ;
    au lancement, 3 présents suffisent (sans Mister White, cf. imposterSetup). */
 export const IMPOSTER_MIN = 3; // joueurs présents minimum pour une manche
-const IMPOSTER_DECK_MIN = 4; // joueurs minimum pour garder les cartes
+const IMPOSTER_DECK_MIN = 3; // joueurs minimum pour garder les cartes
 function initImposteur(s, base) {
   if (s.players.length < IMPOSTER_MIN) return { ...base, phase: "over", cantPlay: true };
   return { ...base, phase: "select", roles: {}, eliminated: [], speakerIdx: 0, speakOrder: [], round: 1, lastElim: null, result: null };
