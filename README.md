@@ -71,7 +71,8 @@ table :
   retournent dans la pioche). Il ne compte alors plus dans les gorgées ni les
   mini-jeux.
 - **Gorgées prises** — si tu envoies une gorgée (Diable) à quelqu'un d'absent,
-  tu peux **valider toi-même** « gorgées prises » sans attendre sa réponse.
+  tu peux **valider toi-même** « gorgées prises » s'il n'a pas répondu au bout
+  de 30 s (le temps de jouer son joker ou sa relance).
 - **Débloquer un mini-jeu** — n'importe quel mini-jeu peut être **terminé**
   (avec ou sans perdant) via « ⚠️ Un joueur absent bloque le jeu ? », même si
   c'est le lanceur lui-même qui est parti.
@@ -94,7 +95,8 @@ In-app (jouables directement dans l'appli) :
   (distribue 3 gorgées) et le **pire mime** (boit).
 - 🍐 **Coupe la poire** — direction cible à reproduire au doigt.
 - 🗺️ **Place la ville** — carte de France + 50 villes, zoom (pincer / ＋) + classement.
-- 🕵️ **Undercover** — avec un Mister White qui peut deviner le mot.
+- 🕵️ **Undercover** — avec un Mister White qui peut deviner le mot. Le lanceur
+  coche d'abord les joueurs présents ; chacun révèle son mot via un bouton.
 - 🔟 **C'est un 10 mais…** — le lanceur boit la moyenne des écarts.
 - 🔗 **Connexion** — un mot commun au décompte : les « connectés » boivent.
 - 🔢 **Comptez-vous** (à l'oral) — tout le monde compte jusqu'au nombre de
@@ -129,8 +131,7 @@ Dans « Règles & mini-jeux », seul le mini-jeu de la période en cours appara�
 Hors période, aucun mini-jeu éphémère n'apparaît (ni dans la pioche, ni
 dans les règles, ni dans la composition Premium).
 
-> 🧪 **Mode test** (⚠️ **actuellement activé** pour tester Black Friday et le
-> calendrier de l'avent — à repasser à `false` avant la mise en prod) : passer `SEASONAL_TEST_ALL` à `true` dans
+> 🧪 **Mode test** : passer `SEASONAL_TEST_ALL` à `true` dans
 > `src/game/seasons.js` active **tous** les mini-jeux éphémères en même
 > temps (désactivé en production).
 

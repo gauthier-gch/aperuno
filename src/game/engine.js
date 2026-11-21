@@ -203,6 +203,11 @@ function endTurn(s) {
 
 /* ----------------------------- cartes réaction --------------------------- */
 
+/* Délai avant que le lanceur puisse valider « gorgées prises » à la place du
+   joueur visé (absent). Sans lui, le lanceur validait tout de suite et la
+   cible buvait sans pouvoir jouer son joker ou sa relance. */
+export const REACT_FORCE_DELAY = 30000;
+
 function reactionCardsOf(s, playerIdx) {
   const hand = s.players[playerIdx].hand;
   return {
@@ -297,28 +302,30 @@ function pickFrom(list, avoid) {
 const PROMPT_POOLS = { inapp_mime: MIME_WORDS, inapp_categorie: CATEGORIE_CATS, inapp_vote: VOTE_QUESTIONS };
 const PROMPT_START_PHASE = { inapp_mime: "play", inapp_categorie: "play", inapp_vote: "vote" };
 
+/* Undercover : le lanceur coche d'abord les joueurs PRÉSENTS (phase
+   « select ») ; les rôles ne sont tirés qu'entre eux (un absent ne bloque
+   plus la manche). Les joueurs sans rôle ne participent pas. */
 function initImposteur(s, base) {
-  const n = s.players.length;
-  if (n < 3) return { ...base, phase: "over", cantPlay: true };
-  const { imposteurs, white } = imposterSetup(n);
+  if (s.players.length < 3) return { ...base, phase: "over", cantPlay: true };
+  return { ...base, phase: "select", roles: {}, eliminated: [], speakerIdx: 0, speakOrder: [], round: 1, lastElim: null, result: null };
+}
+function imposteurDeal(mg, ids) {
+  const { imposteurs, white } = imposterSetup(ids.length);
   const pair = IMPOSTER_PAIRS[Math.floor(Math.random() * IMPOSTER_PAIRS.length)];
-  const order = shuffle(s.players.map((p) => p.id));
+  const order = shuffle(ids);
   const roles = {};
   let k = 0;
   for (let i = 0; i < imposteurs; i++) roles[order[k++]] = "imposteur";
   for (let i = 0; i < white; i++) roles[order[k++]] = "white";
   while (k < order.length) roles[order[k++]] = "civil";
-  return {
-    ...base, phase: "reveal", civilWord: pair[0], imposterWord: pair[1],
-    roles, eliminated: [], speakerIdx: 0, speakOrder: [], round: 1, lastElim: null, result: null,
-  };
+  Object.assign(mg, { phase: "reveal", civilWord: pair[0], imposterWord: pair[1], roles, eliminated: [] });
 }
 
 /* Ordre de parole des joueurs encore en jeu.
    Règle : Mister White ne commence jamais (il n'a aucun mot). Si le premier
    de la file est Mister White, on le décale à la fin. */
 function imposteurSpeakOrder(mg, players) {
-  const ids = players.filter((p) => !mg.eliminated.includes(p.id)).map((p) => p.id);
+  const ids = players.filter((p) => mg.roles[p.id] && !mg.eliminated.includes(p.id)).map((p) => p.id);
   let guard = 0;
   while (ids.length > 1 && mg.roles[ids[0]] === "white" && guard < ids.length) {
     ids.push(ids.shift());
@@ -386,7 +393,7 @@ export function applyMove(s0, move, myId) {
       s.reaction = {
         byId: myId, targetId: move.targetId,
         baseLabel: actionDrink(total, unit).replace("boit ", ""), bonus: 0,
-        total, unit,
+        total, unit, at: Date.now(),
       };
       return offerOrResolve(s);
     }
@@ -395,6 +402,8 @@ export function applyMove(s0, move, myId) {
     case "reactForce": {
       if (!s.reaction) throw new Error("Aucune gorgée en attente.");
       if (s.reaction.byId !== myId) throw new Error("Seul le lanceur de la gorgée peut valider à sa place.");
+      // Le joueur visé doit avoir le temps de répondre (joker / relance).
+      if (Date.now() - (s.reaction.at || 0) < REACT_FORCE_DELAY) throw new Error("Laisse le temps au joueur visé de répondre.");
       return resolveDrink(s);
     }
     case "reactDrink": {
@@ -416,6 +425,7 @@ export function applyMove(s0, move, myId) {
         discardFrom(s, me, [card.id]);
         r.bonus += move.value;
         r.targetId = move.nextId;
+        r.byId = myId; r.at = Date.now();
         s.announce = note(`${mine.name} relance +${move.value} sur ${s.players[nt].name} ⏫`);
         return offerOrResolve(s);
       }
@@ -727,6 +737,14 @@ export function applyMove(s0, move, myId) {
     }
 
     /* ---------- L'imposteur ---------- */
+    case "mgImpSetup": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_imposteur", "select");
+      const ids = s.players.map((p) => p.id).filter((id) => (move.playerIds || []).includes(id));
+      if (ids.length < 3) throw new Error("Il faut au moins 3 joueurs présents.");
+      imposteurDeal(s.minigame, ids);
+      return s;
+    }
     case "mgImpStart": {
       mgGuard(s, isLauncher);
       if (s.minigame.phase !== "reveal") throw new Error("Déjà démarré.");
@@ -739,7 +757,7 @@ export function applyMove(s0, move, myId) {
       if (s.minigame.phase !== "play") throw new Error("Pas en phase de parole.");
       const order = s.minigame.speakOrder && s.minigame.speakOrder.length
         ? s.minigame.speakOrder
-        : s.players.filter((p) => !s.minigame.eliminated.includes(p.id)).map((p) => p.id);
+        : s.players.filter((p) => s.minigame.roles[p.id] && !s.minigame.eliminated.includes(p.id)).map((p) => p.id);
       s.minigame.speakerIdx = Math.min(s.minigame.speakerIdx + 1, order.length);
       return s;
     }
@@ -752,7 +770,7 @@ export function applyMove(s0, move, myId) {
       mgGuard(s, isLauncher);
       if (s.minigame.phase !== "elim") throw new Error("Pas en phase d'élimination.");
       const t = idx(s, move.targetId);
-      if (t < 0) throw new Error("Joueur invalide.");
+      if (t < 0 || !s.minigame.roles[move.targetId]) throw new Error("Joueur invalide.");
       if (s.minigame.eliminated.includes(move.targetId)) throw new Error("Déjà éliminé.");
       const role = s.minigame.roles[move.targetId];
       s.minigame.eliminated.push(move.targetId);
@@ -1102,7 +1120,7 @@ export function roleLabel(role) {
 }
 function activeRoles(s) {
   const mg = s.minigame;
-  return s.players.filter((p) => !mg.eliminated.includes(p.id)).map((p) => mg.roles[p.id]);
+  return s.players.filter((p) => mg.roles[p.id] && !mg.eliminated.includes(p.id)).map((p) => mg.roles[p.id]);
 }
 /* Fin de manche de l'imposteur : civils gagnent si imposteur(s)+white éliminés ;
    imposteurs gagnent s'ils atteignent la parité avec les civils. */
