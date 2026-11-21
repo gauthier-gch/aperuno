@@ -217,3 +217,49 @@ export function santaDraw(ids, shuffle) {
   order.forEach((id, i) => { out[id] = order[(i + 1) % order.length]; });
   return out;
 }
+
+/* ------------------------- Calendrier de l'avent ------------------------- */
+/* 24 défis (avec leur nombre d'exemplaires : 2+2+3+3+3+1+3+3+2+1+1 = 24).
+   `chill` / `harr` : texte selon le mode (premium = Harr). `drink` : ce que
+   boit celui qui ouvre la case (stats de partie : { sips, secs }).
+   `info` : explication affichée derrière un petit (i). */
+export const ADVENT_CELLS = 24;
+export const ADVENT_CHALLENGES = [
+  { id: "drink2", n: 2, ic: "🍺", chill: "Bois 2 gorgées", drink: { sips: 2 } },
+  { id: "give2", n: 2, ic: "🫵", chill: "Distribue 2 gorgées" },
+  { id: "drink5", n: 3, ic: "🍻", chill: "Bois 5 gorgées", drink: { sips: 5 } },
+  { id: "give5", n: 3, ic: "🎯", chill: "Distribue 5 gorgées" },
+  { id: "serve", n: 3, ic: "🍷", chill: "Offre / sers un verre au joueur de ton choix" },
+  { id: "story", n: 1, ic: "📸", chill: "Fais une story et identifie @aperuno.app" },
+  { id: "drink3sec", n: 3, ic: "🥃", chill: "Bois 3 gorgées", harr: "Finis ton verre !",
+    drink: { sips: 3 }, drinkHarr: { secs: 1 } },
+  { id: "give3sec", n: 3, ic: "😈", chill: "Distribue 3 gorgées", harr: "Distribue un sec" },
+  { id: "chifoumi", n: 2, ic: "✊", chill: "Défie un joueur au chi-fou-mi : le perdant boit 3 gorgées" },
+  { id: "selfie", n: 1, ic: "🤳", chill: "Photo de groupe : selfie souvenir !" },
+  { id: "quiestle", n: 1, ic: "🤔", chill: "Lance un « Qui est le plus… »",
+    info: "Exemple : « Qui est le plus drôle ? ». Après un décompte (3, 2, 1…), chacun désigne un joueur du doigt." },
+];
+export function adventChallenge(id) { return ADVENT_CHALLENGES.find((c) => c.id === id); }
+/* Texte d'un défi selon le mode de jeu. */
+export function adventText(c, mode) {
+  return (mode === "chill" ? c.chill : c.harr || c.chill);
+}
+export function adventDrink(c, mode) {
+  return (mode === "chill" ? c.drink : c.drinkHarr || c.drink) || null;
+}
+/* Tirage d'un calendrier : tableau de 24 ids de défis (case n → cells[n-1]). */
+export function adventDraw(shuffle) {
+  const all = [];
+  ADVENT_CHALLENGES.forEach((c) => { for (let i = 0; i < c.n; i++) all.push(c.id); });
+  return shuffle(all);
+}
+/* Position des numéros dans la maison (fixe, mélangée comme un vrai
+   calendrier) : ordre d'affichage des 24 cases, ligne par ligne. */
+export const ADVENT_LAYOUT = [
+  13, 2, 20, 7,
+  9, 24, 4, 16,
+  18, 11, 22, 1,
+  5, 15, 8, 19,
+  23, 3, 12, 6,
+  10, 17, 21, 14,
+];
