@@ -1013,6 +1013,13 @@ export function applyMove(s0, move, myId) {
       return s;
     }
 
+    case "mgAdventRecap": {
+      mgKind(s, "inapp_advent", "open");
+      mgGuard(s, isLauncher);
+      s.minigame.phase = "recap"; // récap « qui fait quoi » (comme C'est un 10 mais)
+      return s;
+    }
+
     /* ---------- débloquer / terminer un mini-jeu (n'importe qui) ----------
        Utile si le LANCEUR lui-même est absent (lui seul a les boutons de fin)
        ou si un participant déconnecté bloque une phase collective. */
