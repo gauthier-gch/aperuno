@@ -27,6 +27,8 @@ import { SunGame } from "./Sun.jsx";
 import { InterroGame } from "./Interro.jsx";
 import { TrainGame } from "./Train.jsx";
 import { SantaGame } from "./Santa.jsx";
+import { BlackFridayGame } from "./BlackFriday.jsx";
+import { AdventGame } from "./Advent.jsx";
 
 /* Phases pendant lesquelles on peut arrêter un mini-jeu avec les joueurs qui
    ont déjà joué (PARTIAL_KINDS : poire, ville, vote, Cupidon, Secret Santa). */
@@ -73,6 +75,8 @@ export function Minigame({ room, act, busy, leave }) {
     case "inapp_interro": body = <InterroGame {...shared} />; break;
     case "inapp_train": body = <TrainGame {...shared} />; break;
     case "inapp_santa": body = <SantaGame {...shared} />; break;
+    case "inapp_bf": body = <BlackFridayGame {...shared} />; break;
+    case "inapp_advent": body = <AdventGame {...shared} />; break;
     default:
       if (g.duel) {
         // duels : choisir l'adversaire PUIS désigner le perdant.

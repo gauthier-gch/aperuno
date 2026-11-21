@@ -18,6 +18,7 @@ import {
   EGG_COUNT, EGG_SPOTS, EGG_SCENES, EGG_COLORS, EGG_DURATION, EGG_PREP,
   SUN_PREP, SUN_DURATION, SUN_BURN_MIN, SUN_BURN_MAX, SUN_BURN_SIPS,
   TRAIN_PREP, TRAIN_FORKS, TRAIN_SIPS, trainFork, trainEnd, trainDeaths, trainRevealed, santaDraw,
+  ADVENT_CELLS, adventDraw, adventChallenge, adventDrink,
 } from "./seasonal.js";
 
 /* ----------------------------- création d'état --------------------------- */
@@ -52,6 +53,7 @@ export function dealNewGame(s0, starterIdx) {
   s.turn = { drawn: false };
   s.announce = note(`C'est parti ! ${s.players[s.current].name} commence — pioche puis joue 🥃`);
   s.reaction = null; s.minigame = null; s.timers = []; s.secTarget = null;
+  s.advent = null; // calendrier de l'avent : retiré à chaque nouvelle partie
   s.drinks = {};
   s.dealtAt = Date.now(); // identifie la manche (historique des joueurs)
   return s;
@@ -265,6 +267,12 @@ function initMinigame(s, gameId) {
       return { ...base, phase: "intro", monsterSide: Array.from({ length: TRAIN_FORKS }, () => (Math.random() < 0.5 ? "L" : "R")), choices: {} };
     case "inapp_santa":
       return { ...base, phase: "give", santa: santaDraw(s.players.map((p) => p.id), shuffle), gifts: {}, received: {}, opened: {} };
+    case "inapp_bf": return { ...base, phase: "pick" };
+    case "inapp_advent":
+      // Calendrier tiré une seule fois par partie (mêmes défis pour tous) ;
+      // les cases déjà ouvertes par chaque joueur restent ouvertes.
+      if (!s.advent || !Array.isArray(s.advent.cells)) s.advent = { cells: adventDraw(shuffle), opened: {} };
+      return { ...base, phase: "open", picks: {} };
     case "inapp_roulette": return { ...base, segment: null };
     case "inapp_dix": {
       const suit = CARD_SUITS[Math.floor(Math.random() * CARD_SUITS.length)];
@@ -971,6 +979,37 @@ export function applyMove(s0, move, myId) {
     case "mgSantaOpen": {
       mgKind(s, "inapp_santa", "open");
       s.minigame.opened[myId] = true;
+      return s;
+    }
+
+    /* ---------- Black Friday : 1 acheté = 1 offert (chrono 10 min) ---------- */
+    case "mgBfPick": {
+      mgKind(s, "inapp_bf");
+      mgGuard(s, isLauncher);
+      const t = idx(s, move.targetId);
+      if (t < 0 || t === me) throw new Error("Choisis un autre joueur.");
+      const label = `BF : ${mine.name} → ${s.players[t].name}`;
+      s.timers = [...(s.timers || []), { id: makeUid("t", 0), label, endsAt: Date.now() + TEN_MIN }];
+      s.announce = note(`🛍️ Black Friday ! Pendant 10 min, dès que ${mine.name} boit, ${s.players[t].name} boit aussi.`, true);
+      endTurn(s);
+      return s;
+    }
+
+    /* ---------- Calendrier de l'avent : chacun ouvre une case ---------- */
+    case "mgAdventOpen": {
+      mgKind(s, "inapp_advent", "open");
+      const mg = s.minigame;
+      if (mg.picks[myId]) throw new Error("Tu as déjà ouvert ta case.");
+      const n = Number(move.cell);
+      if (!Number.isInteger(n) || n < 1 || n > ADVENT_CELLS) throw new Error("Case invalide.");
+      if (!s.advent) s.advent = { cells: adventDraw(shuffle), opened: {} };
+      const mineOpened = s.advent.opened[myId] || [];
+      if (mineOpened.includes(n)) throw new Error("Tu as déjà ouvert cette case.");
+      s.advent.opened[myId] = [...mineOpened, n];
+      mg.picks[myId] = n;
+      const c = adventChallenge(s.advent.cells[n - 1]);
+      const d = c && adventDrink(c, mode);
+      if (d) addDrink(s, myId, d.sips || 0, d.secs || 0);
       return s;
     }
 

@@ -144,7 +144,8 @@ export function sanitizePremium(p) {
           inapp_mime | inapp_pear | inapp_city | inapp_roulette |
           inapp_connexion | inapp_patate | inapp_piraterie | inapp_categorie |
           inapp_newyear | inapp_cupidon | inapp_fleur | inapp_eggs | inapp_sun |
-          inapp_interro | inapp_train | inapp_santa | facilitator | offapp
+          inapp_interro | inapp_train | inapp_santa | inapp_bf | inapp_advent |
+          facilitator | offapp
    harrOnly : carte présente uniquement dans le deck du mode Harr. */
 export const GAMES = [
   { id: "21", name: "Le 21", chill: 3, harr: 1, kind: "offapp",
@@ -205,7 +206,8 @@ export const GAMES = [
   /* ------------------------------------------------------------------
      Mini-jeux ÉPHÉMÈRES : `seasonal` = id de période (voir seasons.js).
      Présents dans le paquet uniquement pendant leur période (4 cartes,
-     sauf l'été : 2 « Coup de soleil » + 2 « Place la plage »).
+     sauf l'été : 2 « Coup de soleil » + 2 « Place la plage », Black Friday :
+     3 cartes, décembre : 2 « Calendrier de l'avent » + 2 « Secret Santa »).
      ------------------------------------------------------------------ */
   { id: "rebours", name: "Le compte à rebours", chill: 4, harr: 4, kind: "inapp_newyear", seasonal: "newyear",
     rule: "Un **décompte** démarre sur tous les écrans *(10, 9, 8…)*. À partir de 5, les chiffres **disparaissent** !\nAppuie sur **« Bonne année ! 🎉 »** pile au moment où le **zéro** tombe.\n\nClassement du plus précis au moins précis :\n- ceux qui n'ont pas appuyé boivent **5 gorgées** ;\n- puis les 3 derniers boivent **3, 2 et 1 gorgée**." },
@@ -223,7 +225,11 @@ export const GAMES = [
     rule: "Le lanceur choisit **une question parmi 3** sur lui-même *(couleur préférée, job, bodycount…)* 📝.\nChacun y répond sur son téléphone, les réponses arrivent chez le lanceur.\n\nLe lanceur désigne ensuite :\n- le **gagnant**, qui distribue **3 gorgées** ;\n- le **perdant**, qui boit **3 gorgées**." },
   { id: "train", name: "Évite les monstres", chill: 4, harr: 4, kind: "inapp_train", seasonal: "spooky",
     rule: "Tout le monde monte dans le **train fantôme** 🎢.\nÀ chaque **bifurcation** *(3 au total)*, tu as **5 secondes** pour choisir **gauche** ou **droite** : un des deux chemins cache un **monstre** 🐺🧛🧙. Si tu ne choisis pas, tu fonces tout droit dans le mur… et son monstre 🐍🧟👻 !\n\n- Tu rencontres un monstre : tu bois **3 gorgées** *(et tu regardes la suite)*.\n- Tu évites tous les monstres : tu **distribues 5 gorgées**." },
-  { id: "santa", name: "Secret Santa", chill: 4, harr: 4, kind: "inapp_santa", seasonal: "xmas",
+  { id: "blackfriday", name: "Black Friday", chill: 3, harr: 3, kind: "inapp_bf", seasonal: "blackfriday",
+    rule: "**1 acheté = 1 offert !** 🛍️\nChoisis un joueur : pendant **10 minutes**, dès que tu bois, **ce joueur boit également**.\n\nUn chrono apparaît en haut de l'écran pour que personne n'oublie l'offre 😏" },
+  { id: "avent", name: "Calendrier de l'avent", chill: 2, harr: 2, kind: "inapp_advent", seasonal: "advent",
+    rule: "Une **maison de Noël** 🏠 avec **24 cases** apparaît sur ton téléphone.\nChoisis une case et ouvre-la : un **défi** t'attend derrière la porte 🎁\n\nLes défis sont tirés au sort en début de partie et sont **les mêmes pour tous** les joueurs. Une case ouverte reste ouverte jusqu'à la fin de la partie." },
+  { id: "santa", name: "Secret Santa", chill: 2, harr: 2, kind: "inapp_santa", seasonal: "xmas",
     rule: "Un joueur secret 🎅 est tiré au sort pour chacun.\nChoisis **une carte de ta main** à lui offrir : chacun **donne une carte** et **en reçoit une**.\n\nTon cadeau arrive dans un **papier cadeau** 🎁 : ouvre-le pour découvrir ta nouvelle carte… sans savoir qui te l'a offerte 🤫" },
 ];
 

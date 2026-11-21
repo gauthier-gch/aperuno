@@ -110,7 +110,7 @@ In-app (jouables directement dans l'appli) :
 ### ✨ Mini-jeux éphémères
 
 Selon la période de l'année, un mini-jeu saisonnier rejoint le paquet
-(**4 cartes**, en **bleu clair** avec l'icône de la période en haut à droite).
+(**4 cartes** en général, en **bleu clair** avec l'icône de la période en haut à droite).
 Dans « Règles & mini-jeux », seul le mini-jeu de la période en cours apparaît.
 
 | Période | Dates | Mini-jeu |
@@ -121,13 +121,16 @@ Dans « Règles & mini-jeux », seul le mini-jeu de la période en cours appara�
 | 🐣 Pâques | 26 mars → 26 avril | **Chasse aux œufs** — 10 œufs parmi 20 cachettes, 20 s, zoom au pincer |
 | 🏖️ Été | 15 juin → 30 août | **Coup de soleil** (2 cartes) + **Place la plage** (2 cartes, 50 stations) |
 | 🎒 Back to school | 1er → 20 septembre | **Interro surprise** — questions sur le lanceur, qui note les copies |
-| 🎃 Spooky | 10 octobre → 15 novembre | **Évite les monstres** — train fantôme, 3 bifurcations |
-| 🎅 Noël | 1er → 31 décembre | **Secret Santa** — chacun offre une carte de sa main |
+| 🎃 Spooky | 10 octobre → 14 novembre | **Évite les monstres** — train fantôme, 3 bifurcations |
+| 🛍️ Black Friday | 15 → 30 novembre | **Black Friday** (3 cartes) — « 1 acheté = 1 offert » : pendant 10 min (chrono `BF : lanceur → joueur`), le joueur choisi boit à chaque fois que le lanceur boit |
+| 🎄 Avent | 1er → 24 décembre | **Calendrier de l'avent** (2 cartes) — maison de Noël à 24 cases, chacun ouvre une case et relève le défi ; calendrier tiré une fois par partie, identique pour tous, cases ouvertes conservées |
+| 🎅 Noël | 1er → 31 décembre | **Secret Santa** (2 cartes) — chacun offre une carte de sa main |
 
 Hors période, aucun mini-jeu éphémère n'apparaît (ni dans la pioche, ni
 dans les règles, ni dans la composition Premium).
 
-> 🧪 **Mode test** : passer `SEASONAL_TEST_ALL` à `true` dans
+> 🧪 **Mode test** (⚠️ **actuellement activé** pour tester Black Friday et le
+> calendrier de l'avent — à repasser à `false` avant la mise en prod) : passer `SEASONAL_TEST_ALL` à `true` dans
 > `src/game/seasons.js` active **tous** les mini-jeux éphémères en même
 > temps (désactivé en production).
 

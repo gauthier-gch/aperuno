@@ -8,7 +8,7 @@
 /* Mode test : `true` = TOUS les mini-jeux éphémères actifs en même temps
    (quelle que soit la date). `false` (production) = seulement celui de la
    période en cours — et rien hors période. */
-export const SEASONAL_TEST_ALL = false;
+export const SEASONAL_TEST_ALL = true;
 
 export const SEASONS = {
   newyear: { id: "newyear", name: "New Year", emoji: "🎆", from: [1, 1], to: [1, 15] },
@@ -17,7 +17,9 @@ export const SEASONS = {
   easter: { id: "easter", name: "Pâques", emoji: "🐣", from: [3, 26], to: [4, 26] },
   summer: { id: "summer", name: "Été", emoji: "🏖️", from: [6, 15], to: [8, 30] },
   school: { id: "school", name: "Back to school", emoji: "🎒", from: [9, 1], to: [9, 20] },
-  spooky: { id: "spooky", name: "Spooky", emoji: "🎃", from: [10, 10], to: [11, 15] },
+  spooky: { id: "spooky", name: "Spooky", emoji: "🎃", from: [10, 10], to: [11, 14] },
+  blackfriday: { id: "blackfriday", name: "Black Friday", emoji: "🛍️", from: [11, 15], to: [11, 30] },
+  advent: { id: "advent", name: "Calendrier de l'avent", emoji: "🎄", from: [12, 1], to: [12, 24] },
   xmas: { id: "xmas", name: "Noël", emoji: "🎅", from: [12, 1], to: [12, 31] },
 };
 
