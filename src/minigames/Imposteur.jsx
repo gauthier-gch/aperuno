@@ -33,12 +33,12 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
     return (
       <div className="center-col">
         <p className="b mb">Qui joue ? Décoche les absents :</p>
-        <div className="wrap mb">
+        <div className="col-gap mb" style={{ width: "100%" }}>
           {room.players.map((p) => {
             const on = picked.includes(p.id);
             return (
-              <button key={p.id} className={"btn btn-sm auto " + (on ? "btn-gold" : "btn-ghost")} style={on ? undefined : { opacity: 0.55 }} onClick={() => toggle(p.id)}>
-                <Ava p={p} size={20} /> {on ? "✅" : "⬜"} {p.name}
+              <button key={p.id} className={"btn btn-sm " + (on ? "btn-gold" : "btn-ghost")} style={{ justifyContent: "flex-start", ...(on ? {} : { opacity: 0.55 }) }} onClick={() => toggle(p.id)}>
+                {on ? "✅" : "⬜"} <Ava p={p} size={22} /> {p.name}
               </button>
             );
           })}
@@ -169,16 +169,53 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
     return <div className="center-col"><p className="muted">🎭 Mister White tente de deviner le mot des civils…</p></div>;
   }
 
-  /* élimination */
+  /* élimination : vote secret de tous les joueurs en jeu */
   if (mg.phase === "elim") {
+    const votes = mg.votes || {};
+    const nameOf = (id) => (room.players.find((p) => p.id === id) || {}).name || "?";
+    const Tally = () => mg.tally && Object.keys(mg.tally).length > 0 ? (
+      <div className="pb-table mb" style={{ width: "100%" }}>
+        {Object.entries(mg.tally).sort((a, b) => b[1] - a[1]).map(([id, n]) => (
+          <div className="pb-row space" key={id}><b>{nameOf(id)}</b><span className="muted">{n} voix</span></div>
+        ))}
+      </div>
+    ) : null;
+    if (!mg.lastElim && mg.tie) {
+      const tied = mg.tie.map((id) => room.players.find((p) => p.id === id)).filter(Boolean);
+      return (
+        <div className="center-col">
+          <p className="b mb">⚖️ Égalité entre {tied.map((p) => p.name).join(", ")} !</p>
+          <Tally />
+          <p className="muted mb">Tranchez à l'oral, puis {isLauncher ? "désigne" : `${launcher.name} désigne`} l'éliminé.</p>
+          {isLauncher && <DesignateLoser players={tied} onPick={(id) => act({ type: "mgImpEliminate", targetId: id })} label="Qui est éliminé ?" />}
+        </div>
+      );
+    }
     if (!mg.lastElim) {
+      const voted = active.filter((p) => votes[p.id]).length;
+      const amIn = active.some((p) => p.id === MYID);
       return (
         <div className="center-col">
           <p className="b mb">🗳️ Heure de l'élimination — manche {mg.round}</p>
           <Composition />
-          {isLauncher
-            ? <DesignateLoser players={active} onPick={(id) => act({ type: "mgImpEliminate", targetId: id })} label="Qui les joueurs ont-ils voté d'éliminer ?" />
-            : <p className="muted">Votez entre vous, puis {launcher.name} indique l'éliminé.</p>}
+          {amIn && !votes[MYID] && (
+            <>
+              <p className="muted mb">Vote en secret pour le joueur à éliminer :</p>
+              <div className="col-gap mb" style={{ width: "100%" }}>
+                {active.filter((p) => p.id !== MYID).map((p) => (
+                  <button key={p.id} className="btn btn-ghost btn-sm" style={{ justifyContent: "flex-start" }} disabled={busy} onClick={() => act({ type: "mgImpVote", targetId: p.id })}>
+                    <Ava p={p} size={22} /> {p.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {amIn && votes[MYID] && <p className="muted mb">✅ Vote enregistré.</p>}
+          {!amIn && <p className="muted mb">Tu ne votes pas (absent ou éliminé).</p>}
+          <p className="muted mb">{voted}/{active.length} votes</p>
+          {isLauncher && voted > 0 && voted < active.length && (
+            <button className="btn btn-ghost btn-sm" disabled={busy} onClick={() => act({ type: "mgImpTally" })}>⚠️ Un joueur ne vote pas ? Dépouiller maintenant</button>
+          )}
         </div>
       );
     }
@@ -186,6 +223,7 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
     return (
       <div className="center-col">
         <p className="b mb">{elim.name} était <b className="w">{roleLabel(mg.lastElim.role)}</b> — boit 1 gorgée 🍻</p>
+        <Tally />
         {mg.whiteGuessFailed && <p className="muted mb">Mister White n'a pas trouvé le mot.</p>}
         {isLauncher
           ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgImpNextRound" })}>Manche suivante ▶</button>

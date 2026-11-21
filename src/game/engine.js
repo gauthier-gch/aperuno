@@ -770,22 +770,37 @@ export function applyMove(s0, move, myId) {
     }
     case "mgImpToVote": {
       mgGuard(s, isLauncher);
-      s.minigame.phase = "elim"; s.minigame.lastElim = null;
+      Object.assign(s.minigame, { phase: "elim", lastElim: null, votes: {}, tie: null, tally: null });
       return s;
     }
+    /* Vote secret : chaque joueur en jeu (présent, non éliminé) vote pour un
+       autre joueur en jeu. Dépouillement dès que tout le monde a voté. */
+    case "mgImpVote": {
+      mgKind(s, "inapp_imposteur", "elim");
+      const mg = s.minigame;
+      if (mg.lastElim || mg.tie) throw new Error("Le vote est terminé.");
+      const inGame = imposteurInGame(s);
+      if (!inGame.includes(myId)) throw new Error("Tu ne votes pas (absent ou éliminé).");
+      if (move.targetId === myId || !inGame.includes(move.targetId)) throw new Error("Vote invalide.");
+      mg.votes = { ...(mg.votes || {}), [myId]: move.targetId };
+      if (inGame.every((id) => mg.votes[id])) imposteurTally(s);
+      return s;
+    }
+    /* Le lanceur dépouille sans attendre (un joueur absent ne vote pas). */
+    case "mgImpTally": {
+      mgGuard(s, isLauncher);
+      mgKind(s, "inapp_imposteur", "elim");
+      if (s.minigame.lastElim || s.minigame.tie) throw new Error("Le vote est terminé.");
+      if (!Object.keys(s.minigame.votes || {}).length) throw new Error("Personne n'a encore voté.");
+      imposteurTally(s);
+      return s;
+    }
+    /* Égalité : les joueurs tranchent à l'oral, le lanceur désigne l'éliminé. */
     case "mgImpEliminate": {
       mgGuard(s, isLauncher);
-      if (s.minigame.phase !== "elim") throw new Error("Pas en phase d'élimination.");
-      const t = idx(s, move.targetId);
-      if (t < 0 || !s.minigame.roles[move.targetId]) throw new Error("Joueur invalide.");
-      if (s.minigame.eliminated.includes(move.targetId)) throw new Error("Déjà éliminé.");
-      const role = s.minigame.roles[move.targetId];
-      s.minigame.eliminated.push(move.targetId);
-      s.minigame.lastElim = { id: move.targetId, role };
-      s.announce = note(`${s.players[t].name} est éliminé — ${roleLabel(role)} — et boit 1 gorgée 🍻`, true);
-      addDrink(s, move.targetId, 1);
-      if (role === "white") s.minigame.phase = "whiteguess"; // Mister White tente de deviner
-      else imposteurCheckOver(s);
+      if (s.minigame.phase !== "elim" || s.minigame.lastElim) throw new Error("Pas en phase d'élimination.");
+      if (!s.minigame.tie || !s.minigame.tie.includes(move.targetId)) throw new Error("Choisis parmi les joueurs à égalité.");
+      imposteurEliminate(s, move.targetId);
       return s;
     }
     case "mgImpWhiteGuess": {
@@ -810,6 +825,7 @@ export function applyMove(s0, move, myId) {
       s.minigame.speakerIdx = 0;
       s.minigame.speakOrder = imposteurSpeakOrder(s.minigame, s.players);
       s.minigame.lastElim = null;
+      s.minigame.votes = {}; s.minigame.tie = null; s.minigame.tally = null;
       s.minigame.whiteGuessFailed = false;
       s.minigame.phase = "play";
       return s;
@@ -1128,6 +1144,42 @@ export function roleLabel(role) {
 function activeRoles(s) {
   const mg = s.minigame;
   return s.players.filter((p) => mg.roles[p.id] && !mg.eliminated.includes(p.id)).map((p) => mg.roles[p.id]);
+}
+/* Joueurs encore en jeu (présents au lancement et non éliminés). */
+function imposteurInGame(s) {
+  const mg = s.minigame;
+  return s.players.filter((p) => mg.roles[p.id] && !mg.eliminated.includes(p.id)).map((p) => p.id);
+}
+/* Dépouillement : le plus voté est éliminé ; en cas d'égalité, on garde la
+   liste des ex aequo (le lanceur tranche après discussion à l'oral). */
+function imposteurTally(s) {
+  const mg = s.minigame;
+  const inGame = imposteurInGame(s);
+  const tally = {};
+  Object.entries(mg.votes || {}).forEach(([v, t]) => {
+    if (inGame.includes(v) && inGame.includes(t)) tally[t] = (tally[t] || 0) + 1;
+  });
+  mg.tally = tally;
+  const max = Math.max(0, ...Object.values(tally));
+  const top = inGame.filter((id) => tally[id] === max && max > 0);
+  if (top.length === 1) imposteurEliminate(s, top[0]);
+  else {
+    mg.tie = top.length ? top : inGame;
+    s.announce = note(`🗳️ Égalité entre ${mg.tie.map((id) => s.players[idx(s, id)].name).join(", ")} — tranchez à l'oral !`, true);
+  }
+}
+function imposteurEliminate(s, id) {
+  const mg = s.minigame;
+  const t = idx(s, id);
+  if (t < 0 || !mg.roles[id] || mg.eliminated.includes(id)) throw new Error("Joueur invalide.");
+  const role = mg.roles[id];
+  mg.eliminated.push(id);
+  mg.lastElim = { id, role };
+  mg.tie = null;
+  s.announce = note(`${s.players[t].name} est éliminé — ${roleLabel(role)} — et boit 1 gorgée 🍻`, true);
+  addDrink(s, id, 1);
+  if (role === "white") mg.phase = "whiteguess"; // Mister White tente de deviner
+  else imposteurCheckOver(s);
 }
 /* Fin de manche de l'imposteur : civils gagnent si imposteur(s)+white éliminés ;
    imposteurs gagnent s'ils atteignent la parité avec les civils. */
