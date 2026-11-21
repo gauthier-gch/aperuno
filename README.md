@@ -123,7 +123,7 @@ Dans « Règles & mini-jeux », seul le mini-jeu de la période en cours appara�
 | 🎒 Back to school | 1er → 20 septembre | **Interro surprise** — questions sur le lanceur, qui note les copies |
 | 🎃 Spooky | 10 octobre → 14 novembre | **Évite les monstres** — train fantôme, 3 bifurcations |
 | 🛍️ Black Friday | 15 → 30 novembre | **Black Friday** (3 cartes) — « 1 acheté = 1 offert » : pendant 10 min (chrono `BF : lanceur → joueur`), le joueur choisi boit à chaque fois que le lanceur boit |
-| 🎄 Avent | 1er → 24 décembre | **Calendrier de l'avent** (2 cartes) — maison de Noël à 24 cases, chacun ouvre une case et relève le défi ; calendrier tiré une fois par partie, identique pour tous, cases ouvertes conservées |
+| 🎄 Avent | 1er → 24 décembre | **Calendrier de l'avent** (2 cartes) — maison de Noël à 24 cases, chacun ouvre une case et relève le défi ; calendrier tiré une fois par partie, identique pour tous, cases ouvertes conservées ; récap « qui fait quoi » en fin de tour |
 | 🎅 Noël | 1er → 31 décembre | **Secret Santa** (2 cartes) — chacun offre une carte de sa main |
 
 Hors période, aucun mini-jeu éphémère n'apparaît (ni dans la pioche, ni

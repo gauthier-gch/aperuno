@@ -19,6 +19,33 @@ export function AdventGame({ room, mg, isLauncher, act, busy, waiting }) {
   const nDone = Object.keys(picks).length;
   const others = room.players.filter((p) => p.id !== MYID && picks[p.id]);
 
+  /* ---- récap de fin de tour : qui fait quoi ---- */
+  if (mg.phase === "recap") {
+    return (
+      <div className="center-col">
+        <div style={{ fontSize: 44 }}>🎄</div>
+        <p className="muted mb">Récap du calendrier : à chacun son défi !</p>
+        <div className="pb-table" style={{ width: "100%" }}>
+          {room.players.map((p) => {
+            const n = picks[p.id];
+            const c = n ? challengeAt(n) : null;
+            return (
+              <div className={"pb-row adv-recap-row" + (p.id === MYID ? " me" : "")} key={p.id}>
+                <b>{p.name} {n && <span className="dim">· case {n}</span>}</b>
+                <span className="muted">{c ? <>{c.ic} {adventText(c, room.mode)}</> : "n'a pas ouvert de case"}</span>
+              </div>
+            );
+          })}
+        </div>
+        {isLauncher
+          ? <button className="btn btn-primary" disabled={busy} onClick={() => act({
+              type: "mgFinish", text: "Calendrier de l'avent 🎄 : à demain pour la prochaine case ! 🎁", long: false,
+            })}>Terminer le tour</button>
+          : waiting}
+      </div>
+    );
+  }
+
   return (
     <div className="center-col">
       {/* Une fois la case ouverte, le défi passe au-dessus de la maison
@@ -60,9 +87,8 @@ export function AdventGame({ room, mg, isLauncher, act, busy, waiting }) {
       )}
 
       {isLauncher
-        ? <button className="btn btn-primary mt" disabled={busy} onClick={() => act({
-            type: "mgFinish", text: "Calendrier de l'avent 🎄 : à demain pour la prochaine case ! 🎁", long: false,
-          })}>Terminer le tour <span className="dim">({nDone}/{room.players.length} ouvertes)</span></button>
+        ? <button className="btn btn-primary mt" disabled={busy} onClick={() => act({ type: "mgAdventRecap" })}>
+            Voir le récap <span className="dim">({nDone}/{room.players.length} ouvertes)</span></button>
         : waiting}
     </div>
   );
