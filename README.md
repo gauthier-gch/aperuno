@@ -96,7 +96,7 @@ In-app (jouables directement dans l'appli) :
 - 🍐 **Coupe la poire** — direction cible à reproduire au doigt.
 - 🗺️ **Place la ville** — carte de France + 50 villes, zoom (pincer / ＋) + classement.
 - 🕵️ **Undercover** — avec un Mister White qui peut deviner le mot. Le lanceur
-  coche d'abord les joueurs présents (4 minimum) ; chacun révèle son mot via un
+  coche d'abord les joueurs présents (3 minimum : à 3, pas de Mister White) ; chacun révèle son mot via un
   bouton. Cartes retirées du paquet si la partie démarre à 3 joueurs.
 - 🔟 **C'est un 10 mais…** — le lanceur boit la moyenne des écarts.
 - 🔗 **Connexion** — un mot commun au décompte : les « connectés » boivent.
