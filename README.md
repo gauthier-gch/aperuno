@@ -72,7 +72,7 @@ table :
   mini-jeux.
 - **Gorgées prises** — si tu envoies une gorgée (Diable) à quelqu'un d'absent,
   tu peux **valider toi-même** « gorgées prises » s'il n'a pas répondu au bout
-  de 30 s (le temps de jouer son joker ou sa relance).
+  de 10 s (le temps de jouer son joker ou sa relance).
 - **Débloquer un mini-jeu** — n'importe quel mini-jeu peut être **terminé**
   (avec ou sans perdant) via « ⚠️ Un joueur absent bloque le jeu ? », même si
   c'est le lanceur lui-même qui est parti.
@@ -96,7 +96,8 @@ In-app (jouables directement dans l'appli) :
 - 🍐 **Coupe la poire** — direction cible à reproduire au doigt.
 - 🗺️ **Place la ville** — carte de France + 50 villes, zoom (pincer / ＋) + classement.
 - 🕵️ **Undercover** — avec un Mister White qui peut deviner le mot. Le lanceur
-  coche d'abord les joueurs présents ; chacun révèle son mot via un bouton.
+  coche d'abord les joueurs présents (4 minimum) ; chacun révèle son mot via un
+  bouton. Cartes retirées du paquet si la partie démarre à 3 joueurs.
 - 🔟 **C'est un 10 mais…** — le lanceur boit la moyenne des écarts.
 - 🔗 **Connexion** — un mot commun au décompte : les « connectés » boivent.
 - 🔢 **Comptez-vous** (à l'oral) — tout le monde compte jusqu'au nombre de
