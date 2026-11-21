@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { MYID } from "../me.js";
-import { roleLabel } from "../game/engine.js";
+import { roleLabel, IMPOSTER_MIN } from "../game/engine.js";
 import { DesignateLoser, Ava } from "../components/common.jsx";
 
 export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiting }) {
@@ -17,7 +17,7 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
   if (mg.cantPlay) {
     return (
       <div className="center-col">
-        <p className="muted mb">Il faut au moins 3 joueurs pour Undercover.</p>
+        <p className="muted mb">Il faut au moins {IMPOSTER_MIN} joueurs pour Undercover.</p>
         {isLauncher
           ? <button className="btn btn-primary" disabled={busy} onClick={() => act({ type: "mgFinish", text: "Undercover annulé (pas assez de joueurs)", long: false })}>Terminer</button>
           : waiting}
@@ -43,8 +43,8 @@ export function ImposteurGame({ room, mg, isLauncher, launcher, act, busy, waiti
             );
           })}
         </div>
-        <button className="btn btn-primary" disabled={busy || ids.length < 3} onClick={() => act({ type: "mgImpSetup", playerIds: ids })}>
-          {ids.length < 3 ? "Il faut au moins 3 joueurs" : `Distribuer les mots (${ids.length} joueurs) 🎲`}
+        <button className="btn btn-primary" disabled={busy || ids.length < IMPOSTER_MIN} onClick={() => act({ type: "mgImpSetup", playerIds: ids })}>
+          {ids.length < IMPOSTER_MIN ? `Il faut au moins ${IMPOSTER_MIN} joueurs` : `Distribuer les mots (${ids.length} joueurs) 🎲`}
         </button>
       </div>
     );

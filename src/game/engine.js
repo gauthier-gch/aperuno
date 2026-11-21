@@ -42,7 +42,10 @@ export function newLobby(code, mode, host, premium) {
 
 export function dealNewGame(s0, starterIdx) {
   const s = clone(s0);
-  const deck = shuffle(buildDeck(s.mode, s.premium));
+  // Undercover injouable à 3 (pas de Mister White, trop simple) : on retire
+  // ses cartes du paquet quand la partie démarre avec 3 joueurs ou moins.
+  const deck = shuffle(buildDeck(s.mode, s.premium)
+    .filter((c) => !(c.gameId === "imposteur" && s.players.length < IMPOSTER_DECK_MIN)));
   // (bronze : lunettes du « Coup de soleil », retirées à chaque nouvelle partie)
   s.players = s.players.map(({ bronze, ...p }) => ({ ...p, hand: deck.splice(0, 7) }));
   s.deck = deck;
@@ -206,7 +209,7 @@ function endTurn(s) {
 /* Délai avant que le lanceur puisse valider « gorgées prises » à la place du
    joueur visé (absent). Sans lui, le lanceur validait tout de suite et la
    cible buvait sans pouvoir jouer son joker ou sa relance. */
-export const REACT_FORCE_DELAY = 30000;
+export const REACT_FORCE_DELAY = 10000;
 
 function reactionCardsOf(s, playerIdx) {
   const hand = s.players[playerIdx].hand;
@@ -305,8 +308,12 @@ const PROMPT_START_PHASE = { inapp_mime: "play", inapp_categorie: "play", inapp_
 /* Undercover : le lanceur coche d'abord les joueurs PRÉSENTS (phase
    « select ») ; les rôles ne sont tirés qu'entre eux (un absent ne bloque
    plus la manche). Les joueurs sans rôle ne participent pas. */
+/* Undercover : cartes dans le paquet seulement si la partie démarre à 4+ ;
+   au lancement, 3 présents suffisent (sans Mister White, cf. imposterSetup). */
+export const IMPOSTER_MIN = 3; // joueurs présents minimum pour une manche
+const IMPOSTER_DECK_MIN = 4; // joueurs minimum pour garder les cartes
 function initImposteur(s, base) {
-  if (s.players.length < 3) return { ...base, phase: "over", cantPlay: true };
+  if (s.players.length < IMPOSTER_MIN) return { ...base, phase: "over", cantPlay: true };
   return { ...base, phase: "select", roles: {}, eliminated: [], speakerIdx: 0, speakOrder: [], round: 1, lastElim: null, result: null };
 }
 function imposteurDeal(mg, ids) {
@@ -741,7 +748,7 @@ export function applyMove(s0, move, myId) {
       mgGuard(s, isLauncher);
       mgKind(s, "inapp_imposteur", "select");
       const ids = s.players.map((p) => p.id).filter((id) => (move.playerIds || []).includes(id));
-      if (ids.length < 3) throw new Error("Il faut au moins 3 joueurs présents.");
+      if (ids.length < IMPOSTER_MIN) throw new Error(`Il faut au moins ${IMPOSTER_MIN} joueurs présents.`);
       imposteurDeal(s.minigame, ids);
       return s;
     }
